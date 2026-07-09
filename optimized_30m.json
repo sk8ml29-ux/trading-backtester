@@ -1,0 +1,85 @@
+[
+  {
+    "strategy": "rsi_mean_reversion",
+    "best_score": 116.55,
+    "best_params": {
+      "rsi_period": 18,
+      "rsi_oversold": 32.0,
+      "rsi_atr_sl": 1.0,
+      "rsi_atr_tp": 1.5,
+      "adx_trend_threshold": 25.0
+    },
+    "details": [
+      {
+        "strategy": "rsi_mean_reversion",
+        "symbol": "GC=F",
+        "timeframe": "30m",
+        "total_trades": 16,
+        "trades_per_year": 91.3,
+        "win_rate_pct": 62.5,
+        "profit_factor": 1.56,
+        "total_return_pct": 4.32,
+        "cagr_pct": 27.33,
+        "max_drawdown_pct": -4.83,
+        "final_equity": 10432.49
+      },
+      {
+        "strategy": "rsi_mean_reversion",
+        "symbol": "BTC-USD",
+        "timeframe": "30m",
+        "total_trades": 5,
+        "trades_per_year": 33.8,
+        "win_rate_pct": 60.0,
+        "profit_factor": 1.33,
+        "total_return_pct": 0.89,
+        "cagr_pct": 6.15,
+        "max_drawdown_pct": -1.4,
+        "final_equity": 10088.62
+      }
+    ]
+  },
+  {
+    "strategy": "macd_pullback",
+    "best_score": 63.2,
+    "best_params": {
+      "macd_signal_mode": "cross_below_zero",
+      "reward_risk": 1.25,
+      "swing_lookback": 16,
+      "macd_strict_trend": false,
+      "adx_trend_threshold": 0.0,
+      "macd_require_below_zero": false
+    },
+    "details": [
+      {
+        "strategy": "macd_pullback",
+        "symbol": "BTC-USD",
+        "timeframe": "30m",
+        "total_trades": 13,
+        "profit_factor": 1.53,
+        "total_return_pct": 2.99
+      }
+    ],
+    "note": "MACD 30m is profitable on BTC-USD and SI=F; avoid GC=F on 30m. Use --optimized with per-symbol file."
+  },
+  {
+    "strategy": "donchian_breakout",
+    "best_score": 78.0,
+    "best_params": {
+      "donchian_entry": 24,
+      "donchian_exit": 3,
+      "reward_risk": 2.0,
+      "adx_trend_threshold": 0.0,
+      "donchian_strict_trend": false
+    },
+    "details": [
+      {
+        "strategy": "donchian_breakout",
+        "symbol": "BTC-USD",
+        "timeframe": "30m",
+        "total_trades": 8,
+        "profit_factor": 1.79,
+        "total_return_pct": 3.38
+      }
+    ]
+  }
+]

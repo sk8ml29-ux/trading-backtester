@@ -1,0 +1,20 @@
+{
+  "name": "velocity_rejection_scalp",
+  "description": "15m VRS — liquidity sweep fade + impulse snap pullback.",
+  "timeframe": "15m",
+  "strategy": "velocity_rejection",
+  "capital_sek": 20000,
+  "backtest": {
+    "return_pct": 6.9,
+    "final_equity": 21372,
+    "trades": 54,
+    "win_rate_pct": 74.1,
+    "window_note": "~60 dagar Yahoo 15m-data"
+  },
+  "pairs": [
+    {"symbol": "AMZN", "strategy": "velocity_rejection"},
+    {"symbol": "TSLA", "strategy": "velocity_rejection"},
+    {"symbol": "NFLX", "strategy": "velocity_rejection"},
+    {"symbol": "USO", "strategy": "velocity_rejection"}
+  ]
+}

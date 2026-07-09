@@ -1,0 +1,8 @@
+{
+  "symbol": "ETH-USD",
+  "strategy": "donchian_bidirectional",
+  "equity": 20000.0,
+  "open_position": null,
+  "last_bar_time": "2026-07-06T12:00:00",
+  "trade_count": 0
+}

@@ -1,0 +1,28 @@
+{
+  "name": "oos_paper_production",
+  "description": "Walk-forward OOS crypto (Binance). En strategi per symbol per bot — paper-forward.",
+  "source": "research_results.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {
+    "15m": [
+      {"symbol": "XRP-USD", "strategy": "triple_tf_confluence", "oos_test_pct": 12.9, "note": "PF 1.46"},
+      {"symbol": "ETH-USD", "strategy": "donchian_bidirectional", "oos_test_pct": 11.4, "note": "113 OOS trades"}
+    ],
+    "1h": [
+      {"symbol": "XRP-USD", "strategy": "macd_pullback", "oos_test_pct": 10.9, "note": "PF 1.70"},
+      {"symbol": "ETH-USD", "strategy": "squeeze_bidirectional", "oos_test_pct": 10.5, "note": "PF 1.49"}
+    ],
+    "30m": [
+      {"symbol": "BTC-USD", "strategy": "donchian_bidirectional", "oos_test_pct": 3.0, "note": "Få trades — låg förväntan"}
+    ]
+  },
+  "pairs": [
+    {"symbol": "XRP-USD", "strategy": "triple_tf_confluence", "timeframe": "15m"},
+    {"symbol": "ETH-USD", "strategy": "donchian_bidirectional", "timeframe": "15m"},
+    {"symbol": "XRP-USD", "strategy": "macd_pullback", "timeframe": "1h"},
+    {"symbol": "ETH-USD", "strategy": "squeeze_bidirectional", "timeframe": "1h"},
+    {"symbol": "BTC-USD", "strategy": "donchian_bidirectional", "timeframe": "30m"}
+  ]
+}

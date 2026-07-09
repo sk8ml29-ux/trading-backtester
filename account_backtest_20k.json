@@ -1,0 +1,104 @@
+{
+  "metrics": {
+    "initial_capital": 20000.0,
+    "final_equity": 38481.08,
+    "total_return_pct": 92.41,
+    "total_pnl": 18481.08,
+    "total_trades": 102,
+    "wins": 68,
+    "losses": 34,
+    "win_rate_pct": 66.67,
+    "avg_win": 402.21,
+    "avg_loss": -260.85,
+    "expectancy": 181.19,
+    "profit_factor": 3.08,
+    "total_costs": 4076.3,
+    "skipped_trades": 0,
+    "stop_loss_exits": 32,
+    "take_profit_exits": 64,
+    "pairs": 20,
+    "currency": "SEK"
+  },
+  "pairs": [
+    [
+      "AAPL",
+      "donchian_bidirectional"
+    ],
+    [
+      "AMZN",
+      "macd_bear_pullback"
+    ],
+    [
+      "BTC-USD",
+      "squeeze_breakout"
+    ],
+    [
+      "CL=F",
+      "squeeze_breakout"
+    ],
+    [
+      "ETH-USD",
+      "donchian_breakout"
+    ],
+    [
+      "GLD",
+      "squeeze_bidirectional"
+    ],
+    [
+      "HG=F",
+      "macd_pullback"
+    ],
+    [
+      "MSFT",
+      "squeeze_bidirectional"
+    ],
+    [
+      "NG=F",
+      "donchian_breakout"
+    ],
+    [
+      "NVDA",
+      "active_pulse"
+    ],
+    [
+      "QQQ",
+      "squeeze_breakout"
+    ],
+    [
+      "SI=F",
+      "macd_pullback"
+    ],
+    [
+      "SOL-USD",
+      "squeeze_breakout"
+    ],
+    [
+      "SPY",
+      "squeeze_breakout"
+    ],
+    [
+      "TLT",
+      "donchian_bidirectional"
+    ],
+    [
+      "TSLA",
+      "adaptive_trend_pullback"
+    ],
+    [
+      "USDCAD=X",
+      "edge_compression"
+    ],
+    [
+      "^DJI",
+      "donchian_breakout"
+    ],
+    [
+      "^GSPC",
+      "squeeze_breakout"
+    ],
+    [
+      "^NDX",
+      "squeeze_breakout"
+    ]
+  ]
+}

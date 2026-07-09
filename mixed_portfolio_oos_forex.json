@@ -1,0 +1,200 @@
+{
+  "name": "oos_paper_forex",
+  "description": "Aggressive max-return OOS. +4.1% weighted, risk 1.0%.",
+  "source": "research_results_forex_aggressive.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.01,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {
+    "1h": [
+      {
+        "symbol": "USDJPY=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 7.4,
+        "note": "PF 7.02  5 OOS trades",
+        "params": {
+          "donchian_entry": 20,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 22.0
+        }
+      },
+      {
+        "symbol": "USDCAD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 2.8,
+        "note": "PF 2.48  4 OOS trades",
+        "params": {
+          "donchian_entry": 48,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 22.0
+        }
+      },
+      {
+        "symbol": "EURUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 4.7,
+        "note": "PF 1.72  12 OOS trades",
+        "params": {
+          "donchian_entry": 36,
+          "donchian_exit": 5,
+          "reward_risk": 3.5,
+          "adx_trend_threshold": 22.0
+        }
+      },
+      {
+        "symbol": "GBPUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 4.5,
+        "note": "PF 1.36  19 OOS trades",
+        "params": {
+          "donchian_entry": 32,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 12.0
+        }
+      },
+      {
+        "symbol": "AUDUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 1.9,
+        "note": "PF 1.5  7 OOS trades",
+        "params": {
+          "donchian_entry": 40,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 22.0
+        }
+      }
+    ],
+    "30m": [
+      {
+        "symbol": "USDJPY=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 3.7,
+        "note": "PF 2.76  5 OOS trades",
+        "params": {
+          "donchian_entry": 48,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 0.0
+        }
+      },
+      {
+        "symbol": "AUDUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 5.3,
+        "note": "PF 2.07  10 OOS trades",
+        "params": {
+          "donchian_entry": 36,
+          "donchian_exit": 5,
+          "reward_risk": 3.0,
+          "adx_trend_threshold": 22.0
+        }
+      },
+      {
+        "symbol": "USDCAD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 2.8,
+        "note": "PF 1.24  17 OOS trades",
+        "params": {
+          "donchian_entry": 40,
+          "donchian_exit": 5,
+          "reward_risk": 4.0,
+          "adx_trend_threshold": 18.0
+        }
+      }
+    ]
+  },
+  "pairs": [
+    {
+      "symbol": "USDJPY=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 20,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 22.0
+      }
+    },
+    {
+      "symbol": "USDJPY=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "30m",
+      "params": {
+        "donchian_entry": 48,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 0.0
+      }
+    },
+    {
+      "symbol": "USDCAD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 48,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 22.0
+      }
+    },
+    {
+      "symbol": "AUDUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "30m",
+      "params": {
+        "donchian_entry": 36,
+        "donchian_exit": 5,
+        "reward_risk": 3.0,
+        "adx_trend_threshold": 22.0
+      }
+    },
+    {
+      "symbol": "EURUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 36,
+        "donchian_exit": 5,
+        "reward_risk": 3.5,
+        "adx_trend_threshold": 22.0
+      }
+    },
+    {
+      "symbol": "GBPUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 32,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 12.0
+      }
+    },
+    {
+      "symbol": "AUDUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 40,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 22.0
+      }
+    },
+    {
+      "symbol": "USDCAD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "30m",
+      "params": {
+        "donchian_entry": 40,
+        "donchian_exit": 5,
+        "reward_risk": 4.0,
+        "adx_trend_threshold": 18.0
+      }
+    }
+  ]
+}

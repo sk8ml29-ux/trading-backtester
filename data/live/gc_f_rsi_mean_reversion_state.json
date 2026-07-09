@@ -1,0 +1,8 @@
+{
+  "symbol": "GC=F",
+  "strategy": "rsi_mean_reversion",
+  "equity": 10000.0,
+  "open_position": null,
+  "last_bar_time": "2026-06-30T17:49:07",
+  "trade_count": 0
+}

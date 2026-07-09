@@ -1,0 +1,207 @@
+{
+  "strategy": "velocity_rejection",
+  "timeframe": "15m",
+  "capital": 20000.0,
+  "symbols": [
+    "AMZN",
+    "TSLA",
+    "NFLX"
+  ],
+  "pairs": [
+    {
+      "symbol": "AMZN",
+      "strategy": "velocity_rejection"
+    },
+    {
+      "symbol": "TSLA",
+      "strategy": "velocity_rejection"
+    },
+    {
+      "symbol": "NFLX",
+      "strategy": "velocity_rejection"
+    }
+  ],
+  "scan_top": [
+    {
+      "symbol": "AMZN",
+      "category": "stocks",
+      "total_return_pct": 2.55,
+      "total_trades": 10,
+      "win_rate_pct": 80.0,
+      "profit_factor": 2.23
+    },
+    {
+      "symbol": "TSLA",
+      "category": "stocks",
+      "total_return_pct": 2.3,
+      "total_trades": 17,
+      "win_rate_pct": 70.59,
+      "profit_factor": 1.44
+    },
+    {
+      "symbol": "NFLX",
+      "category": "stocks",
+      "total_return_pct": 1.66,
+      "total_trades": 11,
+      "win_rate_pct": 81.82,
+      "profit_factor": 1.59
+    },
+    {
+      "symbol": "USO",
+      "category": "etfs",
+      "total_return_pct": 0.19,
+      "total_trades": 16,
+      "win_rate_pct": 68.75,
+      "profit_factor": 1.03
+    },
+    {
+      "symbol": "AAPL",
+      "category": "stocks",
+      "total_return_pct": -0.44,
+      "total_trades": 10,
+      "win_rate_pct": 70.0,
+      "profit_factor": 0.86
+    },
+    {
+      "symbol": "^DJI",
+      "category": "indices",
+      "total_return_pct": -1.07,
+      "total_trades": 3,
+      "win_rate_pct": 66.67,
+      "profit_factor": 0.32
+    },
+    {
+      "symbol": "ZC=F",
+      "category": "commodities",
+      "total_return_pct": -1.56,
+      "total_trades": 13,
+      "win_rate_pct": 69.23,
+      "profit_factor": 0.68
+    },
+    {
+      "symbol": "ZS=F",
+      "category": "commodities",
+      "total_return_pct": -1.83,
+      "total_trades": 5,
+      "win_rate_pct": 60.0,
+      "profit_factor": 0.4
+    },
+    {
+      "symbol": "GOOGL",
+      "category": "stocks",
+      "total_return_pct": -1.84,
+      "total_trades": 15,
+      "win_rate_pct": 60.0,
+      "profit_factor": 0.73
+    },
+    {
+      "symbol": "DIA",
+      "category": "etfs",
+      "total_return_pct": -1.97,
+      "total_trades": 4,
+      "win_rate_pct": 50.0,
+      "profit_factor": 0.31
+    },
+    {
+      "symbol": "JPM",
+      "category": "stocks",
+      "total_return_pct": -1.97,
+      "total_trades": 7,
+      "win_rate_pct": 57.14,
+      "profit_factor": 0.47
+    },
+    {
+      "symbol": "DIS",
+      "category": "stocks",
+      "total_return_pct": -2.17,
+      "total_trades": 10,
+      "win_rate_pct": 60.0,
+      "profit_factor": 0.57
+    },
+    {
+      "symbol": "EEM",
+      "category": "etfs",
+      "total_return_pct": -2.49,
+      "total_trades": 13,
+      "win_rate_pct": 61.54,
+      "profit_factor": 0.6
+    },
+    {
+      "symbol": "XRP-USD",
+      "category": "crypto",
+      "total_return_pct": -2.67,
+      "total_trades": 11,
+      "win_rate_pct": 54.55,
+      "profit_factor": 0.55
+    },
+    {
+      "symbol": "GLD",
+      "category": "etfs",
+      "total_return_pct": -3.06,
+      "total_trades": 10,
+      "win_rate_pct": 60.0,
+      "profit_factor": 0.48
+    },
+    {
+      "symbol": "NVDA",
+      "category": "stocks",
+      "total_return_pct": -3.14,
+      "total_trades": 13,
+      "win_rate_pct": 53.85,
+      "profit_factor": 0.55
+    },
+    {
+      "symbol": "^GSPC",
+      "category": "indices",
+      "total_return_pct": -3.45,
+      "total_trades": 6,
+      "win_rate_pct": 50.0,
+      "profit_factor": 0.2
+    },
+    {
+      "symbol": "NG=F",
+      "category": "commodities",
+      "total_return_pct": -3.55,
+      "total_trades": 32,
+      "win_rate_pct": 59.38,
+      "profit_factor": 0.75
+    },
+    {
+      "symbol": "AMD",
+      "category": "stocks",
+      "total_return_pct": -3.62,
+      "total_trades": 24,
+      "win_rate_pct": 54.17,
+      "profit_factor": 0.69
+    },
+    {
+      "symbol": "XLE",
+      "category": "etfs",
+      "total_return_pct": -4.14,
+      "total_trades": 14,
+      "win_rate_pct": 57.14,
+      "profit_factor": 0.47
+    }
+  ],
+  "metrics": {
+    "initial_capital": 20000.0,
+    "final_equity": 21330.72,
+    "total_return_pct": 6.65,
+    "total_pnl": 1330.72,
+    "total_trades": 38,
+    "wins": 29,
+    "losses": 9,
+    "win_rate_pct": 76.32,
+    "avg_win": 117.21,
+    "avg_loss": -229.81,
+    "expectancy": 35.02,
+    "profit_factor": 1.64,
+    "total_costs": 2990.84,
+    "skipped_trades": 0,
+    "spread_skipped": 0,
+    "stop_loss_exits": 9,
+    "take_profit_exits": 29,
+    "long_trades": 15,
+    "short_trades": 23
+  }
+}

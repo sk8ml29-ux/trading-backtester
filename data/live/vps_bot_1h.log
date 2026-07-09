@@ -1,0 +1,17 @@
+[2026-07-06 13:15:34] START portfolio OOS crypto [1h] pairs=2
+[2026-07-06 13:16:41] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> hold
+[2026-07-06 13:17:56] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> hold
+[2026-07-06 13:23:58] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 13:25:11] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-06 13:31:13] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 13:32:28] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-06 13:38:32] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 13:39:44] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-06 13:45:47] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 13:46:58] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-06 13:53:04] 2026-07-06T11:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 13:54:19] 2026-07-06T11:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-06 14:00:24] 2026-07-06T12:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> hold
+[2026-07-06 14:01:36] 2026-07-06T12:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> hold
+[2026-07-06 14:07:37] 2026-07-06T12:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
+[2026-07-06 14:08:48] 2026-07-06T12:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip

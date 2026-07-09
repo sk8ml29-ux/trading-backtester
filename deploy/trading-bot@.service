@@ -1,0 +1,18 @@
+[Unit]
+Description=Trading bot %i timeframe (OOS portfolio paper)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/trading-backtester
+ExecStart=/root/trading-backtester/deploy/run_bot.sh %i
+StandardOutput=append:/root/trading-backtester/data/live/vps_bot_%i.log
+StandardError=append:/root/trading-backtester/data/live/vps_bot_%i.log
+Restart=always
+RestartSec=60
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target

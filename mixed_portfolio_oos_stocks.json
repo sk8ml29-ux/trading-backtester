@@ -1,0 +1,36 @@
+{
+  "name": "oos_paper_stocks",
+  "description": "Walk-forward OOS stocks/ETFs (Polygon or Yahoo).",
+  "source": "research_results_stocks.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {
+    "1h": [
+      {
+        "symbol": "AAPL",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 3.9,
+        "note": "PF 1.5  14 OOS trades"
+      },
+      {
+        "symbol": "SPY",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 1.2,
+        "note": "PF 1.12  16 OOS trades"
+      }
+    ]
+  },
+  "pairs": [
+    {
+      "symbol": "AAPL",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "SPY",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h"
+    }
+  ]
+}

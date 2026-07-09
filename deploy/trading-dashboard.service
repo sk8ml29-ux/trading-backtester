@@ -1,0 +1,19 @@
+[Unit]
+Description=Trading Dashboard (webb-UI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/trading-backtester
+EnvironmentFile=-/root/trading-backtester/deploy/bot.env
+ExecStart=/root/trading-backtester/.venv/bin/python dashboard/app.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/root/trading-backtester/data/live/dashboard.log
+StandardError=append:/root/trading-backtester/data/live/dashboard.log
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target

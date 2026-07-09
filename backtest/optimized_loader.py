@@ -1,0 +1,215 @@
+"""Load optimized 30m parameters."""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+
+from config import BacktestConfig, LiveConfig
+
+ROOT = Path(__file__).resolve().parent.parent
+OPT_PATH = ROOT / "optimized_30m.json"
+OPT_BY_SYMBOL_PATH = ROOT / "optimized_30m_by_symbol.json"
+SCAN_PATH = ROOT / "universe_scan_30m.json"
+SQUEEZE_PATH = ROOT / "optimized_squeeze.json"
+
+# Legacy fallback (commodities/crypto only)
+RECOMMENDED_30M: dict[str, str] = {
+    "GC=F": "rsi_mean_reversion",
+    "BTC-USD": "donchian_breakout",
+    "ETH-USD": "donchian_breakout",
+    "SI=F": "macd_pullback",
+}
+
+
+def load_universe_recommendations() -> dict[str, str]:
+    """Best profitable strategy per symbol from full universe scan."""
+    if not SCAN_PATH.exists():
+        return dict(RECOMMENDED_30M)
+    data = json.loads(SCAN_PATH.read_text(encoding="utf-8"))
+    out: dict[str, str] = {}
+    for sym, info in data.get("best_per_symbol", {}).items():
+        ret = float(info.get("total_return_pct", 0))
+        pf = info.get("profit_factor", 0)
+        if ret > 0 and pf not in (0, "0") and float(pf) >= 1.0:
+            out[sym] = info["strategy"]
+    return out if out else dict(RECOMMENDED_30M)
+
+
+def _filtered_scan_pairs() -> list[tuple[str, str]]:
+    if not SCAN_PATH.exists():
+        return list(RECOMMENDED_30M.items())
+    data = json.loads(SCAN_PATH.read_text(encoding="utf-8"))
+    pairs: list[tuple[str, str]] = []
+    for sym, info in data.get("best_per_symbol", {}).items():
+        ret = float(info.get("total_return_pct", 0))
+        pf = info.get("profit_factor", 0)
+        wr = float(info.get("win_rate_pct", 0))
+        if ret <= 0 or pf in (0, "0") or float(pf) < 1.35:
+            continue
+        if wr < 52 and float(pf) < 1.6:
+            continue
+        pairs.append((sym, info["strategy"]))
+    return pairs
+
+
+def profitable_universe_pairs() -> list[tuple[str, str]]:
+    """Profitable symbol/strategy pairs from universe scan."""
+    return list(load_universe_recommendations().items())
+
+
+def mixed_portfolio_path(timeframe: str = "30m") -> Path:
+    if timeframe in ("30m", ""):
+        return ROOT / "mixed_portfolio.json"
+    return ROOT / f"mixed_portfolio_{timeframe}.json"
+
+
+def mixed_portfolio_pairs(timeframe: str = "30m") -> list[tuple[str, str]]:
+    """Curated mixed portfolio for the given entry timeframe."""
+    mixed_path = mixed_portfolio_path(timeframe)
+    if mixed_path.exists():
+        data = json.loads(mixed_path.read_text(encoding="utf-8"))
+        return [(p["symbol"], p["strategy"]) for p in data.get("pairs", [])]
+    if timeframe == "30m":
+        return _filtered_scan_pairs()
+    scan = ROOT / f"universe_scan_{timeframe}.json"
+    if not scan.exists():
+        return []
+    data = json.loads(scan.read_text(encoding="utf-8"))
+    return [(sym, info["strategy"]) for sym, info in data.get("best_per_symbol", {}).items()
+            if float(info.get("total_return_pct", 0)) > 0]
+
+
+def triple_portfolio_pairs() -> list[tuple[str, str]]:
+    """Same symbols + triple_tf_confluence on all three bots."""
+    path = ROOT / "mixed_portfolio_triple.json"
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return [(p["symbol"], p["strategy"]) for p in data.get("pairs", [])]
+    strategy = "triple_tf_confluence"
+    return [(s, strategy) for s in ["QQQ", "BTC-USD", "ETH-USD", "GLD", "SOL-USD"]]
+
+
+def scalp_portfolio_pairs() -> list[tuple[str, str]]:
+    """15m Velocity Rejection Scalp portfolio."""
+    path = ROOT / "mixed_portfolio_scalp.json"
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return [(p["symbol"], p["strategy"]) for p in data.get("pairs", [])]
+    return [(s, "velocity_rejection") for s in ["AMZN", "TSLA", "NFLX", "USO"]]
+
+
+def oos_portfolio_pairs(timeframe: str = "15m") -> list[tuple[str, str]]:
+    """Walk-forward validated crypto pairs for one bot timeframe."""
+    path = ROOT / "mixed_portfolio_oos.json"
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    bots = data.get("bots", {})
+    if timeframe in bots:
+        return [(p["symbol"], p["strategy"]) for p in bots[timeframe]]
+    return [
+        (p["symbol"], p["strategy"])
+        for p in data.get("pairs", [])
+        if p.get("timeframe") == timeframe
+    ]
+
+
+def forex_oos_portfolio_path() -> Path:
+    return ROOT / "mixed_portfolio_oos_forex.json"
+
+
+def forex_oos_portfolio_entries(timeframe: str | None = None) -> list[dict]:
+    """Forex OOS pairs with per-pair optimized params."""
+    path = forex_oos_portfolio_path()
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if timeframe and timeframe in data.get("bots", {}):
+        return list(data["bots"][timeframe])
+    pairs = data.get("pairs", [])
+    if timeframe:
+        pairs = [p for p in pairs if p.get("timeframe") == timeframe]
+    return pairs
+
+
+def forex_oos_portfolio_pairs(timeframe: str) -> list[tuple[str, str]]:
+    return [(p["symbol"], p["strategy"]) for p in forex_oos_portfolio_entries(timeframe)]
+
+
+def apply_params_to_config(config: BacktestConfig | LiveConfig, params: dict) -> None:
+    for key, value in params.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+
+
+def load_optimized_params() -> dict[str, dict]:
+    if not OPT_PATH.exists():
+        return {}
+    data = json.loads(OPT_PATH.read_text(encoding="utf-8"))
+    return {item["strategy"]: item["best_params"] for item in data}
+
+
+def load_per_symbol_params() -> dict[str, dict[str, dict]]:
+    if not OPT_BY_SYMBOL_PATH.exists():
+        return {}
+    data = json.loads(OPT_BY_SYMBOL_PATH.read_text(encoding="utf-8"))
+    out: dict[str, dict[str, dict]] = {}
+    for strategy, by_sym in data.items():
+        out[strategy] = {sym: entry["best_params"] for sym, entry in by_sym.items()}
+    return out
+
+
+def resolve_strategy_for_symbol(symbol: str) -> str | None:
+    return load_universe_recommendations().get(symbol)
+
+
+def params_for(symbol: str, strategy: str) -> dict:
+    if strategy in ("squeeze_breakout", "squeeze_bidirectional") and SQUEEZE_PATH.exists():
+        squeeze = json.loads(SQUEEZE_PATH.read_text(encoding="utf-8"))
+        if symbol in squeeze and "params" in squeeze[symbol]:
+            return squeeze[symbol]["params"]
+    per_symbol = load_per_symbol_params().get(strategy, {}).get(symbol)
+    if per_symbol:
+        return per_symbol
+    return load_optimized_params().get(strategy, {})
+
+
+def _apply_params(config: BacktestConfig | LiveConfig, params: dict):
+    for key, value in params.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+
+
+def apply_to_config(config: BacktestConfig, strategy: str) -> BacktestConfig:
+    _apply_params(config, params_for(config.symbol, strategy))
+    return config
+
+
+def apply_optimized_to_live(
+    config: LiveConfig,
+    auto_strategy: bool = True,
+    extra_params: dict | None = None,
+) -> LiveConfig:
+    if auto_strategy:
+        recommended = resolve_strategy_for_symbol(config.symbol)
+        if recommended:
+            config.strategy = recommended
+    params = dict(params_for(config.symbol, config.strategy))
+    if extra_params:
+        params.update(extra_params)
+    _apply_params(config, params)
+    state_file, log_file = live_paths(config.symbol, config.strategy, config.timeframe)
+    config.state_file = state_file
+    config.log_file = log_file
+    return config
+
+
+def live_paths(symbol: str, strategy: str, timeframe: str = "") -> tuple[str, str]:
+    safe = re.sub(r"[^a-zA-Z0-9]+", "_", symbol).strip("_").lower()
+    tf = f"_{timeframe}" if timeframe else ""
+    return (
+        f"data/live/{safe}_{strategy}{tf}_state.json",
+        f"data/live/{safe}_{strategy}{tf}.log",
+    )

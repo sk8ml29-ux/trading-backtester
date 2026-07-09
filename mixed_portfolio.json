@@ -1,0 +1,385 @@
+{
+  "description": "Curated mixed portfolio \u2014 account-validated on 20k SEK with costs",
+  "validation": {
+    "capital_sek": 20000,
+    "risk_per_trade": 0.0075,
+    "costs": {
+      "commission_pct": 0.0005,
+      "slippage_pct": 0.0003,
+      "spread_pct": 0.0002
+    }
+  },
+  "pairs": [
+    {
+      "symbol": "AAPL",
+      "strategy": "squeeze_breakout",
+      "category": "stocks",
+      "backtest_return_pct": 3.43,
+      "profit_factor": 3.68,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 513.95
+    },
+    {
+      "symbol": "ADA-USD",
+      "strategy": "squeeze_breakout",
+      "category": "crypto",
+      "backtest_return_pct": 5.7,
+      "profit_factor": "inf",
+      "win_rate_pct": 100.0,
+      "total_trades": 3,
+      "account_pnl_sek": 850.95
+    },
+    {
+      "symbol": "AMD",
+      "strategy": "donchian_breakout",
+      "category": "stocks",
+      "backtest_return_pct": 3.71,
+      "profit_factor": 13.96,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 555.47
+    },
+    {
+      "symbol": "AMZN",
+      "strategy": "macd_bear_pullback",
+      "category": "stocks",
+      "backtest_return_pct": 2.77,
+      "profit_factor": 3.53,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 415.72
+    },
+    {
+      "symbol": "BTC-USD",
+      "strategy": "macd_bear_pullback",
+      "category": "crypto",
+      "backtest_return_pct": 10.84,
+      "profit_factor": 2.19,
+      "win_rate_pct": 61.11,
+      "total_trades": 18,
+      "account_pnl_sek": 1614.12
+    },
+    {
+      "symbol": "CL=F",
+      "strategy": "squeeze_bidirectional",
+      "category": "commodities",
+      "backtest_return_pct": 11.61,
+      "profit_factor": 2.28,
+      "win_rate_pct": 46.67,
+      "total_trades": 15,
+      "account_pnl_sek": 1730.07
+    },
+    {
+      "symbol": "COST",
+      "strategy": "donchian_bidirectional",
+      "category": "stocks",
+      "backtest_return_pct": 1.11,
+      "profit_factor": 1.52,
+      "win_rate_pct": 50.0,
+      "total_trades": 4,
+      "account_pnl_sek": 167.03
+    },
+    {
+      "symbol": "DIA",
+      "strategy": "donchian_breakout",
+      "category": "etfs",
+      "backtest_return_pct": 1.26,
+      "profit_factor": 2.05,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 190.06
+    },
+    {
+      "symbol": "DOGE-USD",
+      "strategy": "macd_bear_pullback",
+      "category": "crypto",
+      "backtest_return_pct": 13.05,
+      "profit_factor": 1.81,
+      "win_rate_pct": 53.57,
+      "total_trades": 28,
+      "account_pnl_sek": 1940.34
+    },
+    {
+      "symbol": "EEM",
+      "strategy": "rsi_mean_reversion",
+      "category": "etfs",
+      "backtest_return_pct": 1.63,
+      "profit_factor": 1.39,
+      "win_rate_pct": 62.5,
+      "total_trades": 8,
+      "account_pnl_sek": 247.09
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "donchian_breakout",
+      "category": "crypto",
+      "backtest_return_pct": 4.51,
+      "profit_factor": 2.95,
+      "win_rate_pct": 60.0,
+      "total_trades": 5,
+      "account_pnl_sek": 676.84
+    },
+    {
+      "symbol": "GLD",
+      "strategy": "macd_bear_pullback",
+      "category": "etfs",
+      "backtest_return_pct": 6.31,
+      "profit_factor": 6.56,
+      "win_rate_pct": 83.33,
+      "total_trades": 6,
+      "account_pnl_sek": 941.33
+    },
+    {
+      "symbol": "GOOGL",
+      "strategy": "squeeze_bidirectional",
+      "category": "stocks",
+      "backtest_return_pct": 6.63,
+      "profit_factor": 6.73,
+      "win_rate_pct": 80.0,
+      "total_trades": 5,
+      "account_pnl_sek": 989.18
+    },
+    {
+      "symbol": "HG=F",
+      "strategy": "macd_pullback",
+      "category": "commodities",
+      "backtest_return_pct": 2.58,
+      "profit_factor": 1.34,
+      "win_rate_pct": 62.5,
+      "total_trades": 16,
+      "account_pnl_sek": 389.89
+    },
+    {
+      "symbol": "JPM",
+      "strategy": "macd_pullback",
+      "category": "stocks",
+      "backtest_return_pct": 3.19,
+      "profit_factor": 2.35,
+      "win_rate_pct": 71.43,
+      "total_trades": 7,
+      "account_pnl_sek": 477.65
+    },
+    {
+      "symbol": "META",
+      "strategy": "squeeze_breakout",
+      "category": "stocks",
+      "backtest_return_pct": 1.52,
+      "profit_factor": 5.43,
+      "win_rate_pct": 50.0,
+      "total_trades": 2,
+      "account_pnl_sek": 227.61
+    },
+    {
+      "symbol": "MSFT",
+      "strategy": "squeeze_bidirectional",
+      "category": "stocks",
+      "backtest_return_pct": 2.9,
+      "profit_factor": 1.9,
+      "win_rate_pct": 57.14,
+      "total_trades": 7,
+      "account_pnl_sek": 436.26
+    },
+    {
+      "symbol": "NFLX",
+      "strategy": "donchian_bidirectional",
+      "category": "stocks",
+      "backtest_return_pct": 3.31,
+      "profit_factor": 6.32,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 495.92
+    },
+    {
+      "symbol": "NVDA",
+      "strategy": "active_pulse",
+      "category": "stocks",
+      "backtest_return_pct": 3.9,
+      "profit_factor": "inf",
+      "win_rate_pct": 100.0,
+      "total_trades": 3,
+      "account_pnl_sek": 582.79
+    },
+    {
+      "symbol": "PL=F",
+      "strategy": "donchian_bidirectional",
+      "category": "commodities",
+      "backtest_return_pct": 2.05,
+      "profit_factor": 1.27,
+      "win_rate_pct": 46.15,
+      "total_trades": 13,
+      "account_pnl_sek": 311.77
+    },
+    {
+      "symbol": "QQQ",
+      "strategy": "donchian_breakout",
+      "category": "etfs",
+      "backtest_return_pct": 3.66,
+      "profit_factor": 17.27,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 548.27
+    },
+    {
+      "symbol": "SI=F",
+      "strategy": "kinetic_equilibrium",
+      "category": "commodities",
+      "backtest_return_pct": 4.69,
+      "profit_factor": "inf",
+      "win_rate_pct": 100.0,
+      "total_trades": 3,
+      "account_pnl_sek": 700.52
+    },
+    {
+      "symbol": "SLV",
+      "strategy": "squeeze_bidirectional",
+      "category": "etfs",
+      "backtest_return_pct": 4.01,
+      "profit_factor": 2.86,
+      "win_rate_pct": 66.67,
+      "total_trades": 6,
+      "account_pnl_sek": 601.89
+    },
+    {
+      "symbol": "SOL-USD",
+      "strategy": "donchian_bidirectional",
+      "category": "crypto",
+      "backtest_return_pct": 8.38,
+      "profit_factor": 2.18,
+      "win_rate_pct": 53.33,
+      "total_trades": 15,
+      "account_pnl_sek": 1251.45
+    },
+    {
+      "symbol": "SPY",
+      "strategy": "donchian_bidirectional",
+      "category": "etfs",
+      "backtest_return_pct": 1.54,
+      "profit_factor": 1.68,
+      "win_rate_pct": 60.0,
+      "total_trades": 5,
+      "account_pnl_sek": 232.08
+    },
+    {
+      "symbol": "TLT",
+      "strategy": "donchian_breakout",
+      "category": "etfs",
+      "backtest_return_pct": 0.68,
+      "profit_factor": 1.58,
+      "win_rate_pct": 50.0,
+      "total_trades": 2,
+      "account_pnl_sek": 102.81
+    },
+    {
+      "symbol": "TSLA",
+      "strategy": "adaptive_trend_pullback",
+      "category": "stocks",
+      "backtest_return_pct": 4.38,
+      "profit_factor": 2.3,
+      "win_rate_pct": 57.14,
+      "total_trades": 7,
+      "account_pnl_sek": 656.83
+    },
+    {
+      "symbol": "USDCAD=X",
+      "strategy": "edge_compression",
+      "category": "forex",
+      "backtest_return_pct": 3.2,
+      "profit_factor": "inf",
+      "win_rate_pct": 100.0,
+      "total_trades": 3,
+      "account_pnl_sek": 478.92
+    },
+    {
+      "symbol": "USO",
+      "strategy": "macd_pullback",
+      "category": "etfs",
+      "backtest_return_pct": 1.26,
+      "profit_factor": 2.17,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 188.9
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "squeeze_breakout",
+      "category": "crypto",
+      "backtest_return_pct": 4.33,
+      "profit_factor": 4.76,
+      "win_rate_pct": 75.0,
+      "total_trades": 4,
+      "account_pnl_sek": 648.12
+    },
+    {
+      "symbol": "ZC=F",
+      "strategy": "donchian_bidirectional",
+      "category": "commodities",
+      "backtest_return_pct": 6.56,
+      "profit_factor": 1.77,
+      "win_rate_pct": 50.0,
+      "total_trades": 16,
+      "account_pnl_sek": 982.92
+    },
+    {
+      "symbol": "^DJI",
+      "strategy": "donchian_breakout",
+      "category": "indices",
+      "backtest_return_pct": 1.35,
+      "profit_factor": 2.2,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 203.14
+    },
+    {
+      "symbol": "^GSPC",
+      "strategy": "donchian_bidirectional",
+      "category": "indices",
+      "backtest_return_pct": 2.8,
+      "profit_factor": 3.37,
+      "win_rate_pct": 75.0,
+      "total_trades": 4,
+      "account_pnl_sek": 419.53
+    },
+    {
+      "symbol": "^IXIC",
+      "strategy": "squeeze_breakout",
+      "category": "indices",
+      "backtest_return_pct": 2.44,
+      "profit_factor": 2.82,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 366.01
+    },
+    {
+      "symbol": "^NDX",
+      "strategy": "donchian_breakout",
+      "category": "indices",
+      "backtest_return_pct": 3.67,
+      "profit_factor": 18.21,
+      "win_rate_pct": 66.67,
+      "total_trades": 3,
+      "account_pnl_sek": 548.7
+    },
+    {
+      "symbol": "^RUT",
+      "strategy": "donchian_breakout",
+      "category": "indices",
+      "backtest_return_pct": 0.59,
+      "profit_factor": 1.45,
+      "win_rate_pct": 33.33,
+      "total_trades": 3,
+      "account_pnl_sek": 89.7
+    }
+  ],
+  "aggregate_estimate": {
+    "total_trades": 238,
+    "wins": 145,
+    "losses": 93,
+    "win_rate_pct": 60.92,
+    "avg_win": 171.36,
+    "avg_loss": -110.69,
+    "expectancy": 61.15,
+    "total_pnl": 14552.78,
+    "profit_factor": 2.41
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "triple_mtf_confluence",
+  "description": "Samma 5 symboler på alla tre bots (15m/30m/1h). 1h sätter trend, 30m bekräftar, 15m precision-entry vid squeeze.",
+  "strategy": "triple_tf_confluence",
+  "symbols": [
+    "QQQ",
+    "BTC-USD",
+    "ETH-USD",
+    "GLD",
+    "SOL-USD"
+  ],
+  "pairs": [
+    {"symbol": "QQQ", "strategy": "triple_tf_confluence"},
+    {"symbol": "BTC-USD", "strategy": "triple_tf_confluence"},
+    {"symbol": "ETH-USD", "strategy": "triple_tf_confluence"},
+    {"symbol": "GLD", "strategy": "triple_tf_confluence"},
+    {"symbol": "SOL-USD", "strategy": "triple_tf_confluence"}
+  ],
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "max_concurrent_per_bot": 6,
+  "backtest_combined": {
+    "start_sek": 60000,
+    "end_sek": 74561,
+    "return_pct": 24.3,
+    "window_note": "15m/30m ~60 dagar, 1h ~2 år (Yahoo begränsning)"
+  },
+  "bots": {
+    "15m": {"return_pct": -4.1, "trades": 103, "role": "Snabb entry när 1h+30m+15m bias stämmer"},
+    "30m": {"return_pct": 8.4, "trades": 70, "role": "Mellan-timeframe bekräftelse + entry"},
+    "1h": {"return_pct": 68.5, "trades": 469, "role": "Primär trendmotor, flest trades"}
+  }
+}

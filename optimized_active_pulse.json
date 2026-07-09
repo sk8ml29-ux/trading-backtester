@@ -1,0 +1,18 @@
+{
+  "score": 66.34251428571427,
+  "params": {
+    "pulse_rsi_period": 18,
+    "pulse_rsi_buy": 45.0,
+    "pulse_atr_sl": 1.2,
+    "pulse_reward_risk": 2.0,
+    "pulse_require_above_200": false,
+    "adx_trend_threshold": 18
+  },
+  "totals": {
+    "trades": 35,
+    "wins": 18,
+    "losses": 17,
+    "win_rate_pct": 51.43,
+    "avg_return_pct": 0.11
+  }
+}

@@ -1,0 +1,16 @@
+[Unit]
+Description=Trading backtester paper bot (mixed portfolio)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/trading-backtester
+ExecStart=%h/trading-backtester/deploy/run_bot.sh
+StandardOutput=append:%h/trading-backtester/data/live/vps_bot.log
+StandardError=append:%h/trading-backtester/data/live/vps_bot.log
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,10 @@
+{
+  "name": "oos_paper_forex_strategies",
+  "description": "Forex session strategies \u2014 walk-forward OOS on 5 major pairs.",
+  "source": "research_results_forex_strategies.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {},
+  "pairs": []
+}

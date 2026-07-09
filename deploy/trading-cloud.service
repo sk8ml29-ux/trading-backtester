@@ -1,0 +1,23 @@
+[Unit]
+Description=Trading Cloud Orchestrator (backup + lab + health)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/trading-backtester
+ExecStart=/root/trading-backtester/.venv/bin/python run_cloud.py \
+    --backup-interval 3600 \
+    --lab-interval 21600
+Restart=always
+RestartSec=30
+ExecStopPost=/root/trading-backtester/deploy/rollback_on_crash.sh
+CPUQuota=80%
+MemoryMax=2G
+StandardOutput=append:/root/trading-backtester/data/live/cloud.log
+StandardError=append:/root/trading-backtester/data/live/cloud.log
+Environment=HOME=/root
+
+[Install]
+WantedBy=multi-user.target

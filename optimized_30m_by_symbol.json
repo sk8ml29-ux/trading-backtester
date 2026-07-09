@@ -1,0 +1,266 @@
+{
+  "macd_pullback": {
+    "GC=F": {
+      "best_score": -38.53,
+      "best_params": {
+        "macd_signal_mode": "cross_below_zero",
+        "reward_risk": 1.75,
+        "swing_lookback": 8,
+        "macd_strict_trend": false,
+        "adx_trend_threshold": 0.0,
+        "macd_require_below_zero": false
+      },
+      "detail": {
+        "strategy": "macd_pullback",
+        "symbol": "GC=F",
+        "timeframe": "30m",
+        "total_trades": 8,
+        "trades_per_year": 45.7,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.46,
+        "total_return_pct": -3.53,
+        "cagr_pct": -18.57,
+        "max_drawdown_pct": -5.53,
+        "avg_win": 150.57,
+        "avg_loss": -109.11,
+        "expectancy": -44.19,
+        "approx_breakeven_wr_pct": 42.02,
+        "final_equity": 9646.51,
+        "fitness": -38.53
+      }
+    },
+    "BTC-USD": {
+      "best_score": 63.19,
+      "best_params": {
+        "macd_signal_mode": "cross_below_zero",
+        "reward_risk": 1.25,
+        "swing_lookback": 16,
+        "macd_strict_trend": false,
+        "adx_trend_threshold": 0.0,
+        "macd_require_below_zero": false
+      },
+      "detail": {
+        "strategy": "macd_pullback",
+        "symbol": "BTC-USD",
+        "timeframe": "30m",
+        "total_trades": 13,
+        "trades_per_year": 87.9,
+        "win_rate_pct": 61.54,
+        "profit_factor": 1.53,
+        "total_return_pct": 2.99,
+        "cagr_pct": 22.05,
+        "max_drawdown_pct": -2.23,
+        "avg_win": 108.41,
+        "avg_loss": -113.68,
+        "expectancy": 22.99,
+        "approx_breakeven_wr_pct": 51.18,
+        "final_equity": 10298.93,
+        "fitness": 63.19
+      }
+    },
+    "ETH-USD": {
+      "best_score": -21.22,
+      "best_params": {
+        "macd_signal_mode": "cross_below_zero",
+        "reward_risk": 2.5,
+        "swing_lookback": 6,
+        "macd_strict_trend": false,
+        "adx_trend_threshold": 0.0,
+        "macd_require_below_zero": true
+      },
+      "detail": {
+        "strategy": "macd_pullback",
+        "symbol": "ETH-USD",
+        "timeframe": "30m",
+        "total_trades": 5,
+        "trades_per_year": 33.8,
+        "win_rate_pct": 20.0,
+        "profit_factor": 0.52,
+        "total_return_pct": -2.14,
+        "cagr_pct": -13.6,
+        "max_drawdown_pct": -2.42,
+        "avg_win": 235.94,
+        "avg_loss": -112.44,
+        "expectancy": -42.76,
+        "approx_breakeven_wr_pct": 32.27,
+        "final_equity": 9786.19,
+        "fitness": -21.22
+      }
+    },
+    "SI=F": {
+      "best_score": 107.47,
+      "best_params": {
+        "macd_signal_mode": "cross_below_zero",
+        "reward_risk": 2.5,
+        "swing_lookback": 16,
+        "macd_strict_trend": false,
+        "adx_trend_threshold": 0.0,
+        "macd_require_below_zero": false
+      },
+      "detail": {
+        "strategy": "macd_pullback",
+        "symbol": "SI=F",
+        "timeframe": "30m",
+        "total_trades": 6,
+        "trades_per_year": 34.2,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.27,
+        "total_return_pct": 4.1,
+        "cagr_pct": 25.78,
+        "max_drawdown_pct": -2.11,
+        "avg_win": 244.26,
+        "avg_loss": -107.56,
+        "expectancy": 68.35,
+        "approx_breakeven_wr_pct": 30.57,
+        "final_equity": 10410.08,
+        "fitness": 107.47
+      }
+    }
+  },
+  "donchian_breakout": {
+    "GC=F": {
+      "best_score": -12.41,
+      "best_params": {
+        "donchian_entry": 24,
+        "donchian_exit": 3,
+        "reward_risk": 2.0,
+        "adx_trend_threshold": 0.0,
+        "donchian_strict_trend": false
+      },
+      "detail": {
+        "strategy": "donchian_breakout",
+        "symbol": "GC=F",
+        "timeframe": "30m",
+        "total_trades": 4,
+        "trades_per_year": 22.8,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.58,
+        "total_return_pct": -1.32,
+        "cagr_pct": -7.31,
+        "max_drawdown_pct": -2.11,
+        "avg_win": 184.9,
+        "avg_loss": -105.68,
+        "expectancy": -33.03,
+        "approx_breakeven_wr_pct": 36.37,
+        "final_equity": 9867.87,
+        "fitness": -12.41
+      }
+    },
+    "BTC-USD": {
+      "best_score": 79.96499999999999,
+      "best_params": {
+        "donchian_entry": 24,
+        "donchian_exit": 3,
+        "reward_risk": 2.0,
+        "adx_trend_threshold": 0.0,
+        "donchian_strict_trend": false
+      },
+      "detail": {
+        "strategy": "donchian_breakout",
+        "symbol": "BTC-USD",
+        "timeframe": "30m",
+        "total_trades": 8,
+        "trades_per_year": 54.1,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.79,
+        "total_return_pct": 3.38,
+        "cagr_pct": 25.22,
+        "max_drawdown_pct": -2.07,
+        "avg_win": 191.56,
+        "avg_loss": -107.04,
+        "expectancy": 42.26,
+        "approx_breakeven_wr_pct": 35.85,
+        "final_equity": 10338.1,
+        "fitness": 79.96499999999999
+      }
+    },
+    "ETH-USD": {
+      "best_score": 128.645,
+      "best_params": {
+        "donchian_entry": 12,
+        "donchian_exit": 3,
+        "reward_risk": 3.0,
+        "adx_trend_threshold": 0.0,
+        "donchian_strict_trend": false
+      },
+      "detail": {
+        "strategy": "donchian_breakout",
+        "symbol": "ETH-USD",
+        "timeframe": "30m",
+        "total_trades": 4,
+        "trades_per_year": 27.1,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.71,
+        "total_return_pct": 3.67,
+        "cagr_pct": 27.65,
+        "max_drawdown_pct": -1.04,
+        "avg_win": 290.99,
+        "avg_loss": -107.24,
+        "expectancy": 91.87,
+        "approx_breakeven_wr_pct": 26.93,
+        "final_equity": 10367.5,
+        "fitness": 128.645
+      }
+    },
+    "SI=F": {
+      "best_score": 33.355,
+      "best_params": {
+        "donchian_entry": 12,
+        "donchian_exit": 3,
+        "reward_risk": 1.5,
+        "adx_trend_threshold": 0.0,
+        "donchian_strict_trend": false
+      },
+      "detail": {
+        "strategy": "donchian_breakout",
+        "symbol": "SI=F",
+        "timeframe": "30m",
+        "total_trades": 9,
+        "trades_per_year": 51.4,
+        "win_rate_pct": 44.44,
+        "profit_factor": 1.11,
+        "total_return_pct": 0.56,
+        "cagr_pct": 3.25,
+        "max_drawdown_pct": -3.11,
+        "avg_win": 146.52,
+        "avg_loss": -105.98,
+        "expectancy": 6.24,
+        "approx_breakeven_wr_pct": 41.97,
+        "final_equity": 10056.16,
+        "fitness": 33.355
+      }
+    }
+  },
+  "rsi_mean_reversion": {
+    "GC=F": {
+      "best_score": 116.55,
+      "best_params": {
+        "rsi_period": 18,
+        "rsi_oversold": 32.0,
+        "rsi_atr_sl": 1.0,
+        "rsi_atr_tp": 1.5,
+        "adx_trend_threshold": 25.0
+      },
+      "detail": {
+        "total_trades": 9,
+        "profit_factor": 1.17,
+        "total_return_pct": 0.81
+      }
+    },
+    "BTC-USD": {
+      "best_score": 45.0,
+      "best_params": {
+        "rsi_period": 18,
+        "rsi_oversold": 32.0,
+        "rsi_atr_sl": 1.0,
+        "rsi_atr_tp": 1.5,
+        "adx_trend_threshold": 25.0
+      },
+      "detail": {
+        "total_trades": 5,
+        "profit_factor": 1.33,
+        "total_return_pct": 0.89
+      }
+    }
+  }
+}

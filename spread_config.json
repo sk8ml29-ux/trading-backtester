@@ -1,0 +1,54 @@
+{
+  "description": "Typical and max spread per symbol (fraction of price). Live MT5 can override via spread_monitor.update().",
+  "defaults": {
+    "typical_spread_pct": 0.0002,
+    "max_spread_pct": 0.0006,
+    "min_risk_to_spread_ratio": 4.0
+  },
+  "categories": {
+    "forex": {
+      "typical_spread_pct": 0.00015,
+      "max_spread_pct": 0.0004
+    },
+    "indices": {
+      "typical_spread_pct": 0.0002,
+      "max_spread_pct": 0.0005
+    },
+    "etfs": {
+      "typical_spread_pct": 0.0002,
+      "max_spread_pct": 0.0005
+    },
+    "stocks": {
+      "typical_spread_pct": 0.0003,
+      "max_spread_pct": 0.0008
+    },
+    "commodities": {
+      "typical_spread_pct": 0.00025,
+      "max_spread_pct": 0.0007
+    },
+    "crypto": {
+      "typical_spread_pct": 0.0005,
+      "max_spread_pct": 0.0015
+    }
+  },
+  "symbols": {
+    "EURUSD=X": { "typical_spread_pct": 0.00008, "max_spread_pct": 0.00025, "mt5_symbol": "EURUSD" },
+    "USDCAD=X": { "typical_spread_pct": 0.00012, "max_spread_pct": 0.00035, "mt5_symbol": "USDCAD" },
+    "GBPUSD=X": { "typical_spread_pct": 0.00012, "max_spread_pct": 0.0004, "mt5_symbol": "GBPUSD" },
+    "USDJPY=X": { "typical_spread_pct": 0.0001, "max_spread_pct": 0.0003, "mt5_symbol": "USDJPY" },
+    "AUDUSD=X": { "typical_spread_pct": 0.00012, "max_spread_pct": 0.0004, "mt5_symbol": "AUDUSD" },
+    "QQQ": { "typical_spread_pct": 0.00015, "max_spread_pct": 0.00045, "mt5_symbol": "NAS100" },
+    "^NDX": { "typical_spread_pct": 0.0002, "max_spread_pct": 0.0005, "mt5_symbol": "NAS100" },
+    "SPY": { "typical_spread_pct": 0.00015, "max_spread_pct": 0.00045, "mt5_symbol": "US500" },
+    "^GSPC": { "typical_spread_pct": 0.0002, "max_spread_pct": 0.0005, "mt5_symbol": "US500" },
+    "BTC-USD": { "typical_spread_pct": 0.0008, "max_spread_pct": 0.002, "mt5_symbol": "BTCUSD" },
+    "ETH-USD": { "typical_spread_pct": 0.001, "max_spread_pct": 0.0025, "mt5_symbol": "ETHUSD" },
+    "SOL-USD": { "typical_spread_pct": 0.0012, "max_spread_pct": 0.003, "mt5_symbol": "SOLUSD" },
+    "GC=F": { "typical_spread_pct": 0.0002, "max_spread_pct": 0.0006, "mt5_symbol": "XAUUSD" },
+    "GLD": { "typical_spread_pct": 0.0002, "max_spread_pct": 0.00055, "mt5_symbol": "XAUUSD" },
+    "CL=F": { "typical_spread_pct": 0.0003, "max_spread_pct": 0.0008, "mt5_symbol": "USOIL" },
+    "AAPL": { "typical_spread_pct": 0.00025, "max_spread_pct": 0.0007, "mt5_symbol": "AAPL" },
+    "NVDA": { "typical_spread_pct": 0.0003, "max_spread_pct": 0.0009, "mt5_symbol": "NVDA" }
+  },
+  "live_overrides": {}
+}

@@ -1,0 +1,564 @@
+{
+  "best": {
+    "symbols": [
+      "SOL-USD",
+      "GLD",
+      "ETH-USD",
+      "SLV",
+      "QQQ",
+      "BTC-USD"
+    ],
+    "align": {
+      "15m": null,
+      "30m": null,
+      "1h": null
+    },
+    "combined_return_pct": 25.44,
+    "combined_end": 75262.1,
+    "total_trades": 500,
+    "bots": {
+      "15m": {
+        "total_trades": 0,
+        "final_equity": 20000.0,
+        "total_return_pct": 0.0
+      },
+      "30m": {
+        "total_trades": 0,
+        "final_equity": 20000.0,
+        "total_return_pct": 0.0
+      },
+      "1h": {
+        "initial_capital": 20000.0,
+        "final_equity": 35262.1,
+        "total_return_pct": 76.31,
+        "total_pnl": 15262.1,
+        "total_trades": 500,
+        "wins": 217,
+        "losses": 283,
+        "win_rate_pct": 43.4,
+        "avg_win": 363.26,
+        "avg_loss": -224.61,
+        "expectancy": 30.52,
+        "profit_factor": 1.24,
+        "total_costs": 14373.69,
+        "skipped_trades": 0,
+        "spread_skipped": 0,
+        "stop_loss_exits": 280,
+        "take_profit_exits": 216,
+        "long_trades": 271,
+        "short_trades": 229
+      }
+    }
+  },
+  "top10": [
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "BTC-USD"
+      ],
+      "align": {
+        "15m": null,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 25.44,
+      "combined_end": 75262.1,
+      "total_trades": 500,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 35262.1,
+          "total_return_pct": 76.31,
+          "total_pnl": 15262.1,
+          "total_trades": 500,
+          "wins": 217,
+          "losses": 283,
+          "win_rate_pct": 43.4,
+          "avg_win": 363.26,
+          "avg_loss": -224.61,
+          "expectancy": 30.52,
+          "profit_factor": 1.24,
+          "total_costs": 14373.69,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 280,
+          "take_profit_exits": 216,
+          "long_trades": 271,
+          "short_trades": 229
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "BTC-USD"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 25.44,
+      "combined_end": 75262.1,
+      "total_trades": 500,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 35262.1,
+          "total_return_pct": 76.31,
+          "total_pnl": 15262.1,
+          "total_trades": 500,
+          "wins": 217,
+          "losses": 283,
+          "win_rate_pct": 43.4,
+          "avg_win": 363.26,
+          "avg_loss": -224.61,
+          "expectancy": 30.52,
+          "profit_factor": 1.24,
+          "total_costs": 14373.69,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 280,
+          "take_profit_exits": 216,
+          "long_trades": 271,
+          "short_trades": 229
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "BTC-USD"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": 2,
+        "1h": null
+      },
+      "combined_return_pct": 25.44,
+      "combined_end": 75262.1,
+      "total_trades": 500,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 35262.1,
+          "total_return_pct": 76.31,
+          "total_pnl": 15262.1,
+          "total_trades": 500,
+          "wins": 217,
+          "losses": 283,
+          "win_rate_pct": 43.4,
+          "avg_win": 363.26,
+          "avg_loss": -224.61,
+          "expectancy": 30.52,
+          "profit_factor": 1.24,
+          "total_costs": 14373.69,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 280,
+          "take_profit_exits": 216,
+          "long_trades": 271,
+          "short_trades": 229
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "NVDA"
+      ],
+      "align": {
+        "15m": null,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 24.24,
+      "combined_end": 74543.88,
+      "total_trades": 393,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34543.88,
+          "total_return_pct": 72.72,
+          "total_pnl": 14543.88,
+          "total_trades": 393,
+          "wins": 173,
+          "losses": 220,
+          "win_rate_pct": 44.02,
+          "avg_win": 354.72,
+          "avg_loss": -212.83,
+          "expectancy": 37.01,
+          "profit_factor": 1.31,
+          "total_costs": 9416.77,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 218,
+          "take_profit_exits": 171,
+          "long_trades": 224,
+          "short_trades": 169
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "NVDA"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 24.24,
+      "combined_end": 74543.88,
+      "total_trades": 393,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34543.88,
+          "total_return_pct": 72.72,
+          "total_pnl": 14543.88,
+          "total_trades": 393,
+          "wins": 173,
+          "losses": 220,
+          "win_rate_pct": 44.02,
+          "avg_win": 354.72,
+          "avg_loss": -212.83,
+          "expectancy": 37.01,
+          "profit_factor": 1.31,
+          "total_costs": 9416.77,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 218,
+          "take_profit_exits": 171,
+          "long_trades": 224,
+          "short_trades": 169
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ",
+        "NVDA"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": 2,
+        "1h": null
+      },
+      "combined_return_pct": 24.24,
+      "combined_end": 74543.88,
+      "total_trades": 393,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34543.88,
+          "total_return_pct": 72.72,
+          "total_pnl": 14543.88,
+          "total_trades": 393,
+          "wins": 173,
+          "losses": 220,
+          "win_rate_pct": 44.02,
+          "avg_win": 354.72,
+          "avg_loss": -212.83,
+          "expectancy": 37.01,
+          "profit_factor": 1.31,
+          "total_costs": 9416.77,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 218,
+          "take_profit_exits": 171,
+          "long_trades": 224,
+          "short_trades": 169
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "BTC-USD",
+        "NVDA"
+      ],
+      "align": {
+        "15m": null,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 23.75,
+      "combined_end": 74247.89,
+      "total_trades": 495,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34247.89,
+          "total_return_pct": 71.24,
+          "total_pnl": 14247.89,
+          "total_trades": 495,
+          "wins": 214,
+          "losses": 281,
+          "win_rate_pct": 43.23,
+          "avg_win": 355.41,
+          "avg_loss": -219.97,
+          "expectancy": 28.78,
+          "profit_factor": 1.23,
+          "total_costs": 13749.47,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 279,
+          "take_profit_exits": 212,
+          "long_trades": 265,
+          "short_trades": 230
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "BTC-USD",
+        "NVDA"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 23.75,
+      "combined_end": 74247.89,
+      "total_trades": 495,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34247.89,
+          "total_return_pct": 71.24,
+          "total_pnl": 14247.89,
+          "total_trades": 495,
+          "wins": 214,
+          "losses": 281,
+          "win_rate_pct": 43.23,
+          "avg_win": 355.41,
+          "avg_loss": -219.97,
+          "expectancy": 28.78,
+          "profit_factor": 1.23,
+          "total_costs": 13749.47,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 279,
+          "take_profit_exits": 212,
+          "long_trades": 265,
+          "short_trades": 230
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "BTC-USD",
+        "NVDA"
+      ],
+      "align": {
+        "15m": 2,
+        "30m": 2,
+        "1h": null
+      },
+      "combined_return_pct": 23.75,
+      "combined_end": 74247.89,
+      "total_trades": 495,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34247.89,
+          "total_return_pct": 71.24,
+          "total_pnl": 14247.89,
+          "total_trades": 495,
+          "wins": 214,
+          "losses": 281,
+          "win_rate_pct": 43.23,
+          "avg_win": 355.41,
+          "avg_loss": -219.97,
+          "expectancy": 28.78,
+          "profit_factor": 1.23,
+          "total_costs": 13749.47,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 279,
+          "take_profit_exits": 212,
+          "long_trades": 265,
+          "short_trades": 230
+        }
+      }
+    },
+    {
+      "symbols": [
+        "SOL-USD",
+        "GLD",
+        "ETH-USD",
+        "SLV",
+        "QQQ"
+      ],
+      "align": {
+        "15m": null,
+        "30m": null,
+        "1h": null
+      },
+      "combined_return_pct": 23.57,
+      "combined_end": 74141.68,
+      "total_trades": 370,
+      "bots": {
+        "15m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "30m": {
+          "total_trades": 0,
+          "final_equity": 20000.0,
+          "total_return_pct": 0.0
+        },
+        "1h": {
+          "initial_capital": 20000.0,
+          "final_equity": 34141.68,
+          "total_return_pct": 70.71,
+          "total_pnl": 14141.68,
+          "total_trades": 370,
+          "wins": 164,
+          "losses": 206,
+          "win_rate_pct": 44.32,
+          "avg_win": 357.87,
+          "avg_loss": -216.26,
+          "expectancy": 38.22,
+          "profit_factor": 1.32,
+          "total_costs": 9279.75,
+          "skipped_trades": 0,
+          "spread_skipped": 0,
+          "stop_loss_exits": 204,
+          "take_profit_exits": 163,
+          "long_trades": 209,
+          "short_trades": 161
+        }
+      }
+    }
+  ]
+}

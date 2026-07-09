@@ -1,0 +1,108 @@
+{
+  "name": "oos_paper_forex",
+  "description": "Forex OOS winners (refined Donchian + ADX). HF search 2026-07-05 found no better replacements.",
+  "source": "research_results_forex_winners.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {
+    "1h": [
+      {
+        "symbol": "USDJPY=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 5.4,
+        "note": "PF 5.84  5 OOS trades",
+        "params": {
+          "donchian_entry": 48,
+          "donchian_exit": 8,
+          "reward_risk": 3.0,
+          "adx_trend_threshold": 25.0
+        }
+      },
+      {
+        "symbol": "USDCAD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 7.1,
+        "note": "PF 1.86  15 OOS trades",
+        "params": {
+          "donchian_entry": 40,
+          "donchian_exit": 8,
+          "reward_risk": 3.5,
+          "adx_trend_threshold": 25.0
+        }
+      },
+      {
+        "symbol": "AUDUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 1.4,
+        "note": "PF 1.48  6 OOS trades",
+        "params": {
+          "donchian_entry": 48,
+          "donchian_exit": 8,
+          "reward_risk": 3.0,
+          "adx_trend_threshold": 20.0
+        }
+      }
+    ],
+    "30m": [
+      {
+        "symbol": "AUDUSD=X",
+        "strategy": "donchian_bidirectional",
+        "oos_test_pct": 6.3,
+        "note": "PF 2.61  9 OOS trades",
+        "params": {
+          "donchian_entry": 36,
+          "donchian_exit": 8,
+          "reward_risk": 3.0,
+          "adx_trend_threshold": 25.0
+        }
+      }
+    ]
+  },
+  "pairs": [
+    {
+      "symbol": "USDJPY=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 48,
+        "donchian_exit": 8,
+        "reward_risk": 3.0,
+        "adx_trend_threshold": 25.0
+      }
+    },
+    {
+      "symbol": "AUDUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "30m",
+      "params": {
+        "donchian_entry": 36,
+        "donchian_exit": 8,
+        "reward_risk": 3.0,
+        "adx_trend_threshold": 25.0
+      }
+    },
+    {
+      "symbol": "USDCAD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 40,
+        "donchian_exit": 8,
+        "reward_risk": 3.5,
+        "adx_trend_threshold": 25.0
+      }
+    },
+    {
+      "symbol": "AUDUSD=X",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "params": {
+        "donchian_entry": 48,
+        "donchian_exit": 8,
+        "reward_risk": 3.0,
+        "adx_trend_threshold": 20.0
+      }
+    }
+  ]
+}

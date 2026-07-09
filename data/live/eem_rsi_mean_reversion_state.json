@@ -1,0 +1,8 @@
+{
+  "symbol": "EEM",
+  "strategy": "rsi_mean_reversion",
+  "equity": 10000.0,
+  "open_position": null,
+  "last_bar_time": "2026-07-02T15:42:57",
+  "trade_count": 0
+}

@@ -1,0 +1,52 @@
+{
+  "generated": "2026-07-06T13:59:31.356709",
+  "total_start": 60000.0,
+  "total_equity": 60000.0,
+  "rows": [
+    {
+      "timeframe": "15m",
+      "symbol": "XRP-USD",
+      "strategy": "triple_tf_confluence",
+      "equity": 20000.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "trades": 0
+    },
+    {
+      "timeframe": "15m",
+      "symbol": "ETH-USD",
+      "strategy": "donchian_bidirectional",
+      "equity": 20000.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "trades": 0
+    },
+    {
+      "timeframe": "30m",
+      "symbol": "BTC-USD",
+      "strategy": "donchian_bidirectional",
+      "equity": 20000.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "trades": 0
+    },
+    {
+      "timeframe": "1h",
+      "symbol": "XRP-USD",
+      "strategy": "macd_pullback",
+      "equity": 20000.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "trades": 0
+    },
+    {
+      "timeframe": "1h",
+      "symbol": "ETH-USD",
+      "strategy": "squeeze_bidirectional",
+      "equity": 20000.0,
+      "pnl": 0.0,
+      "return_pct": 0.0,
+      "trades": 0
+    }
+  ]
+}
