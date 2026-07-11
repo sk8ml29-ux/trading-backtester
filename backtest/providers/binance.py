@@ -19,6 +19,14 @@ BINANCE_SYMBOLS: dict[str, str] = {
     "ADA-USD": "ADAUSDT",
     "DOGE-USD": "DOGEUSDT",
     "LINK-USD": "LINKUSDT",
+    "AVAX-USD": "AVAXUSDT",
+    "BNB-USD": "BNBUSDT",
+    "MATIC-USD": "MATICUSDT",
+    "LTC-USD": "LTCUSDT",
+    "DOT-USD": "DOTUSDT",
+    "FIL-USD": "FILUSDT",
+    "ATOM-USD": "ATOMUSDT",
+    "NEAR-USD": "NEARUSDT",
 }
 
 INTERVAL_MS: dict[str, int] = {

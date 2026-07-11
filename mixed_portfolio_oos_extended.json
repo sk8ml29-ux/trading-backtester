@@ -1,0 +1,102 @@
+{
+  "name": "oos_extended_crypto",
+  "description": "Walk-forward OOS crypto (Binance). Ut\u00f6kad scan inkl. AVAX, BNB, MATIC, LTC, DOT, ATOM, NEAR + alla befintliga par.",
+  "source": "research_results_extended.json",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.0075,
+  "validation": "70/30 walk-forward, min 3 OOS trades, PF>=1.0",
+  "bots": {
+    "1h": [
+      {
+        "symbol": "NEAR-USD",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 27.9,
+        "note": "PF 1.79  58 OOS trades"
+      },
+      {
+        "symbol": "ATOM-USD",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 26.3,
+        "note": "PF 1.87  50 OOS trades"
+      },
+      {
+        "symbol": "BNB-USD",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 34.2,
+        "note": "PF 1.71  74 OOS trades"
+      },
+      {
+        "symbol": "XRP-USD",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 27.6,
+        "note": "PF 1.73  60 OOS trades"
+      },
+      {
+        "symbol": "ETH-USD",
+        "strategy": "squeeze_bidirectional",
+        "oos_test_pct": 22.6,
+        "note": "PF 1.53  65 OOS trades"
+      },
+      {
+        "symbol": "AVAX-USD",
+        "strategy": "macd_pullback",
+        "oos_test_pct": 7.1,
+        "note": "PF 1.19  52 OOS trades"
+      },
+      {
+        "symbol": "BTC-USD",
+        "strategy": "squeeze_bidirectional",
+        "oos_test_pct": 9.4,
+        "note": "PF 1.19  72 OOS trades"
+      },
+      {
+        "symbol": "SOL-USD",
+        "strategy": "squeeze_bidirectional",
+        "oos_test_pct": 5.7,
+        "note": "PF 1.19  45 OOS trades"
+      }
+    ]
+  },
+  "pairs": [
+    {
+      "symbol": "NEAR-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "ATOM-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "BNB-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "AVAX-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "BTC-USD",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h"
+    },
+    {
+      "symbol": "SOL-USD",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h"
+    }
+  ]
+}

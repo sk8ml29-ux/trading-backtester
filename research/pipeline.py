@@ -22,7 +22,11 @@ from strategies import STRATEGIES
 ROOT = Path(__file__).resolve().parent.parent
 
 # Focus where we have long intraday history + edge potential
-CRYPTO = ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "LINK-USD"]
+CRYPTO = [
+    "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "LINK-USD",
+    "AVAX-USD", "BNB-USD", "MATIC-USD", "LTC-USD", "DOT-USD",
+    "ATOM-USD", "NEAR-USD",
+]
 FOREX = ["EURUSD=X", "GBPUSD=X", "USDJPY=X", "AUDUSD=X", "USDCAD=X"]
 FOREX_EXTENDED = FOREX + ["EURGBP=X", "EURJPY=X", "NZDUSD=X", "USDCHF=X"]
 STOCKS = ["AAPL", "NVDA", "TSLA", "AMZN", "QQQ", "SPY"]
