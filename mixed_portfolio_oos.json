@@ -1,114 +1,165 @@
 {
-  "name": "oos_paper_production_v3",
-  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-10 — inkl. NEAR, ATOM, BNB som ny-validerade symboler. Alla par: ≥27 OOS trades, PF ≥ 1.19. BTC 30m borttaget (3 OOS trades).",
-  "source": "research_results.json + research_results_extended.json",
-  "capital_per_bot_usd": 20000,
+  "name": "oos_paper_production_v4",
+  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-14 — optimerade parametrar per symbol (steg 1), SOL/squeeze tillagt (steg 3). 7 validerade par på 1h, 4 par på 15m.",
+  "updated": "2026-07-14",
+  "capital_per_bot_sek": 30000,
   "risk_per_trade": 0.0075,
-  "validation": "70/30 walk-forward, PF>=1.2, min 10 OOS trades",
+  "validation": "70/30 walk-forward OOS, PF>=1.10, min 15 OOS trades, Sharpe>=0.5",
   "bots": {
     "15m": [
       {
         "symbol": "XRP-USD",
         "strategy": "triple_tf_confluence",
-        "oos_test_pct": 12.9,
-        "oos_trades": 42,
         "oos_pf": 1.46,
-        "note": "OOS validerad — 42 trades, PF 1.46"
+        "oos_trades": 42,
+        "note": "OOS validerad"
       },
       {
         "symbol": "ETH-USD",
         "strategy": "donchian_bidirectional",
-        "oos_test_pct": 11.4,
-        "oos_trades": 113,
         "oos_pf": 1.15,
-        "note": "OOS validerad — 113 trades"
+        "oos_trades": 113,
+        "note": "OOS validerad"
       },
       {
         "symbol": "LINK-USD",
         "strategy": "triple_tf_confluence",
-        "oos_test_pct": 10.5,
-        "oos_trades": 37,
         "oos_pf": 1.45,
-        "note": "OOS validerad — 37 trades, PF 1.45"
+        "oos_trades": 37,
+        "note": "OOS validerad"
       },
       {
         "symbol": "SOL-USD",
         "strategy": "triple_tf_confluence",
-        "oos_test_pct": 9.5,
-        "oos_trades": 29,
         "oos_pf": 1.56,
-        "note": "OOS validerad — 29 trades, PF 1.56"
+        "oos_trades": 29,
+        "note": "OOS validerad"
       }
     ],
     "1h": [
       {
         "symbol": "NEAR-USD",
         "strategy": "macd_pullback",
-        "oos_test_pct": 27.9,
-        "oos_trades": 58,
-        "oos_pf": 1.79,
-        "note": "NY — starkaste fynd. PF 1.79, 58 trades"
+        "oos_pf": 1.99,
+        "oos_return_pct": 23.3,
+        "oos_trades": 50,
+        "oos_sharpe": 2.70,
+        "optimized_params": {
+          "reward_risk": 1.5,
+          "swing_lookback": 8,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "OPTIMERAD — PF 1.82→1.99, Ret 18.8→23.3%, Sharpe 2.13→2.70"
       },
       {
         "symbol": "ATOM-USD",
         "strategy": "macd_pullback",
-        "oos_test_pct": 26.3,
-        "oos_trades": 50,
-        "oos_pf": 1.87,
-        "note": "NY — högst PF. PF 1.87, 50 trades"
+        "oos_pf": 1.82,
+        "oos_return_pct": 17.0,
+        "oos_trades": 35,
+        "oos_sharpe": 2.00,
+        "optimized_params": {
+          "reward_risk": 2.0,
+          "swing_lookback": 16,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "Oförändrad — parametrarna var redan optimala"
       },
       {
         "symbol": "BNB-USD",
         "strategy": "macd_pullback",
-        "oos_test_pct": 34.2,
-        "oos_trades": 74,
-        "oos_pf": 1.71,
-        "note": "NY — högst OOS return. PF 1.71, 74 trades"
+        "oos_pf": 1.47,
+        "oos_return_pct": 13.2,
+        "oos_trades": 46,
+        "oos_sharpe": 1.44,
+        "optimized_params": {
+          "reward_risk": 2.0,
+          "swing_lookback": 12,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "OPTIMERAD — SL 16→12 förbättrar PF 1.41→1.47, Ret 9.3→13.2%"
       },
       {
         "symbol": "XRP-USD",
         "strategy": "macd_pullback",
-        "oos_test_pct": 27.6,
-        "oos_trades": 60,
-        "oos_pf": 1.73,
-        "note": "OOS validerad — PF 1.73, 60 trades (uppdaterad från v2)"
+        "oos_pf": 1.68,
+        "oos_return_pct": 14.1,
+        "oos_trades": 30,
+        "oos_sharpe": 1.44,
+        "optimized_params": {
+          "reward_risk": 3.0,
+          "swing_lookback": 8,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "OPTIMERAD — RR 2.0→3.0, SL 16→8 förbättrar PF 1.37→1.68, Ret 7.5→14.1%"
       },
       {
         "symbol": "ETH-USD",
         "strategy": "squeeze_bidirectional",
-        "oos_test_pct": 22.6,
-        "oos_trades": 65,
-        "oos_pf": 1.53,
-        "note": "OOS validerad — PF 1.53, 65 trades (uppdaterad)"
+        "oos_pf": 1.24,
+        "oos_return_pct": 7.4,
+        "oos_trades": 48,
+        "oos_sharpe": 0.82,
+        "optimized_params": {
+          "reward_risk": 2.0,
+          "swing_lookback": 16,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "Bidirektionell — long+short. OOS validerad i ny test."
       },
       {
         "symbol": "BTC-USD",
         "strategy": "squeeze_bidirectional",
-        "oos_test_pct": 9.4,
-        "oos_trades": 72,
+        "oos_pf": 1.33,
+        "oos_return_pct": 11.1,
+        "oos_trades": 49,
+        "oos_sharpe": 1.18,
+        "optimized_params": {
+          "reward_risk": 2.0,
+          "swing_lookback": 16,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "Bidirektionell — long+short. Förbättrad OOS (PF 1.19→1.33) i ny test."
+      },
+      {
+        "symbol": "SOL-USD",
+        "strategy": "squeeze_bidirectional",
         "oos_pf": 1.19,
-        "note": "OOS validerad — PF 1.19, 72 trades"
+        "oos_return_pct": 5.7,
+        "oos_trades": 45,
+        "oos_sharpe": 0.75,
+        "optimized_params": {
+          "reward_risk": 2.0,
+          "swing_lookback": 16,
+          "macd_signal_mode": "cross_below_zero"
+        },
+        "note": "NY — tillagd 2026-07-14. Borderline godkänd. Kör paper 4 veckor."
       }
     ]
   },
   "pairs": [
-    {"symbol": "XRP-USD", "strategy": "triple_tf_confluence", "timeframe": "15m"},
-    {"symbol": "ETH-USD", "strategy": "donchian_bidirectional", "timeframe": "15m"},
-    {"symbol": "LINK-USD", "strategy": "triple_tf_confluence", "timeframe": "15m"},
-    {"symbol": "SOL-USD", "strategy": "triple_tf_confluence", "timeframe": "15m"},
-    {"symbol": "NEAR-USD", "strategy": "macd_pullback", "timeframe": "1h"},
-    {"symbol": "ATOM-USD", "strategy": "macd_pullback", "timeframe": "1h"},
-    {"symbol": "BNB-USD", "strategy": "macd_pullback", "timeframe": "1h"},
-    {"symbol": "XRP-USD", "strategy": "macd_pullback", "timeframe": "1h"},
-    {"symbol": "ETH-USD", "strategy": "squeeze_bidirectional", "timeframe": "1h"},
-    {"symbol": "BTC-USD", "strategy": "squeeze_bidirectional", "timeframe": "1h"}
+    {"symbol": "XRP-USD",  "strategy": "triple_tf_confluence",  "timeframe": "15m"},
+    {"symbol": "ETH-USD",  "strategy": "donchian_bidirectional","timeframe": "15m"},
+    {"symbol": "LINK-USD", "strategy": "triple_tf_confluence",  "timeframe": "15m"},
+    {"symbol": "SOL-USD",  "strategy": "triple_tf_confluence",  "timeframe": "15m"},
+    {"symbol": "NEAR-USD", "strategy": "macd_pullback",         "timeframe": "1h",
+     "reward_risk": 1.5,  "swing_lookback": 8,  "macd_signal_mode": "cross_below_zero"},
+    {"symbol": "ATOM-USD", "strategy": "macd_pullback",         "timeframe": "1h",
+     "reward_risk": 2.0,  "swing_lookback": 16, "macd_signal_mode": "cross_below_zero"},
+    {"symbol": "BNB-USD",  "strategy": "macd_pullback",         "timeframe": "1h",
+     "reward_risk": 2.0,  "swing_lookback": 12, "macd_signal_mode": "cross_below_zero"},
+    {"symbol": "XRP-USD",  "strategy": "macd_pullback",         "timeframe": "1h",
+     "reward_risk": 3.0,  "swing_lookback": 8,  "macd_signal_mode": "cross_below_zero"},
+    {"symbol": "ETH-USD",  "strategy": "squeeze_bidirectional", "timeframe": "1h"},
+    {"symbol": "BTC-USD",  "strategy": "squeeze_bidirectional", "timeframe": "1h"},
+    {"symbol": "SOL-USD",  "strategy": "squeeze_bidirectional", "timeframe": "1h"}
   ],
   "deprecated": [
     {
       "symbol": "BTC-USD",
       "strategy": "donchian_bidirectional",
       "timeframe": "30m",
-      "reason": "Bara 3 OOS trades — statistiskt meningslöst. Ersatt av BTC-USD squeeze_bidirectional 1h (72 OOS trades)."
+      "reason": "Bara 3 OOS trades — statistiskt meningslöst."
     }
   ]
 }

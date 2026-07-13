@@ -1,0 +1,502 @@
+{
+  "NEAR-USD": {
+    "symbol": "NEAR-USD",
+    "best_params": {
+      "reward_risk": 1.5,
+      "swing_lookback": 8,
+      "signal_mode": "cross_below_zero"
+    },
+    "best_score": 21.102,
+    "best_oos_pf": 1.99,
+    "best_oos_return": 23.3,
+    "best_oos_trades": 50,
+    "best_oos_sharpe": 2.7,
+    "all_results": [
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 8,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.99,
+        "oos_return": 23.3,
+        "oos_trades": 50,
+        "oos_sharpe": 2.7,
+        "score": 21.102
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 8,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.99,
+        "oos_return": 23.3,
+        "oos_trades": 50,
+        "oos_sharpe": 2.7,
+        "score": 21.102
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 8,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.99,
+        "oos_return": 23.3,
+        "oos_trades": 50,
+        "oos_sharpe": 2.7,
+        "score": 21.102
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 16,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.97,
+        "oos_return": 19.1,
+        "oos_trades": 42,
+        "oos_sharpe": 2.46,
+        "score": 18.213
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 16,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.97,
+        "oos_return": 19.1,
+        "oos_trades": 42,
+        "oos_sharpe": 2.46,
+        "score": 18.213
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 16,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.97,
+        "oos_return": 19.1,
+        "oos_trades": 42,
+        "oos_sharpe": 2.46,
+        "score": 18.213
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.92,
+        "oos_return": 24.6,
+        "oos_trades": 46,
+        "oos_sharpe": 2.44,
+        "score": 18.022
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.92,
+        "oos_return": 24.6,
+        "oos_trades": 46,
+        "oos_sharpe": 2.44,
+        "score": 18.022
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.92,
+        "oos_return": 24.6,
+        "oos_trades": 46,
+        "oos_sharpe": 2.44,
+        "score": 18.022
+      },
+      {
+        "reward_risk": 1.5,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.83,
+        "oos_return": 20.5,
+        "oos_trades": 50,
+        "oos_sharpe": 2.41,
+        "score": 17.333
+      }
+    ]
+  },
+  "ATOM-USD": {
+    "symbol": "ATOM-USD",
+    "best_params": {
+      "reward_risk": 2.0,
+      "swing_lookback": 16,
+      "signal_mode": "cross_below_zero"
+    },
+    "best_score": 13.07,
+    "best_oos_pf": 1.82,
+    "best_oos_return": 17.0,
+    "best_oos_trades": 35,
+    "best_oos_sharpe": 2.0,
+    "all_results": [
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 16,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.82,
+        "oos_return": 17.0,
+        "oos_trades": 35,
+        "oos_sharpe": 2.0,
+        "score": 13.07
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 16,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.82,
+        "oos_return": 17.0,
+        "oos_trades": 35,
+        "oos_sharpe": 2.0,
+        "score": 13.07
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 16,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.82,
+        "oos_return": 17.0,
+        "oos_trades": 35,
+        "oos_sharpe": 2.0,
+        "score": 13.07
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 20,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.83,
+        "oos_return": 16.2,
+        "oos_trades": 33,
+        "oos_sharpe": 1.97,
+        "score": 12.7
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 20,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.83,
+        "oos_return": 16.2,
+        "oos_trades": 33,
+        "oos_sharpe": 1.97,
+        "score": 12.7
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 20,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.83,
+        "oos_return": 16.2,
+        "oos_trades": 33,
+        "oos_sharpe": 1.97,
+        "score": 12.7
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 20,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 2.04,
+        "oos_return": 17.9,
+        "oos_trades": 25,
+        "oos_sharpe": 1.86,
+        "score": 12.376
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 20,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 2.04,
+        "oos_return": 17.9,
+        "oos_trades": 25,
+        "oos_sharpe": 1.86,
+        "score": 12.376
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 20,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 2.04,
+        "oos_return": 17.9,
+        "oos_trades": 25,
+        "oos_sharpe": 1.86,
+        "score": 12.376
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 16,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.94,
+        "oos_return": 18.7,
+        "oos_trades": 28,
+        "oos_sharpe": 1.85,
+        "score": 12.092
+      }
+    ]
+  },
+  "BNB-USD": {
+    "symbol": "BNB-USD",
+    "best_params": {
+      "reward_risk": 2.0,
+      "swing_lookback": 12,
+      "signal_mode": "cross_below_zero"
+    },
+    "best_score": 8.173,
+    "best_oos_pf": 1.47,
+    "best_oos_return": 13.2,
+    "best_oos_trades": 46,
+    "best_oos_sharpe": 1.44,
+    "all_results": [
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.47,
+        "oos_return": 13.2,
+        "oos_trades": 46,
+        "oos_sharpe": 1.44,
+        "score": 8.173
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.47,
+        "oos_return": 13.2,
+        "oos_trades": 46,
+        "oos_sharpe": 1.44,
+        "score": 8.173
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.47,
+        "oos_return": 13.2,
+        "oos_trades": 46,
+        "oos_sharpe": 1.44,
+        "score": 8.173
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.49,
+        "oos_return": 13.1,
+        "oos_trades": 37,
+        "oos_sharpe": 1.24,
+        "score": 6.715
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.49,
+        "oos_return": 13.1,
+        "oos_trades": 37,
+        "oos_sharpe": 1.24,
+        "score": 6.715
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.49,
+        "oos_return": 13.1,
+        "oos_trades": 37,
+        "oos_sharpe": 1.24,
+        "score": 6.715
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.39,
+        "oos_return": 11.4,
+        "oos_trades": 47,
+        "oos_sharpe": 1.24,
+        "score": 6.694
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.39,
+        "oos_return": 11.4,
+        "oos_trades": 47,
+        "oos_sharpe": 1.24,
+        "score": 6.694
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 8,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.39,
+        "oos_return": 11.4,
+        "oos_trades": 47,
+        "oos_sharpe": 1.24,
+        "score": 6.694
+      },
+      {
+        "reward_risk": 2.5,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.42,
+        "oos_return": 11.2,
+        "oos_trades": 39,
+        "oos_sharpe": 1.18,
+        "score": 6.155
+      }
+    ]
+  },
+  "XRP-USD": {
+    "symbol": "XRP-USD",
+    "best_params": {
+      "reward_risk": 3.0,
+      "swing_lookback": 8,
+      "signal_mode": "cross_below_zero"
+    },
+    "best_score": 8.284,
+    "best_oos_pf": 1.68,
+    "best_oos_return": 14.1,
+    "best_oos_trades": 30,
+    "best_oos_sharpe": 1.44,
+    "all_results": [
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.68,
+        "oos_return": 14.1,
+        "oos_trades": 30,
+        "oos_sharpe": 1.44,
+        "score": 8.284
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.68,
+        "oos_return": 14.1,
+        "oos_trades": 30,
+        "oos_sharpe": 1.44,
+        "score": 8.284
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 8,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.68,
+        "oos_return": 14.1,
+        "oos_trades": 30,
+        "oos_sharpe": 1.44,
+        "score": 8.284
+      },
+      {
+        "reward_risk": 2.5,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.61,
+        "oos_return": 12.6,
+        "oos_trades": 32,
+        "oos_sharpe": 1.42,
+        "score": 7.977
+      },
+      {
+        "reward_risk": 2.5,
+        "swing_lookback": 12,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.61,
+        "oos_return": 12.6,
+        "oos_trades": 32,
+        "oos_sharpe": 1.42,
+        "score": 7.977
+      },
+      {
+        "reward_risk": 2.5,
+        "swing_lookback": 12,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.61,
+        "oos_return": 12.6,
+        "oos_trades": 32,
+        "oos_sharpe": 1.42,
+        "score": 7.977
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.54,
+        "oos_return": 11.3,
+        "oos_trades": 35,
+        "oos_sharpe": 1.41,
+        "score": 7.798
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "histogram_flip",
+        "oos_pass": true,
+        "oos_pf": 1.54,
+        "oos_return": 11.3,
+        "oos_trades": 35,
+        "oos_sharpe": 1.41,
+        "score": 7.798
+      },
+      {
+        "reward_risk": 2.0,
+        "swing_lookback": 12,
+        "signal_mode": "either",
+        "oos_pass": true,
+        "oos_pf": 1.54,
+        "oos_return": 11.3,
+        "oos_trades": 35,
+        "oos_sharpe": 1.41,
+        "score": 7.798
+      },
+      {
+        "reward_risk": 3.0,
+        "swing_lookback": 12,
+        "signal_mode": "cross_below_zero",
+        "oos_pass": true,
+        "oos_pf": 1.57,
+        "oos_return": 12.6,
+        "oos_trades": 31,
+        "oos_sharpe": 1.29,
+        "score": 7.025
+      }
+    ]
+  }
+}

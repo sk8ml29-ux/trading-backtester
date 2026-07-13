@@ -102,18 +102,47 @@ def scalp_portfolio_pairs() -> list[tuple[str, str]]:
 
 def oos_portfolio_pairs(timeframe: str = "15m") -> list[tuple[str, str]]:
     """Walk-forward validated crypto pairs for one bot timeframe."""
+    return [(e["symbol"], e["strategy"]) for e in oos_portfolio_entries(timeframe)]
+
+
+def oos_portfolio_entries(timeframe: str = "15m") -> list[dict]:
+    """
+    OOS-validerade par med optimerade parametrar per symbol.
+    Returnerar lista av dicts med symbol, strategy och params.
+    """
     path = ROOT / "mixed_portfolio_oos.json"
     if not path.exists():
         return []
     data = json.loads(path.read_text(encoding="utf-8"))
-    bots = data.get("bots", {})
-    if timeframe in bots:
-        return [(p["symbol"], p["strategy"]) for p in bots[timeframe]]
-    return [
-        (p["symbol"], p["strategy"])
-        for p in data.get("pairs", [])
-        if p.get("timeframe") == timeframe
-    ]
+
+    # Försök hitta par i "pairs"-listan filtrerat på timeframe
+    raw_pairs = [p for p in data.get("pairs", []) if p.get("timeframe") == timeframe]
+
+    # Fallback: hämta från bots-sektionen
+    if not raw_pairs:
+        raw_pairs = data.get("bots", {}).get(timeframe, [])
+
+    entries = []
+    for p in raw_pairs:
+        # Extrahera optimerade parametrar direkt från par-objektet
+        PARAM_KEYS = ("reward_risk", "swing_lookback", "macd_signal_mode",
+                      "squeeze_bb_period", "squeeze_width_pct_max")
+        params = {k: p[k] for k in PARAM_KEYS if k in p}
+
+        # Slå ihop med eventuell "optimized_params"-sektion från bots
+        bots_entry = next(
+            (b for b in data.get("bots", {}).get(timeframe, [])
+             if b.get("symbol") == p.get("symbol") and b.get("strategy") == p.get("strategy")),
+            {},
+        )
+        params.update(bots_entry.get("optimized_params", {}))
+
+        entries.append({
+            "symbol":   p["symbol"],
+            "strategy": p["strategy"],
+            "params":   params,
+        })
+    return entries
 
 
 def forex_oos_portfolio_path() -> Path:

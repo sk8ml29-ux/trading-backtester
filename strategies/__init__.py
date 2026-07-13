@@ -30,6 +30,8 @@ from strategies.forex_mtf_breakout import ForexMtfBreakoutStrategy
 from strategies.forex_atr_vol_breakout import ForexAtrVolBreakoutStrategy
 from strategies.triple_tf_confluence import TripleTfConfluenceStrategy
 from strategies.velocity_rejection import VelocityRejectionScalpStrategy
+from strategies.funding_confluence import FundingConfluenceStrategy
+from strategies.macd_bidirectional import MacdBidirectionalStrategy
 
 STRATEGIES: dict[str, type[Strategy]] = {
     "macd_pullback": MacdPullbackStrategy,
@@ -62,5 +64,7 @@ STRATEGIES: dict[str, type[Strategy]] = {
     "forex_smart_donchian": ForexSmartDonchianStrategy,
     "forex_mtf_breakout": ForexMtfBreakoutStrategy,
     "forex_atr_vol_breakout": ForexAtrVolBreakoutStrategy,
+    "funding_confluence": FundingConfluenceStrategy,
+    "macd_bidirectional": MacdBidirectionalStrategy,
 }
 __all__ = ["Signal", "Strategy", "STRATEGIES"]

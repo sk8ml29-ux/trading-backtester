@@ -14,6 +14,7 @@ from backtest.optimized_loader import (
     forex_oos_portfolio_pairs,
     mixed_portfolio_pairs,
     oos_portfolio_pairs,
+    oos_portfolio_entries,
     profitable_universe_pairs,
     triple_portfolio_pairs,
     scalp_portfolio_pairs,
@@ -73,8 +74,8 @@ def resolve_portfolio_pairs(args: argparse.Namespace) -> tuple[list, str]:
         entries = forex_oos_portfolio_entries(args.timeframe)
         return entries, f"OOS forex [{args.timeframe}]"
     if args.oos:
-        pairs = oos_portfolio_pairs(args.timeframe)
-        return pairs, f"OOS crypto [{args.timeframe}]"
+        entries = oos_portfolio_entries(args.timeframe)
+        return entries, f"OOS crypto [{args.timeframe}]"
     if args.scalp:
         return scalp_portfolio_pairs(), f"VRS scalp [{args.timeframe}]"
     if args.triple:
