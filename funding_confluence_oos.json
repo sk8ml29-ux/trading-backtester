@@ -1,0 +1,160 @@
+{
+  "strategy": "funding_confluence",
+  "timeframe": "1h",
+  "symbols": [
+    "BTC-USD",
+    "ETH-USD",
+    "XRP-USD",
+    "NEAR-USD",
+    "ATOM-USD",
+    "BNB-USD"
+  ],
+  "frc_results": [
+    {
+      "symbol": "BTC-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": false,
+      "oos_pf": 0.54,
+      "oos_return": -11.8,
+      "oos_trades": 32,
+      "oos_winrate": 28.1,
+      "oos_sharpe": -1.89,
+      "oos_mdd": -13.2,
+      "split_date": "2025-10-03 08:00:00"
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": false,
+      "oos_pf": 0.5,
+      "oos_return": -15.9,
+      "oos_trades": 41,
+      "oos_winrate": 24.4,
+      "oos_sharpe": -2.36,
+      "oos_mdd": -17.4,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": false,
+      "oos_pf": 0.94,
+      "oos_return": -1.1,
+      "oos_trades": 27,
+      "oos_winrate": 37.0,
+      "oos_sharpe": -0.17,
+      "oos_mdd": -8.9,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "NEAR-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": true,
+      "oos_pf": 1.43,
+      "oos_return": 9.5,
+      "oos_trades": 36,
+      "oos_winrate": 44.4,
+      "oos_sharpe": 1.18,
+      "oos_mdd": -4.2,
+      "split_date": "2025-10-06 16:00:00"
+    },
+    {
+      "symbol": "ATOM-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": true,
+      "oos_pf": 1.5,
+      "oos_return": 7.7,
+      "oos_trades": 26,
+      "oos_winrate": 46.1,
+      "oos_sharpe": 1.14,
+      "oos_mdd": -3.2,
+      "split_date": "2025-10-06 16:00:00"
+    },
+    {
+      "symbol": "BNB-USD",
+      "strategy": "funding_confluence",
+      "oos_pass": false,
+      "oos_pf": 0.84,
+      "oos_return": -4.3,
+      "oos_trades": 37,
+      "oos_winrate": 32.4,
+      "oos_sharpe": -0.58,
+      "oos_mdd": -11.3,
+      "split_date": "2025-10-06 16:00:00"
+    }
+  ],
+  "baseline_results": [
+    {
+      "symbol": "BTC-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": false,
+      "oos_pf": 0.93,
+      "oos_return": -1.5,
+      "oos_trades": 30,
+      "oos_winrate": 40.0,
+      "oos_sharpe": -0.22,
+      "oos_mdd": -7.2,
+      "split_date": "2025-10-03 08:00:00"
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": false,
+      "oos_pf": 0.82,
+      "oos_return": -4.9,
+      "oos_trades": 38,
+      "oos_winrate": 34.2,
+      "oos_sharpe": -0.67,
+      "oos_mdd": -9.5,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": true,
+      "oos_pf": 1.37,
+      "oos_return": 7.5,
+      "oos_trades": 33,
+      "oos_winrate": 45.5,
+      "oos_sharpe": 1.0,
+      "oos_mdd": -4.4,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "NEAR-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": true,
+      "oos_pf": 1.89,
+      "oos_return": 18.8,
+      "oos_trades": 37,
+      "oos_winrate": 51.4,
+      "oos_sharpe": 2.13,
+      "oos_mdd": -4.4,
+      "split_date": "2025-10-06 16:00:00"
+    },
+    {
+      "symbol": "ATOM-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": true,
+      "oos_pf": 1.82,
+      "oos_return": 17.0,
+      "oos_trades": 35,
+      "oos_winrate": 51.4,
+      "oos_sharpe": 2.0,
+      "oos_mdd": -4.2,
+      "split_date": "2025-10-06 16:00:00"
+    },
+    {
+      "symbol": "BNB-USD",
+      "strategy": "macd_pullback",
+      "oos_pass": true,
+      "oos_pf": 1.41,
+      "oos_return": 9.3,
+      "oos_trades": 37,
+      "oos_winrate": 46.0,
+      "oos_sharpe": 1.14,
+      "oos_mdd": -4.4,
+      "split_date": "2025-10-06 16:00:00"
+    }
+  ]
+}

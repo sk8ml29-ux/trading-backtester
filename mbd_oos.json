@@ -1,0 +1,103 @@
+{
+  "strategy": "macd_bidirectional",
+  "mbd_results": [
+    {
+      "symbol": "BTC-USD",
+      "strategy": "macd_bidirectional",
+      "oos_pass": false,
+      "oos_pf": 0.71,
+      "oos_return": -18.8,
+      "oos_trades": 88,
+      "oos_winrate": 33.0,
+      "oos_sharpe": -1.84,
+      "oos_mdd": -22.2,
+      "split_date": "2025-10-03 08:00:00"
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "macd_bidirectional",
+      "oos_pass": false,
+      "oos_pf": 0.67,
+      "oos_return": -22.5,
+      "oos_trades": 97,
+      "oos_winrate": 29.9,
+      "oos_sharpe": -2.17,
+      "oos_mdd": -26.0,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "SOL-USD",
+      "strategy": "macd_bidirectional",
+      "oos_pass": false,
+      "oos_pf": 0.8,
+      "oos_return": -11.6,
+      "oos_trades": 80,
+      "oos_winrate": 33.8,
+      "oos_sharpe": -1.29,
+      "oos_mdd": -17.9,
+      "split_date": "2025-11-27 00:00:00"
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "macd_bidirectional",
+      "oos_pass": false,
+      "oos_pf": 1.06,
+      "oos_return": 4.1,
+      "oos_trades": 102,
+      "oos_winrate": 39.2,
+      "oos_sharpe": 0.32,
+      "oos_mdd": -12.6,
+      "split_date": "2025-10-04 06:00:00"
+    }
+  ],
+  "baseline_results": [
+    {
+      "symbol": "BTC-USD",
+      "strategy": "squeeze_bidirectional",
+      "oos_pass": true,
+      "oos_pf": 1.33,
+      "oos_return": 11.1,
+      "oos_trades": 49,
+      "oos_winrate": 46.9,
+      "oos_sharpe": 1.18,
+      "oos_mdd": -4.9,
+      "split_date": "2025-10-03 08:00:00"
+    },
+    {
+      "symbol": "ETH-USD",
+      "strategy": "squeeze_bidirectional",
+      "oos_pass": true,
+      "oos_pf": 1.24,
+      "oos_return": 7.4,
+      "oos_trades": 48,
+      "oos_winrate": 43.8,
+      "oos_sharpe": 0.82,
+      "oos_mdd": -10.5,
+      "split_date": "2025-10-04 06:00:00"
+    },
+    {
+      "symbol": "SOL-USD",
+      "strategy": "squeeze_bidirectional",
+      "oos_pass": true,
+      "oos_pf": 1.19,
+      "oos_return": 5.7,
+      "oos_trades": 45,
+      "oos_winrate": 42.2,
+      "oos_sharpe": 0.75,
+      "oos_mdd": -6.5,
+      "split_date": "2025-11-27 00:00:00"
+    },
+    {
+      "symbol": "XRP-USD",
+      "strategy": "squeeze_bidirectional",
+      "oos_pass": true,
+      "oos_pf": 1.17,
+      "oos_return": 5.6,
+      "oos_trades": 49,
+      "oos_winrate": 40.8,
+      "oos_sharpe": 0.62,
+      "oos_mdd": -8.2,
+      "split_date": "2025-10-04 06:00:00"
+    }
+  ]
+}
