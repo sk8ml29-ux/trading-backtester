@@ -53,13 +53,6 @@ class LiveRunner:
                 self.config.symbol, entry_tf, refresh=False
             )
             regime_df = load_forex_regime(self.config.symbol)
-        elif entry_tf == regime_tf:
-            return fetch_ohlcv(
-                self.config.symbol,
-                timeframe=entry_tf,
-                start="2015-01-01",
-                refresh=refresh,
-            )
         else:
             entry_df = fetch_ohlcv(
                 self.config.symbol,
@@ -67,15 +60,15 @@ class LiveRunner:
                 start="2015-01-01",
                 refresh=refresh,
             )
-            regime_df = fetch_ohlcv(
-                self.config.symbol,
-                timeframe=regime_tf,
-                start="2015-01-01",
-                refresh=refresh,
-            )
-
-        if entry_tf == regime_tf and not is_forex_symbol(self.config.symbol):
-            return entry_df
+            if entry_tf == regime_tf:
+                regime_df = entry_df
+            else:
+                regime_df = fetch_ohlcv(
+                    self.config.symbol,
+                    timeframe=regime_tf,
+                    start="2015-01-01",
+                    refresh=refresh,
+                )
 
         entry_frame = prepare_entry_frame(entry_df, cfg)
         return apply_regime_to_entry(entry_frame, regime_df, cfg)
