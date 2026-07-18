@@ -167,6 +167,19 @@ def forex_oos_portfolio_pairs(timeframe: str) -> list[tuple[str, str]]:
     return [(p["symbol"], p["strategy"]) for p in forex_oos_portfolio_entries(timeframe)]
 
 
+def stocks_oos_portfolio_path() -> Path:
+    return ROOT / "mixed_portfolio_oos_stocks.json"
+
+
+def stocks_oos_portfolio_entries() -> list[dict]:
+    """1d stocks/commodities OOS pairs."""
+    path = stocks_oos_portfolio_path()
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data.get("pairs", [])
+
+
 def apply_params_to_config(config: BacktestConfig | LiveConfig, params: dict) -> None:
     for key, value in params.items():
         if hasattr(config, key):

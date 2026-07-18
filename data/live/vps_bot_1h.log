@@ -15,3 +15,11 @@
 [2026-07-06 14:01:36] 2026-07-06T12:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> hold
 [2026-07-06 14:07:37] 2026-07-06T12:00:00 XRP-USD/macd_pullback equity=20000.00 trades=0 -> skip
 [2026-07-06 14:08:48] 2026-07-06T12:00:00 ETH-USD/squeeze_bidirectional equity=20000.00 trades=0 -> skip
+[2026-07-17 07:39:13] START portfolio OOS crypto [1h] pairs=7
+[2026-07-17 07:39:13] Error NEAR-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error ATOM-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error BNB-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error XRP-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error ETH-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error BTC-USD: HTTP Error 451: 
+[2026-07-17 07:39:13] Error SOL-USD: HTTP Error 451: 

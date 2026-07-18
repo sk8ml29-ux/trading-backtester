@@ -1,0 +1,362 @@
+{
+  "scanned_at": "2026-07-17",
+  "timeframe": "1h",
+  "strong": [
+    {
+      "symbol": "AAPL",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": true,
+      "oos_pf": 1.5,
+      "oos_return": 6.1,
+      "oos_trades": 20,
+      "oos_sharpe": 1.0,
+      "split_date": "2025-08-18 18:30:00"
+    }
+  ],
+  "good": [
+    {
+      "symbol": "CL=F",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": true,
+      "oos_pf": 1.31,
+      "oos_return": 3.7,
+      "oos_trades": 19,
+      "oos_sharpe": 0.68,
+      "split_date": "2025-10-14 08:00:00"
+    }
+  ],
+  "all": [
+    {
+      "symbol": "SLV",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 2.61,
+      "oos_return": 8.9,
+      "oos_trades": 12,
+      "oos_sharpe": 1.75,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "SLV",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 3.3,
+      "oos_return": 7.3,
+      "oos_trades": 9,
+      "oos_sharpe": 1.73,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "SLV",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 4.31,
+      "oos_return": 15.7,
+      "oos_trades": 14,
+      "oos_sharpe": 2.67,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "GC=F",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.28,
+      "oos_return": 2.1,
+      "oos_trades": 12,
+      "oos_sharpe": 0.55,
+      "split_date": "2025-11-19 11:00:00"
+    },
+    {
+      "symbol": "GC=F",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.78,
+      "oos_return": -5.8,
+      "oos_trades": 33,
+      "oos_sharpe": -0.95,
+      "split_date": "2025-11-19 11:00:00"
+    },
+    {
+      "symbol": "HG=F",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.78,
+      "oos_return": 6.0,
+      "oos_trades": 14,
+      "oos_sharpe": 1.23,
+      "split_date": "2025-10-10 05:00:00"
+    },
+    {
+      "symbol": "AMD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.3,
+      "oos_return": 1.4,
+      "oos_trades": 8,
+      "oos_sharpe": 0.4,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "CL=F",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": true,
+      "oos_pf": 1.31,
+      "oos_return": 3.7,
+      "oos_trades": 19,
+      "oos_sharpe": 0.68,
+      "split_date": "2025-10-14 08:00:00"
+    },
+    {
+      "symbol": "AMD",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": Infinity,
+      "oos_return": 6.4,
+      "oos_trades": 4,
+      "oos_sharpe": 2.1,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "NVDA",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.38,
+      "oos_return": -5.7,
+      "oos_trades": 11,
+      "oos_sharpe": -1.65,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "AAPL",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.67,
+      "oos_return": 3.9,
+      "oos_trades": 10,
+      "oos_sharpe": 0.89,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "AAPL",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": true,
+      "oos_pf": 1.5,
+      "oos_return": 6.1,
+      "oos_trades": 20,
+      "oos_sharpe": 1.0,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "MSFT",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.64,
+      "oos_return": -2.0,
+      "oos_trades": 7,
+      "oos_sharpe": -0.65,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "MSFT",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.14,
+      "oos_return": 0.8,
+      "oos_trades": 9,
+      "oos_sharpe": 0.22,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "SLV",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.25,
+      "oos_return": 2.3,
+      "oos_trades": 15,
+      "oos_sharpe": 0.46,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.77,
+      "oos_return": 5.1,
+      "oos_trades": 12,
+      "oos_sharpe": 1.08,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "NVDA",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.39,
+      "oos_return": -9.2,
+      "oos_trades": 19,
+      "oos_sharpe": -2.08,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "AMD",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.03,
+      "oos_return": 0.2,
+      "oos_trades": 9,
+      "oos_sharpe": 0.05,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "SPY",
+      "strategy": "adaptive_trend_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.56,
+      "oos_return": -8.7,
+      "oos_trades": 24,
+      "oos_sharpe": -1.5,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "SPY",
+      "strategy": "donchian_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.78,
+      "oos_return": -0.7,
+      "oos_trades": 5,
+      "oos_sharpe": -0.3,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "AMZN",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.51,
+      "oos_return": -3.6,
+      "oos_trades": 9,
+      "oos_sharpe": -1.08,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "GOOGL",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.79,
+      "oos_return": 4.3,
+      "oos_trades": 10,
+      "oos_sharpe": 1.0,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "DOGE-USD",
+      "strategy": "donchian_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.11,
+      "oos_return": 0.6,
+      "oos_trades": 8,
+      "oos_sharpe": 0.11,
+      "split_date": "2024-11-07 21:00:00"
+    },
+    {
+      "symbol": "DOGE-USD",
+      "strategy": "macd_pullback",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 1.02,
+      "oos_return": 1.5,
+      "oos_trades": 95,
+      "oos_sharpe": 0.08,
+      "split_date": "2024-11-07 21:00:00"
+    },
+    {
+      "symbol": "SPY",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.46,
+      "oos_return": -4.3,
+      "oos_trades": 9,
+      "oos_sharpe": -1.23,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "AMZN",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.39,
+      "oos_return": -5.7,
+      "oos_trades": 11,
+      "oos_sharpe": -1.6,
+      "split_date": "2025-08-18 18:30:00"
+    },
+    {
+      "symbol": "GC=F",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.85,
+      "oos_return": -3.2,
+      "oos_trades": 29,
+      "oos_sharpe": -0.55,
+      "split_date": "2025-11-19 11:00:00"
+    },
+    {
+      "symbol": "GC=F",
+      "strategy": "squeeze_breakout",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.96,
+      "oos_return": -0.5,
+      "oos_trades": 16,
+      "oos_sharpe": -0.11,
+      "split_date": "2025-11-19 11:00:00"
+    },
+    {
+      "symbol": "HG=F",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.67,
+      "oos_return": -8.7,
+      "oos_trades": 34,
+      "oos_sharpe": -1.37,
+      "split_date": "2025-10-10 05:00:00"
+    },
+    {
+      "symbol": "CL=F",
+      "strategy": "squeeze_bidirectional",
+      "timeframe": "1h",
+      "oos_pass": false,
+      "oos_pf": 0.83,
+      "oos_return": -4.0,
+      "oos_trades": 33,
+      "oos_sharpe": -0.62,
+      "split_date": "2025-10-14 08:00:00"
+    }
+  ]
+}

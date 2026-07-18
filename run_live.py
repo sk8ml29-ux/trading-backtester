@@ -18,6 +18,7 @@ from backtest.optimized_loader import (
     profitable_universe_pairs,
     triple_portfolio_pairs,
     scalp_portfolio_pairs,
+    stocks_oos_portfolio_entries,
 )
 from config import LiveConfig
 from live.runner import LiveRunner
@@ -65,11 +66,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="OOS-validated forex portfolio (Dukascopy, mixed_portfolio_oos_forex.json)",
     )
+    parser.add_argument(
+        "--stocks",
+        action="store_true",
+        help="OOS-validated stocks/commodities 1d portfolio (mixed_portfolio_oos_stocks.json)",
+    )
     parser.add_argument("--strict-trend", action="store_true", help="MACD strict trend filter")
     return parser.parse_args()
 
 
 def resolve_portfolio_pairs(args: argparse.Namespace) -> tuple[list, str]:
+    if args.stocks:
+        entries = stocks_oos_portfolio_entries()
+        return entries, "OOS stocks/commodities [1d]"
     if args.forex:
         entries = forex_oos_portfolio_entries(args.timeframe)
         return entries, f"OOS forex [{args.timeframe}]"
@@ -116,7 +125,11 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
         print(f"No pairs for {label}. Check portfolio JSON.", file=sys.stderr)
         return 1
 
-    poll = args.poll or (120 if args.timeframe == "15m" else 180 if args.timeframe == "30m" else 300)
+    # Stocks 1d: check once per hour; crypto 15m/30m: more frequent
+    if getattr(args, "stocks", False):
+        poll = args.poll or 3600
+    else:
+        poll = args.poll or (120 if args.timeframe == "15m" else 180 if args.timeframe == "30m" else 300)
     runners: list[LiveRunner] = []
     for item in items:
         if isinstance(item, dict):
@@ -126,13 +139,17 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
         else:
             symbol, strategy = item
             params = {}
+        # Per-pair timeframe overrides CLI default (important for 1d stocks portfolio)
+        pair_tf = (item.get("timeframe") if isinstance(item, dict) else None) or args.timeframe
+        pair_regime_tf = (item.get("regime_timeframe") if isinstance(item, dict) else None) or args.regime_tf
         cfg = LiveConfig(
             symbol=symbol,
-            timeframe=args.timeframe,
+            timeframe=pair_tf,
             strategy=strategy,
             initial_capital=args.capital,
             risk_per_trade=args.risk,
             poll_seconds=poll,
+            regime_timeframe=pair_regime_tf,
         )
         apply_optimized_to_live(cfg, auto_strategy=False, extra_params=params)
         if args.reset:
@@ -182,10 +199,8 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
 def main() -> int:
     args = parse_args()
 
-    if args.portfolio:
-        if not args.optimized:
-            print("Portfolio mode requires --optimized.", file=sys.stderr)
-            return 1
+    # --oos / --forex / --stocks are portfolio modes — run directly without --portfolio flag
+    if args.portfolio or args.oos or getattr(args, "stocks", False) or args.forex:
         return run_portfolio_loop(args)
 
     config = build_config(args)

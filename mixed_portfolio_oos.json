@@ -1,7 +1,7 @@
 {
-  "name": "oos_paper_production_v4",
-  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-14 — optimerade parametrar per symbol (steg 1), SOL/squeeze tillagt (steg 3). 7 validerade par på 1h, 4 par på 15m.",
-  "updated": "2026-07-14",
+  "name": "oos_paper_production_v5",
+  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-18 — nya 15m-par: BTC/donchian_breakout (PF=1.36) + SOL/donchian_breakout (PF=1.85) + XRP/donchian_breakout (PF=1.65, Sh=2.36). 7 validerade par på 1h, 7 par på 15m.",
+  "updated": "2026-07-18",
   "capital_per_bot_sek": 30000,
   "risk_per_trade": 0.0075,
   "validation": "70/30 walk-forward OOS, PF>=1.10, min 15 OOS trades, Sharpe>=0.5",
@@ -34,6 +34,36 @@
         "oos_pf": 1.56,
         "oos_trades": 29,
         "note": "OOS validerad"
+      },
+      {
+        "symbol": "XRP-USD",
+        "strategy": "donchian_breakout",
+        "oos_pf": 1.65,
+        "oos_return_pct": 24.1,
+        "oos_trades": 74,
+        "oos_sharpe": 2.36,
+        "optimized_params": {"reward_risk": 1.5, "swing_lookback": 6},
+        "note": "NY 2026-07-18 — Starkaste 15m-kandidaten. Sharpe 2.36, 74 OOS trades."
+      },
+      {
+        "symbol": "SOL-USD",
+        "strategy": "donchian_breakout",
+        "oos_pf": 1.85,
+        "oos_return_pct": 19.7,
+        "oos_trades": 34,
+        "oos_sharpe": 1.81,
+        "optimized_params": {"reward_risk": 3.0, "swing_lookback": 8},
+        "note": "NY 2026-07-18 — SOL breakout, andra strategi på SOL 15m."
+      },
+      {
+        "symbol": "BTC-USD",
+        "strategy": "donchian_breakout",
+        "oos_pf": 1.36,
+        "oos_return_pct": 12.0,
+        "oos_trades": 45,
+        "oos_sharpe": 1.13,
+        "optimized_params": {"reward_risk": 2.0, "swing_lookback": 8},
+        "note": "NY 2026-07-18 — Borderline, BTC ej på 15m tidigare. Paper 4 veckor."
       }
     ],
     "1h": [
@@ -142,6 +172,12 @@
     {"symbol": "ETH-USD",  "strategy": "donchian_bidirectional","timeframe": "15m"},
     {"symbol": "LINK-USD", "strategy": "triple_tf_confluence",  "timeframe": "15m"},
     {"symbol": "SOL-USD",  "strategy": "triple_tf_confluence",  "timeframe": "15m"},
+    {"symbol": "XRP-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
+     "reward_risk": 1.5, "swing_lookback": 6},
+    {"symbol": "SOL-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
+     "reward_risk": 3.0, "swing_lookback": 8},
+    {"symbol": "BTC-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
+     "reward_risk": 2.0, "swing_lookback": 8},
     {"symbol": "NEAR-USD", "strategy": "macd_pullback",         "timeframe": "1h",
      "reward_risk": 1.5,  "swing_lookback": 8,  "macd_signal_mode": "cross_below_zero"},
     {"symbol": "ATOM-USD", "strategy": "macd_pullback",         "timeframe": "1h",

@@ -32,8 +32,10 @@ from strategies.triple_tf_confluence import TripleTfConfluenceStrategy
 from strategies.velocity_rejection import VelocityRejectionScalpStrategy
 from strategies.funding_confluence import FundingConfluenceStrategy
 from strategies.macd_bidirectional import MacdBidirectionalStrategy
+from strategies.micro_orb import MicroOrbStrategy
 
 STRATEGIES: dict[str, type[Strategy]] = {
+    "micro_orb": MicroOrbStrategy,
     "macd_pullback": MacdPullbackStrategy,
     "donchian_breakout": DonchianBreakoutStrategy,
     "rsi_mean_reversion": RsiMeanReversionStrategy,
