@@ -37,3 +37,12 @@
 [2026-07-17 07:39:05] 2026-07-16T13:30:00 AMD/donchian_breakout equity=10000.00 trades=0 -> hold
 [2026-07-17 07:39:05] 2026-07-16T13:30:00 GOOGL/adaptive_trend_pullback equity=10000.00 trades=0 -> hold
 [2026-07-17 07:39:05] 2026-07-16T13:30:00 WMT/macd_pullback equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:36] START portfolio OOS stocks/commodities [1d] pairs=8
+[2026-07-17 13:55:36] 2026-07-17T04:00:00 GC=F/donchian_breakout equity=10000.00 trades=0 -> skip
+[2026-07-17 13:55:37] 2026-07-17T04:00:00 SI=F/donchian_bidirectional equity=9999.82 trades=0 -> skip
+[2026-07-17 13:55:37] 2026-07-17T13:30:00 AVGO/donchian_breakout equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:37] 2026-07-17T13:30:00 JPM/macd_pullback equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:37] 2026-07-17T13:30:00 IWM/adaptive_trend_pullback equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:38] 2026-07-17T13:30:00 AMD/donchian_breakout equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:38] 2026-07-17T13:30:00 GOOGL/adaptive_trend_pullback equity=10000.00 trades=0 -> hold
+[2026-07-17 13:55:38] 2026-07-17T13:30:00 WMT/macd_pullback equity=10000.00 trades=0 -> hold
