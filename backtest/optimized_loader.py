@@ -180,6 +180,30 @@ def stocks_oos_portfolio_entries() -> list[dict]:
     return data.get("pairs", [])
 
 
+def meanrev_oos_portfolio_path() -> Path:
+    return ROOT / "mixed_portfolio_oos_meanrev.json"
+
+
+def meanrev_oos_portfolio_entries() -> list[dict]:
+    """RSI(2) mean-reversion 1d pairs with per-pair params."""
+    path = meanrev_oos_portfolio_path()
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    entries = []
+    param_keys = ("rsi2_oversold", "rsi2_atr_sl", "rsi2_exit_sma",
+                  "rsi2_period", "rsi2_trend_sma", "rsi2_max_rr")
+    for p in data.get("pairs", []):
+        params = {k: p[k] for k in param_keys if k in p}
+        entries.append({
+            "symbol": p["symbol"],
+            "strategy": p["strategy"],
+            "timeframe": p.get("timeframe", "1d"),
+            "params": params,
+        })
+    return entries
+
+
 def apply_params_to_config(config: BacktestConfig | LiveConfig, params: dict) -> None:
     for key, value in params.items():
         if hasattr(config, key):

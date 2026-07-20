@@ -1,0 +1,56 @@
+{
+  "name": "oos_meanrev_rsi2_v1",
+  "description": "RSI(2) mean-reversion (Connors-style) på index-ETF:er, guld och tech. Uppdaterad 2026-07-20. 7 OOS-validerade par. OKORRELERAD med trend/breakout-portföljen — tjänar i sidled/dippar när trendbotarna sitter stilla. Alla par: köp översålt (RSI2<10) i långsiktig uppåttrend (>SMA200), sälj vid återgång till 5-SMA.",
+  "updated": "2026-07-20",
+  "timeframe": "1d",
+  "strategy": "rsi2_reversion",
+  "capital_per_bot_sek": 30000,
+  "risk_per_trade": 0.0075,
+  "poll_interval_seconds": 3600,
+  "validation": "70/30 walk-forward OOS, PF>=1.5, min 15 OOS trades, Sharpe>=1.1, win-rate 70-82%",
+  "note": "Mean reversion kompletterar trend-portföljen. Handlar 1d, ~1-2 gånger/månad per par. Yahoo Finance data. Stops är breda (ATR*2.5-3) — mean reversion behöver andrum.",
+  "pairs": [
+    {
+      "symbol": "DIA", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 3.86, "oos_sharpe": 1.89, "oos_winrate": 81.8, "oos_trades": 22,
+      "note": "Dow Jones ETF. Starkaste Sharpe (1.89), mest trades (22)."
+    },
+    {
+      "symbol": "IWM", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 3.0, "rsi2_exit_sma": 5,
+      "oos_pf": 3.94, "oos_sharpe": 1.49, "oos_winrate": 82.3, "oos_trades": 17,
+      "note": "Russell 2000 small-cap ETF. Högst win-rate (82%)."
+    },
+    {
+      "symbol": "GLD", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 3.0, "rsi2_exit_sma": 5,
+      "oos_pf": 3.85, "oos_sharpe": 1.64, "oos_winrate": 81.2, "oos_trades": 16,
+      "note": "Guld-ETF. Okorrelerad med aktier OCH crypto — bästa diversifiering."
+    },
+    {
+      "symbol": "SPY", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 2.84, "oos_sharpe": 1.52, "oos_winrate": 77.3, "oos_trades": 22,
+      "note": "S&P 500 ETF. Connors klassiska hemmaplan, 22 trades."
+    },
+    {
+      "symbol": "EEM", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 3.0, "rsi2_exit_sma": 5,
+      "oos_pf": 2.71, "oos_sharpe": 1.24, "oos_winrate": 75.0, "oos_trades": 16,
+      "note": "Emerging markets ETF. Geografisk diversifiering."
+    },
+    {
+      "symbol": "NVDA", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 2.57, "oos_sharpe": 1.33, "oos_winrate": 70.0, "oos_trades": 20,
+      "note": "Enda enskilda aktien — hög volatilitet ger fler dippar att köpa."
+    },
+    {
+      "symbol": "QQQ", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 2.35, "oos_sharpe": 1.17, "oos_winrate": 72.2, "oos_trades": 18,
+      "note": "Nasdaq 100 ETF. Tech-tung mean reversion."
+    }
+  ]
+}
