@@ -19,6 +19,7 @@ from backtest.optimized_loader import (
     triple_portfolio_pairs,
     scalp_portfolio_pairs,
     stocks_oos_portfolio_entries,
+    meanrev_oos_portfolio_entries,
 )
 from config import LiveConfig
 from live.runner import LiveRunner
@@ -71,11 +72,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="OOS-validated stocks/commodities 1d portfolio (mixed_portfolio_oos_stocks.json)",
     )
+    parser.add_argument(
+        "--meanrev",
+        action="store_true",
+        help="OOS-validated RSI(2) mean-reversion 1d portfolio (mixed_portfolio_oos_meanrev.json)",
+    )
     parser.add_argument("--strict-trend", action="store_true", help="MACD strict trend filter")
     return parser.parse_args()
 
 
 def resolve_portfolio_pairs(args: argparse.Namespace) -> tuple[list, str]:
+    if getattr(args, "meanrev", False):
+        entries = meanrev_oos_portfolio_entries()
+        return entries, "OOS RSI(2) mean-reversion [1d]"
     if args.stocks:
         entries = stocks_oos_portfolio_entries()
         return entries, "OOS stocks/commodities [1d]"
@@ -126,7 +135,7 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
         return 1
 
     # Stocks 1d: check once per hour; crypto 15m/30m: more frequent
-    if getattr(args, "stocks", False):
+    if getattr(args, "stocks", False) or getattr(args, "meanrev", False):
         poll = args.poll or 3600
     else:
         poll = args.poll or (120 if args.timeframe == "15m" else 180 if args.timeframe == "30m" else 300)
@@ -164,7 +173,14 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
             print(f"  {item[0]} / {item[1]}")
     print("Ctrl+C to stop.\n")
 
-    log_suffix = "forex" if args.forex else args.timeframe
+    if getattr(args, "meanrev", False):
+        log_suffix = "meanrev"
+    elif getattr(args, "stocks", False):
+        log_suffix = "stocks"
+    elif args.forex:
+        log_suffix = "forex"
+    else:
+        log_suffix = args.timeframe
     log_path = __import__("pathlib").Path(f"data/live/vps_bot_{log_suffix}.log")
     append_log(log_path, f"START portfolio {label} pairs={len(items)}")
 
@@ -199,8 +215,9 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
 def main() -> int:
     args = parse_args()
 
-    # --oos / --forex / --stocks are portfolio modes — run directly without --portfolio flag
-    if args.portfolio or args.oos or getattr(args, "stocks", False) or args.forex:
+    # --oos / --forex / --stocks / --meanrev are portfolio modes — run directly
+    if (args.portfolio or args.oos or args.forex
+            or getattr(args, "stocks", False) or getattr(args, "meanrev", False)):
         return run_portfolio_loop(args)
 
     config = build_config(args)

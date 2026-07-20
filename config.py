@@ -69,6 +69,14 @@ class BacktestConfig:
     pulse_reward_risk: float = 1.5
     pulse_require_above_200: bool = True
 
+    # RSI(2) mean reversion (Connors-style)
+    rsi2_period: int = 2
+    rsi2_oversold: float = 10.0
+    rsi2_trend_sma: int = 200
+    rsi2_exit_sma: int = 5
+    rsi2_atr_sl: float = 3.0
+    rsi2_max_rr: float = 4.0
+
     # Triple TF confluence (None = all relevant timeframes must agree)
     mtf_min_align: int | None = None
 
@@ -162,6 +170,12 @@ class LiveConfig:
     pulse_atr_sl: float = 1.0
     pulse_reward_risk: float = 1.5
     pulse_require_above_200: bool = True
+    rsi2_period: int = 2
+    rsi2_oversold: float = 10.0
+    rsi2_trend_sma: int = 200
+    rsi2_exit_sma: int = 5
+    rsi2_atr_sl: float = 3.0
+    rsi2_max_rr: float = 4.0
     regime_timeframe: str = "1d"
 
     def to_backtest_config(self) -> BacktestConfig:
@@ -208,4 +222,10 @@ class LiveConfig:
             pulse_atr_sl=self.pulse_atr_sl,
             pulse_reward_risk=self.pulse_reward_risk,
             pulse_require_above_200=self.pulse_require_above_200,
+            rsi2_period=self.rsi2_period,
+            rsi2_oversold=self.rsi2_oversold,
+            rsi2_trend_sma=self.rsi2_trend_sma,
+            rsi2_exit_sma=self.rsi2_exit_sma,
+            rsi2_atr_sl=self.rsi2_atr_sl,
+            rsi2_max_rr=self.rsi2_max_rr,
         )
