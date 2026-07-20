@@ -77,6 +77,14 @@ class BacktestConfig:
     rsi2_atr_sl: float = 3.0
     rsi2_max_rr: float = 4.0
 
+    # Conviction Stack — checklist-baserad conviction-sizing ("kryddan")
+    conviction_min_checks: int = 6
+    conviction_high_checks: int = 8
+    conviction_risk_mult: float = 3.0
+    conviction_adx_min: float = 20.0
+    conviction_rsi_recover: float = 45.0
+    conviction_overext_atr: float = 2.0
+
     # Triple TF confluence (None = all relevant timeframes must agree)
     mtf_min_align: int | None = None
 
@@ -176,6 +184,12 @@ class LiveConfig:
     rsi2_exit_sma: int = 5
     rsi2_atr_sl: float = 3.0
     rsi2_max_rr: float = 4.0
+    conviction_min_checks: int = 6
+    conviction_high_checks: int = 8
+    conviction_risk_mult: float = 3.0
+    conviction_adx_min: float = 20.0
+    conviction_rsi_recover: float = 45.0
+    conviction_overext_atr: float = 2.0
     regime_timeframe: str = "1d"
 
     def to_backtest_config(self) -> BacktestConfig:
@@ -228,4 +242,10 @@ class LiveConfig:
             rsi2_exit_sma=self.rsi2_exit_sma,
             rsi2_atr_sl=self.rsi2_atr_sl,
             rsi2_max_rr=self.rsi2_max_rr,
+            conviction_min_checks=self.conviction_min_checks,
+            conviction_high_checks=self.conviction_high_checks,
+            conviction_risk_mult=self.conviction_risk_mult,
+            conviction_adx_min=self.conviction_adx_min,
+            conviction_rsi_recover=self.conviction_rsi_recover,
+            conviction_overext_atr=self.conviction_overext_atr,
         )

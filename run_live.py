@@ -20,6 +20,7 @@ from backtest.optimized_loader import (
     scalp_portfolio_pairs,
     stocks_oos_portfolio_entries,
     meanrev_oos_portfolio_entries,
+    spicy_oos_portfolio_entries,
 )
 from config import LiveConfig
 from live.runner import LiveRunner
@@ -77,11 +78,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="OOS-validated RSI(2) mean-reversion 1d portfolio (mixed_portfolio_oos_meanrev.json)",
     )
+    parser.add_argument(
+        "--spicy",
+        action="store_true",
+        help="ConvictionStack aggressiv portfolj (mixed_portfolio_oos_spicy.json)",
+    )
     parser.add_argument("--strict-trend", action="store_true", help="MACD strict trend filter")
     return parser.parse_args()
 
 
 def resolve_portfolio_pairs(args: argparse.Namespace) -> tuple[list, str]:
+    if getattr(args, "spicy", False):
+        entries = spicy_oos_portfolio_entries()
+        return entries, "OOS ConvictionStack spicy [1d]"
     if getattr(args, "meanrev", False):
         entries = meanrev_oos_portfolio_entries()
         return entries, "OOS RSI(2) mean-reversion [1d]"
@@ -135,7 +144,7 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
         return 1
 
     # Stocks 1d: check once per hour; crypto 15m/30m: more frequent
-    if getattr(args, "stocks", False) or getattr(args, "meanrev", False):
+    if getattr(args, "stocks", False) or getattr(args, "meanrev", False) or getattr(args, "spicy", False):
         poll = args.poll or 3600
     else:
         poll = args.poll or (120 if args.timeframe == "15m" else 180 if args.timeframe == "30m" else 300)
@@ -173,7 +182,9 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
             print(f"  {item[0]} / {item[1]}")
     print("Ctrl+C to stop.\n")
 
-    if getattr(args, "meanrev", False):
+    if getattr(args, "spicy", False):
+        log_suffix = "spicy"
+    elif getattr(args, "meanrev", False):
         log_suffix = "meanrev"
     elif getattr(args, "stocks", False):
         log_suffix = "stocks"
@@ -215,9 +226,10 @@ def run_portfolio_loop(args: argparse.Namespace) -> int:
 def main() -> int:
     args = parse_args()
 
-    # --oos / --forex / --stocks / --meanrev are portfolio modes — run directly
+    # --oos / --forex / --stocks / --meanrev / --spicy are portfolio modes — run directly
     if (args.portfolio or args.oos or args.forex
-            or getattr(args, "stocks", False) or getattr(args, "meanrev", False)):
+            or getattr(args, "stocks", False) or getattr(args, "meanrev", False)
+            or getattr(args, "spicy", False)):
         return run_portfolio_loop(args)
 
     config = build_config(args)
