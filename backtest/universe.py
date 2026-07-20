@@ -16,10 +16,14 @@ UNIVERSE: dict[str, list[str]] = {
     ],
     "etfs": [
         "SPY", "QQQ", "TLT", "GLD", "IWM", "DIA", "SLV", "USO", "XLE", "EEM",
+        "SMH", "XBI", "MDY", "XLI", "XLK", "XLF", "XLV", "XLY", "XLP", "XLU",
+        "VTI", "VOO", "EFA", "VWO", "HYG", "LQD", "VNQ",
     ],
     "stocks": [
         "AAPL", "MSFT", "NVDA", "TSLA", "AMZN",
         "GOOGL", "META", "AMD", "NFLX", "JPM", "COST", "BA", "DIS",
+        "AVGO", "WMT", "CAT", "V", "MA", "HD", "UNH", "JNJ", "PG", "KO",
+        "PEP", "MCD", "XOM", "CVX", "AMAT", "QCOM", "INTC",
     ],
     "crypto": [
         "BTC-USD", "ETH-USD", "SOL-USD",
