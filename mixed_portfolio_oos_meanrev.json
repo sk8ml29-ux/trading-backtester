@@ -1,6 +1,6 @@
 {
-  "name": "oos_meanrev_rsi2_v1",
-  "description": "RSI(2) mean-reversion (Connors-style) på index-ETF:er, guld och tech. Uppdaterad 2026-07-20. 7 OOS-validerade par. OKORRELERAD med trend/breakout-portföljen — tjänar i sidled/dippar när trendbotarna sitter stilla. Alla par: köp översålt (RSI2<10) i långsiktig uppåttrend (>SMA200), sälj vid återgång till 5-SMA.",
+  "name": "oos_meanrev_rsi2_v2",
+  "description": "RSI(2) mean-reversion (Connors-style) på index-ETF:er, sektorer, guld och tech. Uppdaterad 2026-07-20 v2 — +4 nya robusta par (SMH, XBI, MDY, XLI) som klarade ALLA tre OOS-fönster. 11 OOS-validerade par. OKORRELERAD med trend/breakout-portföljen. Alla par: köp översålt (RSI2<10) i långsiktig uppåttrend (>SMA200), sälj vid återgång till 5-SMA.",
   "updated": "2026-07-20",
   "timeframe": "1d",
   "strategy": "rsi2_reversion",
@@ -51,6 +51,30 @@
       "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
       "oos_pf": 2.35, "oos_sharpe": 1.17, "oos_winrate": 72.2, "oos_trades": 18,
       "note": "Nasdaq 100 ETF. Tech-tung mean reversion."
+    },
+    {
+      "symbol": "SMH", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 3.59, "oos_sharpe": 1.49, "oos_winrate": 80.0, "oos_trades": 25,
+      "note": "NY 2026-07-20. Halvledar-ETF. Klarade ALLA 3 OOS-fönster (robust). Starkaste nya."
+    },
+    {
+      "symbol": "XBI", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 1.98, "oos_sharpe": 0.70, "oos_winrate": 65.0, "oos_trades": 17,
+      "note": "NY 2026-07-20. Biotech-ETF — okorrelerad sektor. Klarade 3 OOS-fönster."
+    },
+    {
+      "symbol": "MDY", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 2.09, "oos_sharpe": 0.90, "oos_winrate": 71.0, "oos_trades": 24,
+      "note": "NY 2026-07-20. Mid-cap ETF — fyller marknadsstorleks-gap. Klarade 3 OOS-fönster."
+    },
+    {
+      "symbol": "XLI", "strategy": "rsi2_reversion", "timeframe": "1d",
+      "rsi2_oversold": 10.0, "rsi2_atr_sl": 2.5, "rsi2_exit_sma": 5,
+      "oos_pf": 1.85, "oos_sharpe": 0.79, "oos_winrate": 65.0, "oos_trades": 26,
+      "note": "NY 2026-07-20. Industri-sektor ETF. Klarade 3 OOS-fönster."
     }
   ]
 }

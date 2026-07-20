@@ -1,7 +1,7 @@
 {
-  "name": "oos_stocks_1d_v1",
-  "description": "Walk-forward OOS aktier/råvaror på 1d (Yahoo Finance). Uppdaterad 2026-07-17 — 8 validerade par. Alla har PF >= 1.75 och Sharpe >= 0.50 i OOS-perioden. Körs med --stocks flagga, ~1 trade per 2-4 veckor per par.",
-  "updated": "2026-07-17",
+  "name": "oos_stocks_1d_v2",
+  "description": "Walk-forward OOS aktier/råvaror på 1d (Yahoo Finance). Uppdaterad 2026-07-20 v2 — +CAT (robust, klarade 3 OOS-fönster). 9 validerade par. Körs med --stocks flagga, ~1 trade per 2-4 veckor per par.",
+  "updated": "2026-07-20",
   "timeframe": "1d",
   "capital_per_bot_sek": 30000,
   "risk_per_trade": 0.0075,
@@ -88,6 +88,16 @@
       "oos_trades": 17,
       "oos_sharpe": 0.66,
       "note": "Walmart — defensiv/konsument, låg korrelation med tech/crypto."
+    },
+    {
+      "symbol": "CAT",
+      "strategy": "macd_pullback",
+      "timeframe": "1d",
+      "oos_pf": 1.92,
+      "oos_return_pct": 5.7,
+      "oos_trades": 16,
+      "oos_sharpe": 0.63,
+      "note": "NY 2026-07-20. Caterpillar — industri/cyklisk. Klarade ALLA 3 OOS-fönster (robust)."
     }
   ]
 }
