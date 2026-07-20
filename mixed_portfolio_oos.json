@@ -1,7 +1,7 @@
 {
-  "name": "oos_paper_production_v5",
-  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-18 — nya 15m-par: BTC/donchian_breakout (PF=1.36) + SOL/donchian_breakout (PF=1.85) + XRP/donchian_breakout (PF=1.65, Sh=2.36). 7 validerade par på 1h, 7 par på 15m.",
-  "updated": "2026-07-18",
+  "name": "oos_paper_production_v6",
+  "description": "Walk-forward OOS crypto (Binance). Uppdaterad 2026-07-20 — STÄDNING: tog bort 5 svaga 15m-par som förlorade pengar på full konsekvent data (2025-2026 OOS). 15m-boten hade överanpassade par (donchian PF på fel datafönster). Kvar: 2 marginella 15m triple_tf + 7 validerade 1h-par. Se deprecated för detaljer.",
+  "updated": "2026-07-20",
   "capital_per_bot_sek": 30000,
   "risk_per_trade": 0.0075,
   "validation": "70/30 walk-forward OOS, PF>=1.10, min 15 OOS trades, Sharpe>=0.5",
@@ -43,7 +43,8 @@
         "oos_trades": 74,
         "oos_sharpe": 2.36,
         "optimized_params": {"reward_risk": 1.5, "swing_lookback": 6},
-        "note": "NY 2026-07-18 — Starkaste 15m-kandidaten. Sharpe 2.36, 74 OOS trades."
+        "note": "BORTTAGEN 2026-07-20 — se deprecated. PF 1.65 var dataartefakt; på full konsekvent data (2025-2026 OOS) PF 0.78, -17%.",
+        "disabled": true
       },
       {
         "symbol": "SOL-USD",
@@ -53,7 +54,8 @@
         "oos_trades": 34,
         "oos_sharpe": 1.81,
         "optimized_params": {"reward_risk": 3.0, "swing_lookback": 8},
-        "note": "NY 2026-07-18 — SOL breakout, andra strategi på SOL 15m."
+        "note": "BORTTAGEN 2026-07-20 — se deprecated. Full data OOS: PF 0.81, -9.5%.",
+        "disabled": true
       },
       {
         "symbol": "BTC-USD",
@@ -63,7 +65,8 @@
         "oos_trades": 45,
         "oos_sharpe": 1.13,
         "optimized_params": {"reward_risk": 2.0, "swing_lookback": 8},
-        "note": "NY 2026-07-18 — Borderline, BTC ej på 15m tidigare. Paper 4 veckor."
+        "note": "BORTTAGEN 2026-07-20 — se deprecated. Full data OOS: PF 0.75, -13%.",
+        "disabled": true
       }
     ],
     "1h": [
@@ -169,15 +172,7 @@
   },
   "pairs": [
     {"symbol": "XRP-USD",  "strategy": "triple_tf_confluence",  "timeframe": "15m"},
-    {"symbol": "ETH-USD",  "strategy": "donchian_bidirectional","timeframe": "15m"},
-    {"symbol": "LINK-USD", "strategy": "triple_tf_confluence",  "timeframe": "15m"},
     {"symbol": "SOL-USD",  "strategy": "triple_tf_confluence",  "timeframe": "15m"},
-    {"symbol": "XRP-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
-     "reward_risk": 1.5, "swing_lookback": 6},
-    {"symbol": "SOL-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
-     "reward_risk": 3.0, "swing_lookback": 8},
-    {"symbol": "BTC-USD",  "strategy": "donchian_breakout",     "timeframe": "15m",
-     "reward_risk": 2.0, "swing_lookback": 8},
     {"symbol": "NEAR-USD", "strategy": "macd_pullback",         "timeframe": "1h",
      "reward_risk": 1.5,  "swing_lookback": 8,  "macd_signal_mode": "cross_below_zero"},
     {"symbol": "ATOM-USD", "strategy": "macd_pullback",         "timeframe": "1h",
@@ -196,6 +191,26 @@
       "strategy": "donchian_bidirectional",
       "timeframe": "30m",
       "reason": "Bara 3 OOS trades — statistiskt meningslöst."
+    },
+    {
+      "symbol": "XRP-USD", "strategy": "donchian_breakout", "timeframe": "15m",
+      "reason": "BORTTAGEN 2026-07-20. PF 1.65/Sharpe 2.36 var dataartefakt (kort/fel cache-fönster). På full konsekvent Binance-data (OOS 2025-06→2026-07): PF 0.78, Ret -17.4%, DD -23%. Överanpassad."
+    },
+    {
+      "symbol": "SOL-USD", "strategy": "donchian_breakout", "timeframe": "15m",
+      "reason": "BORTTAGEN 2026-07-20. Full data OOS: PF 0.81, Ret -9.5%, DD -18.4%."
+    },
+    {
+      "symbol": "BTC-USD", "strategy": "donchian_breakout", "timeframe": "15m",
+      "reason": "BORTTAGEN 2026-07-20. Full data OOS: PF 0.75, Ret -13.1%, DD -17.4%."
+    },
+    {
+      "symbol": "ETH-USD", "strategy": "donchian_bidirectional", "timeframe": "15m",
+      "reason": "BORTTAGEN 2026-07-20. Full data OOS (2025-2026): PF 0.94, Ret -4.0%, DD -11.7%. Förlorar i nuvarande regim."
+    },
+    {
+      "symbol": "LINK-USD", "strategy": "triple_tf_confluence", "timeframe": "15m",
+      "reason": "BORTTAGEN 2026-07-20. Full data OOS: PF 0.77, Ret -5.8%, DD -9.1%."
     }
   ]
 }
