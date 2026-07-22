@@ -1,0 +1,31 @@
+{
+  "note": "Best HONEST candidate found. It FAILS the aggressive daily targets but is the only approach with positive, cost-adjusted out-of-sample expectancy. It is a market-neutral cross-sectional SWING book (rebalances every ~12 days), NOT true intraday daytrading. See RAPPORT_DAYTRADING.md.",
+  "strategy": "cross_sectional_momentum",
+  "engine": "research/cross_sectional.py",
+  "universe": ["BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "LINK"],
+  "data_source": "Binance 15m klines resampled to 12h (data/cache/binance_*_15m.csv)",
+  "bar": "12h",
+  "params": {
+    "lookback": 12,
+    "hold": 24,
+    "k": 3,
+    "direction": "momentum",
+    "leverage": 1.0,
+    "vol_target": 0.0
+  },
+  "costs_per_side": {
+    "commission": 0.0005,
+    "slippage": 0.0002,
+    "half_spread": 0.0002
+  },
+  "oos_metrics_last_45pct": {
+    "period": "~2024-09 .. 2026-07 (out-of-sample)",
+    "net_return_pct": 7.96,
+    "net_per_day_pct": 0.017,
+    "win_days_pct": 50.52,
+    "sharpe": 0.374,
+    "max_dd_pct": -12.64,
+    "cost_share_of_gross_pct": 31.6
+  },
+  "run_signal_cmd": "python3 -m research.cross_sectional --bar 12h --signal --lb 12 --hold 24 --k 3 --leverage 1.0"
+}
