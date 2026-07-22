@@ -34,10 +34,12 @@ from strategies.funding_confluence import FundingConfluenceStrategy
 from strategies.macd_bidirectional import MacdBidirectionalStrategy
 from strategies.micro_orb import MicroOrbStrategy
 from strategies.rsi2_reversion import Rsi2ReversionStrategy
+from strategies.conviction_stack import ConvictionStackStrategy
 
 STRATEGIES: dict[str, type[Strategy]] = {
     "micro_orb": MicroOrbStrategy,
     "rsi2_reversion": Rsi2ReversionStrategy,
+    "conviction_stack": ConvictionStackStrategy,
     "macd_pullback": MacdPullbackStrategy,
     "donchian_breakout": DonchianBreakoutStrategy,
     "rsi_mean_reversion": RsiMeanReversionStrategy,

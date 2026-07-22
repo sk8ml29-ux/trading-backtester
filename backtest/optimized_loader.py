@@ -204,6 +204,31 @@ def meanrev_oos_portfolio_entries() -> list[dict]:
     return entries
 
 
+def spicy_oos_portfolio_path() -> Path:
+    return ROOT / "mixed_portfolio_oos_spicy.json"
+
+
+def spicy_oos_portfolio_entries() -> list[dict]:
+    """ConvictionStack 1d pairs (aggressiv 'krydda') with per-pair params."""
+    path = spicy_oos_portfolio_path()
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    entries = []
+    param_keys = ("reward_risk", "conviction_min_checks", "conviction_high_checks",
+                  "conviction_risk_mult", "conviction_adx_min",
+                  "conviction_rsi_recover", "conviction_overext_atr")
+    for p in data.get("pairs", []):
+        params = {k: p[k] for k in param_keys if k in p}
+        entries.append({
+            "symbol": p["symbol"],
+            "strategy": p["strategy"],
+            "timeframe": p.get("timeframe", "1d"),
+            "params": params,
+        })
+    return entries
+
+
 def apply_params_to_config(config: BacktestConfig | LiveConfig, params: dict) -> None:
     for key, value in params.items():
         if hasattr(config, key):

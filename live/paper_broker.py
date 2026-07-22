@@ -49,7 +49,12 @@ class PaperBroker:
 
     def _open(self, signal: Signal, price: float, bar_time: datetime) -> FillResult:
         cfg = self.config
-        risk_amount = self.state.equity * cfg.risk_per_trade
+        # Conviction-sizing: signal.risk_mult skalar risken. Gatekeepern kapar
+        # hårt vid 2% per trade (oföränderligt skydd mot att blåsa kontot).
+        GATEKEEPER_MAX_RISK = 0.02
+        risk_mult = max(0.1, float(getattr(signal, "risk_mult", 1.0)))
+        effective_risk = min(cfg.risk_per_trade * risk_mult, GATEKEEPER_MAX_RISK)
+        risk_amount = self.state.equity * effective_risk
         stop_distance = abs(price - signal.stop_loss)
         if stop_distance <= 0:
             return FillResult("skip", "Invalid stop distance")

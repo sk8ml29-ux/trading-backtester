@@ -93,7 +93,11 @@ class BacktestEngine:
                             spread_skipped += 1
                             equity_points.append((ts, equity))
                             continue
-                    size = self._position_size(equity, close, signal.stop_loss, cfg.risk_per_trade)
+                    # Conviction-sizing: signal.risk_mult skalar upp risken.
+                    # Hård tak-säkring på 6x för att undvika galna storlekar i backtest.
+                    risk_mult = max(0.1, min(float(getattr(signal, "risk_mult", 1.0)), 6.0))
+                    effective_risk = cfg.risk_per_trade * risk_mult
+                    size = self._position_size(equity, close, signal.stop_loss, effective_risk)
                     if size > 0:
                         open_trade = Trade(
                             entry_time=ts,

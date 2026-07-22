@@ -17,6 +17,10 @@ class Signal:
   stop_loss: float
   take_profit: float
   reason: str = ""
+  # Conviction-baserad riskmultiplikator. 1.0 = normal risk. En strategi kan
+  # höja denna (t.ex. 2-4x) när många confluence-villkor uppfylls. Motorn
+  # multiplicerar risk_per_trade med denna vid positionsstorlek.
+  risk_mult: float = 1.0
 
 
 class Strategy:

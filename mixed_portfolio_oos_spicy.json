@@ -1,0 +1,38 @@
+{
+  "name": "oos_spicy_conviction_v1",
+  "description": "KRYDDAN — ConvictionStack checklist-strategi på volatila trendnamn. Varje trade poängsätts mot 10-punkters confluence-checklista. Vid hög score (>=8/10) satsas 3x normal risk. Uppdaterad 2026-07-20. AGGRESSIV — högre risk/reward än övriga portföljer. Hälsovakten övervakar extra noga.",
+  "updated": "2026-07-20",
+  "timeframe": "1d",
+  "strategy": "conviction_stack",
+  "capital_per_bot_sek": 20000,
+  "risk_per_trade": 0.005,
+  "poll_interval_seconds": 3600,
+  "risk_note": "Basrisk 0.5%. Hög-conviction-trades tar 3x = 1.5% (under Gatekeeperns 2%-tak). Normal-conviction 0.5%. Få men selektiva trades.",
+  "validation": "Dubbel-OOS (recent 25% + mid 25% + 70/30). Selektiv strategi — låga trade-counts, därav egen liten portfölj.",
+  "pairs": [
+    {
+      "symbol": "CAT", "strategy": "conviction_stack", "timeframe": "1d",
+      "reward_risk": 3.0, "conviction_high_checks": 8, "conviction_risk_mult": 3.0,
+      "oos_pf": 15.42, "oos_sharpe": 1.14, "oos_trades": 9, "oos_hc_trades": 2, "oos_return_pct": 23.2, "oos_dd": -0.8,
+      "note": "NY 2026-07-20. Caterpillar. Bäst PF, mycket låg DD. Klarade alla OOS-fönster."
+    },
+    {
+      "symbol": "SMH", "strategy": "conviction_stack", "timeframe": "1d",
+      "reward_risk": 2.5, "conviction_high_checks": 8, "conviction_risk_mult": 3.0,
+      "oos_pf": 3.30, "oos_sharpe": 0.97, "oos_trades": 12, "oos_hc_trades": 5, "oos_return_pct": 18.1, "oos_dd": -3.0,
+      "note": "NY 2026-07-20. Halvledare-ETF. Flest trades (12) — mest robust. 5 hög-conviction."
+    },
+    {
+      "symbol": "AVGO", "strategy": "conviction_stack", "timeframe": "1d",
+      "reward_risk": 2.0, "conviction_high_checks": 8, "conviction_risk_mult": 3.0,
+      "oos_pf": 5.37, "oos_sharpe": 1.07, "oos_trades": 9, "oos_hc_trades": 5, "oos_return_pct": 15.4, "oos_dd": -2.3,
+      "note": "NY 2026-07-20. Broadcom. 5 hög-conviction-trades."
+    },
+    {
+      "symbol": "AMD", "strategy": "conviction_stack", "timeframe": "1d",
+      "reward_risk": 2.5, "conviction_high_checks": 8, "conviction_risk_mult": 3.0,
+      "oos_pf": 6.02, "oos_sharpe": 1.01, "oos_trades": 8, "oos_hc_trades": 6, "oos_return_pct": 19.9, "oos_dd": -3.8,
+      "note": "NY 2026-07-20. AMD. 6 av 8 trades var hög-conviction (aggressivast)."
+    }
+  ]
+}
