@@ -73,6 +73,47 @@ class LiveRunner:
         entry_frame = prepare_entry_frame(entry_df, cfg)
         return apply_regime_to_entry(entry_frame, regime_df, cfg)
 
+    def _is_health_paused(self) -> bool:
+        """
+        Fail-safe hälsokontroll: om strategin degraderat (RED) blockeras NYA
+        entries. Öppna positioner stängs normalt. Vid minsta fel → tillåt handel
+        (hälsovakten får aldrig stoppa en frisk bot pga en bugg).
+        """
+        try:
+            from risk.strategy_health import load_benchmarks, assess_strategy
+            from datetime import datetime
+
+            benchmarks = load_benchmarks()
+            key = f"{self.config.symbol}_{self.config.strategy}_{self.config.timeframe}"
+            bm = benchmarks.get(key)
+            if not bm:
+                return False
+
+            months = 0.0
+            if self.state.start_time:
+                try:
+                    start = datetime.fromisoformat(self.state.start_time.replace("Z", ""))
+                    months = max((datetime.now() - start).days / 30.0, 0.0)
+                except Exception:
+                    months = 0.0
+
+            v = assess_strategy(
+                bm,
+                equity=self.state.equity,
+                peak_equity=self.state.peak_equity,
+                initial_capital=self.state.initial_capital,
+                months_live=months,
+            )
+            if v.recommend_pause:
+                append_log(
+                    Path(self.config.log_file),
+                    f"HEALTH-PAUS {self.config.symbol}/{self.config.strategy}: {v.reason}",
+                )
+                return True
+            return False
+        except Exception:
+            return False
+
     def evaluate_latest(self, df: pd.DataFrame | None = None) -> dict:
         data = df if df is not None else self.fetch_market_data(refresh=True)
         strategy = self._strategy_instance()
@@ -87,7 +128,10 @@ class LiveRunner:
         regime = str(row.get("regime", "range"))
 
         signal = None
-        if strategy.allows_regime(regime) and self.state.open_position is None:
+        health_paused = self._is_health_paused()
+        if (strategy.allows_regime(regime)
+                and self.state.open_position is None
+                and not health_paused):
             signal = strategy.generate_signal(row, prev)
 
         result = self.broker.on_bar(

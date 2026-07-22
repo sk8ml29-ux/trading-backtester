@@ -1,0 +1,13 @@
+[Unit]
+Description=Trading Strategy Health Check (daglig degraderings-koll)
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/trading-backtester
+EnvironmentFile=-/root/trading-backtester/deploy/bot.env
+ExecStart=/root/trading-backtester/.venv/bin/python scripts/daily_health_check.py
+User=root
+Environment=HOME=/root
+StandardOutput=append:/root/trading-backtester/data/live/health_check.log
+StandardError=append:/root/trading-backtester/data/live/health_check.log

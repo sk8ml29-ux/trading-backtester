@@ -29,6 +29,7 @@ class BotState:
     trade_count: int = 0
     peak_equity: float = 0.0
     initial_capital: float = 0.0
+    start_time: str | None = None  # när boten först startade (för hälsovakt)
 
     @classmethod
     def load(cls, path: Path, default_equity: float, symbol: str, strategy: str) -> BotState:
@@ -39,6 +40,7 @@ class BotState:
                 equity=default_equity,
                 peak_equity=default_equity,
                 initial_capital=default_equity,
+                start_time=datetime.now().isoformat(timespec="seconds"),
             )
         raw = json.loads(path.read_text(encoding="utf-8"))
         pos = raw.get("open_position")
@@ -52,6 +54,7 @@ class BotState:
             trade_count=int(raw.get("trade_count", 0)),
             peak_equity=float(raw.get("peak_equity", equity)),
             initial_capital=float(raw.get("initial_capital", default_equity)),
+            start_time=raw.get("start_time") or datetime.now().isoformat(timespec="seconds"),
         )
 
     def save(self, path: Path) -> None:
