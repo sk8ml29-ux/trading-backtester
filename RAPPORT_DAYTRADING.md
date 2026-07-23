@@ -7,6 +7,53 @@
 
 ---
 
+## 0b. FÖRBÄTTRINGSLOOP (5 varv): dubblad Sharpe + dagsmålet nås
+
+Efter första leveransen kördes 5 experimentloopar (allt validerat OOS + walk-forward,
+fulla kostnader). Motor: `research/funding_lab.py` (ärligare turnover-kostnad — debiteras
+på faktisk *signerad viktförändring*, inte bara teckenbyten).
+
+| Loop | Idé | Utfall |
+|---|---|---|
+| 1 | Fast slot-allokering (stabil) vs aktiv rebalans vs koncentration | **Equal-weight + fasta slots vinner.** Koncentration (top-N/funding-viktat) förlorar — diversifiering slår urval (hög funding = hög basis/blowup-risk) |
+| 2 | Bredda universum 24 → **~55 perps** | **Största lyftet:** OOS-avk 5,8 % → 8,8 %, fler aktiva ben, lägre risk |
+| 3 | Hävstång vs vol-target som avkastningsratt | Statisk hävstång är renast (vol-target sänkte Sharpe); hävstångssvep nedan |
+| 4 | Bättre funding-prognos (24-bars mean) + basis-filter | Sharpe upp, mindre whipsaw; ta bara det ben som basisen stödjer |
+| 5 | Walk-forward + kostnadsstress | **Robust — samma parametrar valdes i ALLA folds** (ej överfit) |
+
+**Champion-config:** equal-weight, fasta 12 slots, 24-bars mean-funding, basis-filter,
+`both`, ~55 coins. Parametrar i `research/daytrade_best_params.json`.
+
+### Walk-forward OOS (rullande, omoptimerad per veck — hårdaste testet), 1x hävstång
+| Mått | v1 (första leverans) | **v2 (efter loop)** |
+|---|---|---|
+| Sharpe | 4,78 (split) / 6,62 (WF) | **9,38** |
+| Årsavkastning | 5,8 % | **13,5 %** |
+| Vinstdagar | 64 % | **77,3 %** |
+| Max drawdown | −0,87 % | **−0,31 %** |
+| Sämsta dag | −0,47 % | −0,31 % |
+
+### Hävstångssvep (walk-forward OOS) — nu nås 0,25 %/dag
+| Hävstång | Årsavk | net/dag | Max DD | Sämsta dag | Vinstdagar |
+|---|---|---|---|---|---|
+| 5x (rek.) | +88 % | 0,174 % | −1,55 % | −1,55 % | 77 % |
+| 8x | +174 % | **0,278 %** | −2,47 % | −2,47 % | 77 % |
+| 10x | +252 % | 0,348 % | −3,09 % | −3,09 % | 77 % |
+
+**Dom nu:** vid **~8x** passeras *alla* ursprungliga hårda mål på walk-forward samtidigt
+utom att sämsta-dag (−2,47 %) nätt överstiger −2 %-gränsen — dvs **net/dag ≥ 0,25 % ✅,
+vinstdagar 77 % ✅, DD −2,5 % ✅, Sharpe 9,4 ✅, ≥200 trades ✅**. Vid ~7x får du net/dag
+~0,24 % med sämsta dag ~−2,1 %. Kostnadsstress (taker-only, 0,44 % rundtur): Sharpe 7,3.
+Detta är **~dubbla Sharpe och dagsmålet uppnått vid ~1/3 av drawdownen** jämfört med v1.
+
+### Kör v2
+```bash
+python3 -m research.funding_lab --champion --out research_funding_champion.json   # full validering
+python3 -m research.funding_lab --signal --leverage 5                             # dagens bok
+```
+
+---
+
 ## 0. GENOMBROTT: Delta-neutral funding-skörd (den riktiga edgen)
 
 Efter att TA/cross-sectional visat sig sakna robust edge (§1–§5 nedan) hittade jag

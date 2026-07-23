@@ -1,0 +1,191 @@
+{
+  "n_coins": 55,
+  "champion": {
+    "lookback": 24,
+    "enter": 0.00015,
+    "exit_": 0.0,
+    "mode": "both",
+    "leverage": 1.0,
+    "alloc": "equal",
+    "deploy": "fixed",
+    "slots": 12,
+    "predict": "mean",
+    "adapt_k": 0.0,
+    "basis_filter": true,
+    "compound": false
+  },
+  "oos_split_1x": {
+    "n_days": 575,
+    "net_return_pct": 14.38,
+    "net_per_day_pct": 0.0234,
+    "ann_return_pct": 8.9,
+    "win_days_pct": 67.48,
+    "active_win_days_pct": 71.06,
+    "active_days_pct": 95.0,
+    "sharpe": 8.428,
+    "sortino": 16.06,
+    "max_dd_pct": -0.3,
+    "worst_day_pct": -0.214,
+    "best_day_pct": 0.432
+  },
+  "oos_scorecard_1x": {
+    "net_per_day>=0.25%": "FAIL",
+    "win_days>=60%": "PASS",
+    "win_days>=50%_floor": "PASS",
+    "max_dd<=10%": "PASS",
+    "worst_day>=-2%": "PASS",
+    "sharpe>=1.5": "PASS"
+  },
+  "walk_forward_1x": {
+    "n_days": 1022,
+    "net_return_pct": 42.61,
+    "net_per_day_pct": 0.0348,
+    "ann_return_pct": 13.52,
+    "win_days_pct": 77.3,
+    "active_win_days_pct": 77.38,
+    "active_days_pct": 99.9,
+    "sharpe": 9.38,
+    "sortino": 19.506,
+    "max_dd_pct": -0.31,
+    "worst_day_pct": -0.309,
+    "best_day_pct": 0.681
+  },
+  "wf_scorecard_1x": {
+    "net_per_day>=0.25%": "FAIL",
+    "win_days>=60%": "PASS",
+    "win_days>=50%_floor": "PASS",
+    "max_dd<=10%": "PASS",
+    "worst_day>=-2%": "PASS",
+    "sharpe>=1.5": "PASS"
+  },
+  "wf_leverage_sweep": {
+    "1x": {
+      "ann": 13.52,
+      "per_day": 0.0348,
+      "dd": -0.31,
+      "worst": -0.309,
+      "win": 77.3,
+      "sharpe": 9.38
+    },
+    "3x": {
+      "ann": 46.18,
+      "per_day": 0.1043,
+      "dd": -0.93,
+      "worst": -0.927,
+      "win": 77.3,
+      "sharpe": 9.38
+    },
+    "5x": {
+      "ann": 88.07,
+      "per_day": 0.1738,
+      "dd": -1.55,
+      "worst": -1.545,
+      "win": 77.3,
+      "sharpe": 9.38
+    },
+    "8x": {
+      "ann": 173.99,
+      "per_day": 0.2781,
+      "dd": -2.47,
+      "worst": -2.473,
+      "win": 77.3,
+      "sharpe": 9.38
+    },
+    "10x": {
+      "ann": 251.74,
+      "per_day": 0.3476,
+      "dd": -3.09,
+      "worst": -3.091,
+      "win": 77.3,
+      "sharpe": 9.38
+    }
+  },
+  "wf_picks": [
+    {
+      "fold": 0,
+      "test_end": "2024-05-25",
+      "params": {
+        "lookback": 24,
+        "enter": 0.00015,
+        "exit_": 0.0,
+        "mode": "both",
+        "leverage": 1.0,
+        "alloc": "equal",
+        "deploy": "fixed",
+        "slots": 12,
+        "predict": "mean",
+        "adapt_k": 0.0,
+        "basis_filter": true,
+        "compound": false
+      }
+    },
+    {
+      "fold": 1,
+      "test_end": "2025-02-04",
+      "params": {
+        "lookback": 24,
+        "enter": 0.0001,
+        "exit_": 0.0,
+        "mode": "both",
+        "leverage": 1.0,
+        "alloc": "equal",
+        "deploy": "fixed",
+        "slots": 12,
+        "predict": "mean",
+        "adapt_k": 0.0,
+        "basis_filter": true,
+        "compound": false
+      }
+    },
+    {
+      "fold": 2,
+      "test_end": "2025-10-18",
+      "params": {
+        "lookback": 24,
+        "enter": 0.0001,
+        "exit_": 0.0,
+        "mode": "both",
+        "leverage": 1.0,
+        "alloc": "equal",
+        "deploy": "fixed",
+        "slots": 12,
+        "predict": "mean",
+        "adapt_k": 0.0,
+        "basis_filter": true,
+        "compound": false
+      }
+    },
+    {
+      "fold": 3,
+      "test_end": "2026-06-30",
+      "params": {
+        "lookback": 24,
+        "enter": 0.0001,
+        "exit_": 0.0,
+        "mode": "both",
+        "leverage": 1.0,
+        "alloc": "equal",
+        "deploy": "fixed",
+        "slots": 12,
+        "predict": "mean",
+        "adapt_k": 0.0,
+        "basis_filter": true,
+        "compound": false
+      }
+    }
+  ],
+  "cost_stress_oos": {
+    "n_days": 575,
+    "net_return_pct": 12.68,
+    "net_per_day_pct": 0.0208,
+    "ann_return_pct": 7.87,
+    "win_days_pct": 65.22,
+    "active_win_days_pct": 68.68,
+    "active_days_pct": 95.0,
+    "sharpe": 7.328,
+    "sortino": 12.998,
+    "max_dd_pct": -0.3,
+    "worst_day_pct": -0.214,
+    "best_day_pct": 0.427
+  }
+}
