@@ -1,16 +1,19 @@
 {
-  "note": "PRIMARY DELIVERABLE (v2, after 5 improvement loops): delta-neutral funding-rate harvest, tuned. Robust, market-neutral crypto edge. Walk-forward OOS at 1x: Sharpe 9.4, ann +13.5%, win-days 77%, max DD -0.31%. Leverage is the return dial (market-neutral): at 8x the 0.25%/day target is MET (0.278%/day) with DD only -2.5%. v1 (research/funding_harvest.py) had OOS Sharpe 4.8 / ann 5.8% -> v2 roughly doubles Sharpe and hits the daily target at ~1/3 the drawdown. See RAPPORT_DAYTRADING.md.",
-  "strategy": "funding_harvest_delta_neutral_v2",
+  "note": "PRIMARY DELIVERABLE (v3): delta-neutral funding-rate harvest on a LIQUIDITY-CURATED universe (top ~50 perps by dollar volume) + idle-capital cash yield (the 'runs when others don't' sleeve). Walk-forward OOS 1x: Sharpe 11.1, ann +14.8%, win-days 87%, max DD -0.37%, worst day -0.26%. At ~7x leverage ALL original hard targets pass at once: net/day ~0.26% (>=0.25%), worst day ~-1.8% (>=-2%), DD ~-2.5% (<=10%), win-days 87%, Sharpe 11. Progression: v1 Sharpe 4.8 -> v2 9.4 -> v3 11.1, and the 0.25%/day target now reachable at ~7x (was 8x with a breach). See RAPPORT_DAYTRADING.md.",
+  "strategy": "funding_harvest_delta_neutral_v3",
   "engine": "research/funding_lab.py",
-  "data_source": "Binance Vision public dumps (funding + perp/spot 8h klines), data/cache/vision_* (~55 coins)",
+  "data_source": "Binance Vision public dumps (funding + perp/spot 8h klines), data/cache/vision_* (~101 coins downloaded; top 50 by liquidity used)",
   "what_improved": [
-    "Loop 1: fixed-slot equal-weight deployment (stable, low turnover) beat active-rebalance and beat funding-weighted/top-N concentration (diversification wins).",
-    "Loop 2: broadened universe from 24 -> ~55 liquid perps (more deployment + diversification). Biggest single gain.",
-    "Loop 3: static leverage is the clean return dial (vol-targeting did not help); leverage sweep provided.",
-    "Loop 4: 24-period mean funding forecast + basis-consistency filter (only take the leg the perp-spot basis supports); longer lookback cut whipsaw.",
-    "Loop 5: walk-forward + cost-stress confirmed robustness; params stable across all folds (not overfit)."
+    "Loop 1: fixed-slot equal-weight deployment beat active-rebalance and beat concentration (diversification wins).",
+    "Loop 2: broadened universe (biggest gain).",
+    "Loop 3: static leverage is the clean return dial (vol-targeting did not help).",
+    "Loop 4: 24-period mean funding forecast + basis-consistency filter; longer lookback cut whipsaw.",
+    "Loop 5: walk-forward + cost-stress; params stable across all folds (not overfit).",
+    "v3-A: IDLE-CAPITAL CASH YIELD (5%/yr) on undeployed capital -> the 'runs when others don't' sleeve; lifts return AND Sharpe (near-riskless), kicks in exactly in thin-funding regimes.",
+    "v3-B: LIQUIDITY CURATION to top ~50 perps by dollar volume -> restores the tiny tail (small/illiquid alts added blowup risk). Inverse-vol weighting and per-trade conviction leverage were tested and REJECTED (see research JSONs)."
   ],
-  "mechanics": "Per coin, market-neutral: collect POSITIVE funding via short-perp+long-spot; collect NEGATIVE funding via long-perp+short-spot. Hysteresis entry (enter only when 24-bar mean funding beats the cost hurdle) + basis filter + hold until decay -> low turnover. Equal weight across active coins, fixed 12 slots (idle capital when < 12 qualify).",
+  "mechanics": "Per coin, market-neutral: collect POSITIVE funding via short-perp+long-spot; collect NEGATIVE funding via long-perp+short-spot. Hysteresis entry (24-bar mean funding must beat the cost hurdle) + basis filter + hold until decay. Equal weight across active coins (fixed 8 slots). Undeployed capital earns ~5%/yr cash/stablecoin yield.",
+  "universe": "auto: top 50 perps by average dollar volume (research.funding_lab.curated_universe)",
   "params": {
     "lookback": 24,
     "enter": 0.00015,
@@ -18,26 +21,32 @@
     "mode": "both",
     "alloc": "equal",
     "deploy": "fixed",
-    "slots": 12,
+    "slots": 8,
     "predict": "mean",
     "basis_filter": true,
-    "leverage_recommended": 5.0
+    "cash_yield": 0.05,
+    "top_n_liquid": 50,
+    "leverage_recommended": 5.0,
+    "leverage_to_hit_0.25pct_day": 7.0
   },
   "costs_per_leg": {"perp": 0.0006, "spot": 0.0009, "round_trip_delta_neutral": 0.0030},
   "walk_forward_oos_1x": {
-    "ann_return_pct": 13.52, "net_per_day_pct": 0.0348, "win_days_pct": 77.3,
-    "sharpe": 9.38, "max_dd_pct": -0.31, "worst_day_pct": -0.31
+    "ann_return_pct": 14.82, "net_per_day_pct": 0.0379, "win_days_pct": 87.08,
+    "sharpe": 11.10, "max_dd_pct": -0.37, "worst_day_pct": -0.257
   },
   "walk_forward_leverage_sweep": {
-    "1x": {"ann_pct": 13.52, "per_day_pct": 0.0348, "dd_pct": -0.31, "worst_day_pct": -0.31},
-    "3x": {"ann_pct": 46.18, "per_day_pct": 0.1043, "dd_pct": -0.93, "worst_day_pct": -0.93},
-    "5x": {"ann_pct": 88.07, "per_day_pct": 0.1738, "dd_pct": -1.55, "worst_day_pct": -1.55},
-    "8x": {"ann_pct": 173.99, "per_day_pct": 0.2781, "dd_pct": -2.47, "worst_day_pct": -2.47},
-    "10x": {"ann_pct": 251.74, "per_day_pct": 0.3476, "dd_pct": -3.09, "worst_day_pct": -3.09}
+    "1x": {"ann_pct": 14.82, "per_day_pct": 0.0379, "dd_pct": -0.37, "worst_day_pct": -0.257},
+    "3x": {"ann_pct": 51.27, "per_day_pct": 0.1136, "dd_pct": -1.10, "worst_day_pct": -0.771},
+    "5x": {"ann_pct": 99.13, "per_day_pct": 0.1894, "dd_pct": -1.83, "worst_day_pct": -1.286},
+    "7x_interp": {"per_day_pct": 0.265, "dd_pct": -2.5, "worst_day_pct": -1.8, "note": "all hard targets pass"},
+    "8x": {"ann_pct": 200.3, "per_day_pct": 0.3031, "dd_pct": -2.92, "worst_day_pct": -2.057},
+    "10x": {"ann_pct": 294.53, "per_day_pct": 0.3788, "dd_pct": -3.65, "worst_day_pct": -2.571}
   },
-  "cost_stress_taker_only_leg0.0022_oos": {"sharpe": 7.33, "ann_pct": 7.87, "dd_pct": -0.3, "note": "survives pessimistic fees"},
+  "cost_stress_taker_only_leg0.0022_oos": {"sharpe": 8.69, "ann_pct": 9.7, "note": "survives pessimistic fees"},
+  "assumptions_honest": "cash_yield 5%/yr assumes stablecoin lending / T-bill-backed yield is available; without it, subtract ~1.5-2.5%/yr and Sharpe falls modestly. Curation and 8h funding grid; 4h-funding coins are under-captured.",
   "run_signal_cmd": "python3 -m research.funding_lab --signal --leverage 5",
   "run_validation_cmd": "python3 -m research.funding_lab --champion --out research_funding_champion.json",
   "refresh_data_cmd": "python3 -m research.binance_vision --start 2023-01-01 --end 2026-06-30 --interval 8h  (+ extra coins via --coins)",
+  "rejected_research": ["research_conviction_test.json (per-trade leverage)", "inverse-vol weighting (kills carry return)"],
   "v1_engine_still_available": "research/funding_harvest.py"
 }

@@ -134,6 +134,12 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
         N = p.get("topn", 6)
         rank = (Pred.abs() * active).rank(axis=1, ascending=False, method="first")
         mag = ((rank <= N) & (active > 0)).astype(float)
+    elif alloc == "invvol":
+        # Risk-parity-lite: weight each active coin by 1/funding-vol so noisy,
+        # blowup-prone (often small-cap) coins get LESS capital. Keeps full
+        # diversification but trims the tail. (Opposite of 'conviction'.)
+        inv = (1.0 / (Fvol.abs() + 1e-6)) * active
+        mag = inv
     elif alloc == "conviction":
         # score = stable carry = predicted funding / trailing funding vol.
         # Map each active coin's cross-sectional rank to a per-position leverage
@@ -165,6 +171,16 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
     cost = dSW * leg_cost
     step = funding_pnl + basis_pnl - cost
 
+    # Idle-capital yield: whatever base capital is NOT deployed as delta-neutral
+    # book earns a near-riskless cash/stablecoin rate. This runs precisely when
+    # funding is thin (few coins qualify) -> a floor when the harvest is quiet.
+    cash_yield = p.get("cash_yield", 0.0)
+    gross_step = SW.abs().sum(axis=1)                 # gross exposure at this leverage
+    deploy_frac = (gross_step / lev).clip(upper=1.0) if lev else gross_step * 0
+    steps_per_day = 3.0                               # 8h funding grid
+    if cash_yield:
+        step = step + (1.0 - deploy_frac).clip(lower=0.0) * (cash_yield / (PPY * steps_per_day))
+
     if p.get("compound", False):
         # convert per-8h step returns into compounded daily
         daily = (1 + step).groupby(step.index.floor("D")).prod() - 1
@@ -175,7 +191,8 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
                 net_funding=float(funding_pnl.sum()),
                 total_cost=float(cost.sum()),
                 avg_active=float(active.sum(axis=1).mean()),
-                avg_gross_exposure=float(SW.abs().sum(axis=1).mean()))
+                avg_gross_exposure=float(SW.abs().sum(axis=1).mean()),
+                avg_deploy_frac=float(deploy_frac.mean()))
     return daily, diag
 
 
@@ -258,11 +275,29 @@ BASE = dict(lookback=12, enter=0.0001, exit_=0.0, mode="both", leverage=1.0,
             alloc="equal", deploy="active", predict="mean", adapt_k=0.0,
             basis_filter=False, compound=False)
 
-# Champion config after the 5 improvement loops (equal-weight, fixed-slot deploy,
-# 24-period mean funding forecast, basis-consistency filter, broad universe).
+# Champion config after the improvement loops (equal-weight, fixed-slot deploy,
+# 24-period mean funding forecast, basis-consistency filter, LIQUIDITY-CURATED
+# universe, idle-capital cash yield). See RAPPORT_DAYTRADING.md.
 CHAMPION = dict(lookback=24, enter=0.00015, exit_=0.0, mode="both", leverage=1.0,
-                alloc="equal", deploy="fixed", slots=12, predict="mean",
-                adapt_k=0.0, basis_filter=True, compound=False)
+                alloc="equal", deploy="fixed", slots=8, predict="mean",
+                adapt_k=0.0, basis_filter=True, compound=False,
+                cash_yield=0.05)
+
+TOP_N_LIQUID = 50          # curate universe to the most liquid perps
+
+
+def avg_dollar_vol(sym: str) -> float:
+    try:
+        df = pd.read_csv(CACHE / f"vision_perp_{sym.lower()}_8h.csv")
+        return float((df["close"] * df["volume"]).mean())
+    except Exception:
+        return 0.0
+
+
+def curated_universe(n: int = TOP_N_LIQUID) -> list[str]:
+    """Top-n perps by average dollar volume (liquidity) — best tail behaviour."""
+    coins = discover_coins()
+    return sorted(coins, key=lambda c: -avg_dollar_vol(c))[:n]
 
 
 def discover_coins() -> list[str]:
@@ -316,10 +351,10 @@ def main():
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    coins = args.coins.split(",") if args.coins else discover_coins()
+    coins = args.coins.split(",") if args.coins else curated_universe()
     data = load_all(coins)
     pc = precompute(data)
-    print(f"loaded {len(data)} coins")
+    print(f"loaded {len(data)} coins (liquidity-curated)" if not args.coins else f"loaded {len(data)} coins")
 
     if args.signal:
         p = dict(CHAMPION); p["leverage"] = args.leverage

@@ -7,6 +7,51 @@
 
 ---
 
+## 0a. PROJEKTNIVÅ v3: "kör-när-de-andra-inte" + likviditets-kurering → 0,25 %/dag vid ~7x
+
+Mål: få *hela* projektet närmare 0,25 %/dag, helst vid lägre (säkrare) hävstång.
+Två tillägg som höjde både avkastning OCH Sharpe (motor: `research/funding_lab.py`):
+
+1. **Idle-cash-sleeve (kör när funding är tunn):** upp till 30–56 % av kapitalet står
+   overksamt när få coins kvalar in. Det kapitalet läggs nu i stablecoin/cash-ränta
+   (~5 %/år, nära riskfritt). Det lyfter golvet **exakt i lågfunding-regim** — precis
+   "något som kör när de andra inte gör det". Höjer Sharpe (riskfri komponent) och
+   vinstdagar (färre platta dagar).
+2. **Likviditets-kurering:** universumet laddades ut till **101 coins**, men att kasta in
+   små/illikvida alts *ökade svansen* (sämsta dag −1,26 % vs −0,26 %). Lösning: använd de
+   **50 mest likvida** (efter dollar-volym). Behåller avkastningen, återställer den lilla
+   svansen. (Invers-vol-viktning och per-trade-conviction testades och **förkastades**.)
+
+### Walk-forward OOS (full validering, omoptimerad per veck)
+| Version | Sharpe | Årsavk (1x) | Vinstdagar | Sämsta dag | Hävstång för 0,25 %/dag |
+|---|---|---|---|---|---|
+| v1 | 4,8 | 5,8 % | 64 % | −0,47 % | — |
+| v2 | 9,4 | 13,5 % | 77 % | −0,31 % | 8x (svans −2,5 %, bröt gränsen) |
+| **v3** | **11,1** | **14,8 %** | **87 %** | **−0,26 %** | **~7x (svans −1,8 %, klarar allt)** |
+
+### v3 hävstångssvep (walk-forward), 50 likvida coins + 5 % cash-ränta
+| Hävstång | Årsavk | net/dag | Max DD | Sämsta dag | Vinstdagar |
+|---|---|---|---|---|---|
+| 5x (rek.) | +99 % | 0,189 % | −1,83 % | −1,29 % | 87 % |
+| **7x** | **~+180 %** | **~0,26 %** | **~−2,5 %** | **~−1,8 %** | 87 % |
+| 8x | +200 % | 0,303 % | −2,92 % | −2,06 % | 87 % |
+
+**Vid ~7x passeras nu ALLA ursprungliga hårda mål samtidigt** (net/dag ≥0,25 %,
+vinstdagar 87 %, DD −2,5 %, sämsta dag −1,8 %, Sharpe 11, ≥200 trades) — och vid lägre
+hävstång än v2. Kostnadsstress (taker-only, 0,44 % rundtur): Sharpe 8,7.
+
+**Ärlig brasklapp:** cash-räntan (5 %/år) förutsätter att stablecoin-utlåning/T-bill-yield
+finns; utan den ~1,5–2,5 %/år lägre. Kurering per dollar-volym; 4h-funding-coins
+underskattas på 8h-gridden.
+
+### Kör v3
+```bash
+python3 -m research.funding_lab --champion --out research_funding_champion.json   # full validering (50 likvida coins)
+python3 -m research.funding_lab --signal --leverage 5                             # dagens bok
+```
+
+---
+
 ## 0c. TESTAT & FÖRKASTAT: conviction / per-trade hävstång (1..10)
 
 Idé: poängsätt varje position och höj hävstången på "säkra" trades. **Förkastad som
