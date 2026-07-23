@@ -43,7 +43,10 @@ def precompute(data: dict) -> dict:
         pret = np.zeros(len(P)); pret[1:] = P[1:] / P[:-1] - 1
         sret = np.zeros(len(S)); sret[1:] = S[1:] / S[:-1] - 1
         basis = (P - S) / S
-        pc[sym] = dict(idx=df.index, f=f.to_numpy(), pret=pret, sret=sret, basis=basis)
+        # trailing funding volatility (shifted -> no look-ahead), for conviction scoring
+        fvol = f.rolling(60, min_periods=10).std().shift(1).bfill().fillna(f.abs().mean()).to_numpy()
+        pc[sym] = dict(idx=df.index, f=f.to_numpy(), pret=pret, sret=sret,
+                       basis=basis, fvol=fvol)
     return pc
 
 
@@ -104,7 +107,7 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
     G, PRED = build_signed_positions(pc, p)
     syms = list(pc.keys())
     # assemble on shared index
-    frames_g, frames_pred, frames_f, frames_pr, frames_sr = {}, {}, {}, {}, {}
+    frames_g, frames_pred, frames_f, frames_pr, frames_sr, frames_fv = {}, {}, {}, {}, {}, {}
     for sym in syms:
         idx = pc[sym]["idx"]
         frames_g[sym] = pd.Series(G[sym], index=idx)
@@ -112,9 +115,11 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
         frames_f[sym] = pd.Series(pc[sym]["f"], index=idx)
         frames_pr[sym] = pd.Series(pc[sym]["pret"], index=idx)
         frames_sr[sym] = pd.Series(pc[sym]["sret"], index=idx)
+        frames_fv[sym] = pd.Series(pc[sym]["fvol"], index=idx)
     Gm = pd.DataFrame(frames_g).sort_index()
     idx = Gm.index
     Pred = pd.DataFrame(frames_pred).reindex(idx).fillna(0.0)
+    Fvol = pd.DataFrame(frames_fv).reindex(idx).ffill().fillna(1e9)
     Fm = pd.DataFrame(frames_f).reindex(idx).fillna(0.0)
     Pr = pd.DataFrame(frames_pr).reindex(idx).fillna(0.0)
     Sr = pd.DataFrame(frames_sr).reindex(idx).fillna(0.0)
@@ -129,6 +134,17 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
         N = p.get("topn", 6)
         rank = (Pred.abs() * active).rank(axis=1, ascending=False, method="first")
         mag = ((rank <= N) & (active > 0)).astype(float)
+    elif alloc == "conviction":
+        # score = stable carry = predicted funding / trailing funding vol.
+        # Map each active coin's cross-sectional rank to a per-position leverage
+        # multiplier in [conv_min, conv_max] (e.g. 1..10). High, STABLE carry
+        # gets the most; noisy/low carry gets the least.
+        cmin = p.get("conv_min", 1.0)
+        cmax = p.get("conv_max", 10.0)
+        score = (Pred.abs() / (Fvol.abs() + 1e-9)) * active
+        # rank within each row among active coins -> [0,1] -> [cmin,cmax]
+        r = score.where(active > 0).rank(axis=1, pct=True)
+        mag = (cmin + (cmax - cmin) * r).where(active > 0, 0.0).fillna(0.0)
     else:  # equal
         mag = active.copy()
 
@@ -187,7 +203,7 @@ def split_eval(pc: dict, p: dict, train_ratio=0.55, leg_cost=LEG_COST):
             if mask.sum() > 100:
                 out[s] = dict(idx=d["idx"][mask], f=d["f"][mask],
                               pret=d["pret"][mask], sret=d["sret"][mask],
-                              basis=d["basis"][mask])
+                              basis=d["basis"][mask], fvol=d["fvol"][mask])
         return out
     lo = idx[0] - pd.Timedelta(days=1)
     is_pc = sub((lo, split))
@@ -210,7 +226,7 @@ def walk_forward(pc: dict, grid: list, leg_cost=LEG_COST, n_folds=4):
             if mask.sum() > 100:
                 out[s] = dict(idx=d["idx"][mask], f=d["f"][mask],
                               pret=d["pret"][mask], sret=d["sret"][mask],
-                              basis=d["basis"][mask])
+                              basis=d["basis"][mask], fvol=d["fvol"][mask])
         return out
     oos = []
     picks = []

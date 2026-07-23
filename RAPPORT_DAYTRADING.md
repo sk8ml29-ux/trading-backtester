@@ -7,6 +7,21 @@
 
 ---
 
+## 0c. TESTAT & FÖRKASTAT: conviction / per-trade hävstång (1..10)
+
+Idé: poängsätt varje position och höj hävstången på "säkra" trades. **Förkastad som
+strategiändring** (höjde inte risk-justerad vinst) — sparad som forskning
+(`research_conviction_test.json`, `alloc="conviction"` i `funding_lab.py`).
+
+- *Per trade* har poängen (stabil carry = funding ÷ funding-volatilitet) äkta signal:
+  toppkvintil step-Sharpe **0,254** vs 0,046 i botten, minst svans (−29 vs −655 bps).
+- *Men som portfölj-hävstång* koncentreras kapitalet → diversifieringen (källan till
+  Sharpe ~10 / −0,3 % DD) offras och turnover-kostnaden steg 19 %→50 %. Walk-forward:
+  equal-weight 14,1 %/Sharpe 10,0 vs conviction 13,3 %/Sharpe 5,2 — och sämre svans
+  (−0,78 % vs −0,21 %). **Likformig hävstång på den diversifierade boken dominerar.**
+
+---
+
 ## 0b. FÖRBÄTTRINGSLOOP (5 varv): dubblad Sharpe + dagsmålet nås
 
 Efter första leveransen kördes 5 experimentloopar (allt validerat OOS + walk-forward,
