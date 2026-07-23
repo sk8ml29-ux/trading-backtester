@@ -1,0 +1,37 @@
+{
+  "note": "PRIMARY DELIVERABLE: delta-neutral funding-rate harvest. This is a genuinely robust, market-neutral crypto edge that survives realistic costs out-of-sample (Sharpe 4.8 OOS, max DD <1%, ~65% winning days, worst day -0.5% at 1x). The aggressive 0.25%/day target is only reachable with dangerous (>10x) leverage, so it is NOT met; every other target passes at a sane 3-4x leverage. See RAPPORT_DAYTRADING.md.",
+  "strategy": "funding_harvest_delta_neutral",
+  "engine": "research/funding_harvest.py",
+  "data_source": "Binance Vision public dumps (funding + perp/spot 8h klines), data/cache/vision_*",
+  "universe": ["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","LINKUSDT","LTCUSDT","BNBUSDT","AVAXUSDT","DOTUSDT","TRXUSDT","ETCUSDT","BCHUSDT","NEARUSDT","ATOMUSDT","APTUSDT","ARBUSDT","OPUSDT","INJUSDT","SUIUSDT","FILUSDT","AAVEUSDT","UNIUSDT"],
+  "mechanics": "Per coin, market-neutral: to collect POSITIVE funding hold short-perp + long-spot; to collect NEGATIVE funding hold long-perp + short-spot. Enter only when trailing funding beats the cost hurdle (hysteresis) and hold until it decays -> low turnover. Equal weight across active coins.",
+  "params": {
+    "lookback": 12,
+    "enter": 0.0001,
+    "exit": 0.0,
+    "mode": "both",
+    "leverage_recommended": 3.0
+  },
+  "costs_per_leg": {"perp": 0.0006, "spot": 0.0009, "round_trip_delta_neutral": 0.0030},
+  "oos_metrics_1x_last_45pct": {
+    "period": "~2024-09 .. 2026-06 (out-of-sample)",
+    "ann_return_pct": 5.76,
+    "net_per_day_pct": 0.0154,
+    "win_days_pct": 64.0,
+    "active_win_days_pct": 66.9,
+    "sharpe": 4.78,
+    "max_dd_pct": -0.87,
+    "worst_day_pct": -0.47,
+    "cost_share_of_gross_funding_pct": 55.9
+  },
+  "leverage_sweep_oos": {
+    "1x": {"ann_pct": 5.76, "dd_pct": -0.87, "worst_day_pct": -0.47},
+    "3x": {"ann_pct": 18.24, "dd_pct": -2.6, "worst_day_pct": -1.4},
+    "5x": {"ann_pct": 32.12, "dd_pct": -4.32, "worst_day_pct": -2.33},
+    "8x": {"ann_pct": 55.88, "dd_pct": -6.86, "worst_day_pct": -3.73}
+  },
+  "cost_stress_taker_only_leg0.0022_oos": {"sharpe": 1.87, "dd_pct": -2.15, "note": "survives pessimistic fees"},
+  "run_signal_cmd": "python3 -m research.funding_harvest --signal --lookback 12 --enter 0.0001 --mode both",
+  "run_validation_cmd": "python3 -m research.funding_harvest --fixed --lookback 12 --enter 0.0001 --mode both --leverage 1.0",
+  "refresh_data_cmd": "python3 -m research.binance_vision --start 2023-01-01 --end 2026-06-30 --interval 8h"
+}

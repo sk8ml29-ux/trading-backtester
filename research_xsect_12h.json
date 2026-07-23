@@ -1,0 +1,150 @@
+{
+  "bar": "12h",
+  "best_params": {
+    "lookback": 12,
+    "hold": 24,
+    "k": 3,
+    "direction": "momentum",
+    "leverage": 2.0,
+    "vol_target": 0.006
+  },
+  "is_metrics": {
+    "n_days": 704,
+    "net_return_pct": 94.67,
+    "net_per_day_pct": 0.1001,
+    "win_days_pct": 52.13,
+    "sharpe": 1.822,
+    "sortino": 3.404,
+    "max_dd_pct": -18.14,
+    "worst_day_pct": -3.386,
+    "best_day_pct": 9.57
+  },
+  "oos_metrics": {
+    "n_days": 576,
+    "net_return_pct": 8.58,
+    "net_per_day_pct": 0.0195,
+    "win_days_pct": 50.0,
+    "sharpe": 0.364,
+    "sortino": 0.588,
+    "max_dd_pct": -14.52,
+    "worst_day_pct": -4.168,
+    "best_day_pct": 8.394
+  },
+  "oos_cost_share_pct": 47.3,
+  "oos_scorecard": {
+    "net_per_day>=0.25%": "FAIL",
+    "win_days>=60%": "FAIL",
+    "win_days>=50%_floor": "PASS",
+    "max_dd<=10%": "FAIL",
+    "worst_day>=-2%": "FAIL",
+    "sharpe>=1.5": "FAIL"
+  },
+  "yearly_oos": {
+    "2024": {
+      "n_days": 27,
+      "net_return_pct": 0.13,
+      "net_per_day_pct": 0.0097,
+      "win_days_pct": 22.22,
+      "sharpe": 0.189,
+      "sortino": 0.401,
+      "max_dd_pct": -3.76,
+      "worst_day_pct": -1.638,
+      "best_day_pct": 4.491
+    },
+    "2025": {
+      "n_days": 365,
+      "net_return_pct": 9.39,
+      "net_per_day_pct": 0.0302,
+      "win_days_pct": 51.51,
+      "sharpe": 0.543,
+      "sortino": 0.94,
+      "max_dd_pct": -14.52,
+      "worst_day_pct": -3.101,
+      "best_day_pct": 8.394
+    },
+    "2026": {
+      "n_days": 184,
+      "net_return_pct": -0.88,
+      "net_per_day_pct": -0.0004,
+      "win_days_pct": 51.09,
+      "sharpe": -0.007,
+      "sortino": -0.01,
+      "max_dd_pct": -8.46,
+      "worst_day_pct": -4.168,
+      "best_day_pct": 2.923
+    }
+  },
+  "wf_metrics": {
+    "n_days": 1024,
+    "net_return_pct": -61.23,
+    "net_per_day_pct": -0.0829,
+    "win_days_pct": 43.65,
+    "sharpe": -1.156,
+    "sortino": -1.236,
+    "max_dd_pct": -64.05,
+    "worst_day_pct": -11.624,
+    "best_day_pct": 7.024
+  },
+  "wf_scorecard": {
+    "net_per_day>=0.25%": "FAIL",
+    "win_days>=60%": "FAIL",
+    "win_days>=50%_floor": "FAIL",
+    "max_dd<=10%": "FAIL",
+    "worst_day>=-2%": "FAIL",
+    "sharpe>=1.5": "FAIL"
+  },
+  "wf_picks": [
+    {
+      "fold": 0,
+      "test_start": "2023-09-14 00:00:00",
+      "test_end": "2024-05-26 12:00:00",
+      "params": {
+        "lookback": 96,
+        "hold": 6,
+        "k": 1,
+        "direction": "reversion",
+        "leverage": 1.0,
+        "vol_target": 0.0
+      }
+    },
+    {
+      "fold": 1,
+      "test_start": "2024-05-27 00:00:00",
+      "test_end": "2025-02-06 12:00:00",
+      "params": {
+        "lookback": 12,
+        "hold": 24,
+        "k": 3,
+        "direction": "momentum",
+        "leverage": 2.0,
+        "vol_target": 0.006
+      }
+    },
+    {
+      "fold": 2,
+      "test_start": "2025-02-07 00:00:00",
+      "test_end": "2025-10-20 12:00:00",
+      "params": {
+        "lookback": 12,
+        "hold": 24,
+        "k": 3,
+        "direction": "momentum",
+        "leverage": 2.0,
+        "vol_target": 0.006
+      }
+    },
+    {
+      "fold": 3,
+      "test_start": "2025-10-21 00:00:00",
+      "test_end": "2026-07-03 12:00:00",
+      "params": {
+        "lookback": 48,
+        "hold": 6,
+        "k": 3,
+        "direction": "momentum",
+        "leverage": 1.0,
+        "vol_target": 0.0
+      }
+    }
+  ]
+}
