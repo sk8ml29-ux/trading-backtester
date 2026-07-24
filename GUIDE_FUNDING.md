@@ -96,8 +96,20 @@ bash run_funding.sh paper 100000 5     # startar ett paper-konto: 100 000, hävs
 
 Kör sedan samma rad **var 8:e timme eller en gång om dagen**. Verktyget:
 - hämtar den funding som faktiskt betalats,
+- räknar verklig skillnad mellan spot- och perp-priset (basis),
+- drar köp/sälj-kostnader och en försiktig uppskattning av låneränta för kort spot,
+- stoppar säkert utan att ändra boken om OKX-data saknas,
 - räknar löpande vinst/förlust,
 - visar en kurva som växer fram.
+
+Första gången dras en startkostnad för att öppna båda benen. Vid 5x kan kontot
+därför börja under 100 000. **Det är korrekt och inte en bugg** — en verklig börs
+tar också avgift när positionerna öppnas.
+
+Om ditt paper-konto startades före buggrättningen 2026-07-24 kommer nästa körning
+att visa "uppgraderades till modell v2". Då bokförs den gamla saknade startkostnaden
+och gamla positioner kan stängas för att följa de korrigerade reglerna. Kontot kan
+därför få en engångsnedgång. Det är en redovisningsrättning, inte en ny handelsförlust.
 
 Låt det gå i **minst 4–8 veckor**. Om kurvan pekar uppåt ungefär som backtestet
 (lugnt uppåt, små hack) → då först kan man börja fundera på riktiga pengar.

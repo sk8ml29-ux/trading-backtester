@@ -8,4 +8,5 @@ data/live_state.json
 data/live_trades.log
 data/cache/
 data/live/
+data/paper/
 backups/

@@ -1,0 +1,393 @@
+HELA TRADINGPROJEKTET – ENKELT FÖRKLARAT
+=========================================
+
+Senast kontrollerad: 2026-07-24
+
+DEN KORTA VERSIONEN
+-------------------
+
+Det här projektet är ett paket med:
+
+1. program som provar handelsidéer på gammal marknadsdata,
+2. många olika handelsstrategier,
+3. paper-botar som följer marknaden med låtsaspengar,
+4. riskkontroller och en webböversikt,
+5. ett separat system som försöker tjäna på krypto-funding.
+
+Det viktigaste just nu är funding-systemet.
+
+Funding-systemet är tänkt att vara marknadsneutralt:
+
+  - Om funding är positiv: köp coinen i spot och sälj samma belopp i perp.
+  - Om funding är negativ: köp perp och blanka samma belopp i spot.
+
+De två positionerna ska ta ut den vanliga prisrörelsen. Intäkten ska i stället
+komma från funding-betalningen som sker mellan perp-handlare.
+
+VIKTIGT:
+
+  - Paper-programmet handlar INTE riktiga pengar.
+  - Funding-systemet lägger INTE riktiga ordrar på en börs.
+  - Det finns ännu ingen färdig automatisk live-bot för funding.
+  - Backtest är inte ett löfte om framtida vinst.
+  - Paper-testet måste köras i flera veckor innan man ens överväger riktiga pengar.
+
+
+VAD SOM KÖR JUST NU
+-------------------
+
+Kommandot:
+
+  bash run_funding.sh paper 100000 5
+
+startar eller uppdaterar ett PAPER-KONTO:
+
+  - 100000 är låtsaskapitalet.
+  - 5 betyder 5 gånger hävstång i simuleringen.
+  - Programmet hämtar riktig funding och riktiga spot/perp-priser från OKX.
+  - Programmet räknar hur det simulerade kontot hade utvecklats.
+  - Inga API-nycklar behövs.
+  - Inga riktiga ordrar skickas.
+
+Den förbättrade paper-modellen räknar:
+
+  - funding som faktiskt betalats,
+  - skillnaden mellan spot- och perp-priset (basis),
+  - köp- och säljavgifter,
+  - försiktig uppskattning av låneränta när spot blankas,
+  - ränta på kapital som inte används,
+  - förändrade positioner och deras kostnader.
+
+Den stoppar utan att ändra positionerna om viktig OKX-data saknas.
+Paper-filen sparas i:
+
+  data/paper/state.json
+
+Om servern eller anslutningen avbryts finns kontot kvar. Nästa körning fortsätter.
+
+Första gången dras en kostnad för att öppna spot- och perp-positionerna. Därför
+kan kontot börja under 100000. Det är realistiskt och inte ett fel.
+
+
+VAD "BOKEN" BETYDER
+-------------------
+
+Exempel:
+
+  DOGEUSDT  SHORT perp / LÅNG spot  vikt=0.625
+
+Det betyder:
+
+  1. Köp DOGE i spot.
+  2. Sälj/shorta samma DOGE-belopp i perpetual-kontraktet.
+  3. De två benen ska vara lika stora.
+  4. "vikt" visar storleken i förhållande till kontot.
+
+Exempel:
+
+  ATOMUSDT  LÅNG perp / SHORT spot
+
+Det betyder motsatsen:
+
+  1. Köp ATOM-perp.
+  2. Låna och sälj samma ATOM-belopp i spot.
+
+Den andra varianten har en extra verklig kostnad: ränta för att låna spot-coinen.
+Paper-programmet använder för säkerhets skull en uppskattning på 10 procent per år.
+Den verkliga räntan varierar mellan börser och coins.
+
+
+DE VIKTIGASTE FILERNA FÖR FUNDING
+---------------------------------
+
+run_funding.sh
+  Det enkla startkommandot. Det hjälper till att installera, hämta data och köra.
+
+research/funding_lab.py
+  Forsknings- och backtestmotorn för den senaste funding-strategin.
+
+research/funding_harvest.py
+  En tidigare version av funding-strategin.
+
+research/paper_forward.py
+  Paper-kontot som följer riktig funding utan riktiga pengar.
+
+research/binance_vision.py
+  Hämtar historisk funding samt spot- och perp-priser från Binance Vision.
+
+research/okx_data.py
+  Hämtar publik data från OKX. Paper-systemet använder OKX.
+
+research/daytrade_best_params.json
+  Sparar vilka inställningar som har valts för forskningsmodellen.
+
+research_funding_champion.json
+  Ett genererat resultat från senaste funding-backtestet.
+
+GUIDE_FUNDING.md
+  En enkel guide för hur funding-idén och positionerna fungerar.
+
+RAPPORT_DAYTRADING.md
+  Den långa tekniska forskningsrapporten med lyckade och misslyckade tester.
+
+
+BUGGTESTET 2026-07-24
+---------------------
+
+Vid genomgången hittades och rättades flera viktiga fel:
+
+1. Paper-kontot drog inte kostnaden för att öppna den första boken.
+2. Paper-kontot räknade funding men inte förändringen i spot/perp-basis.
+3. Låneränta för blankad spot saknades.
+4. Tillfälligt saknad API-data kunde feltolkas som en signal att stänga.
+5. Paper-inställningen för inträde skilde sig från backtestets champion.
+6. Samtidiga uppdateringar kunde i teorin skriva i samma state-fil.
+7. En hävstångstabell multiplicerade felaktigt även cash-räntan med hävstång.
+8. Funding-backtestet räknade inte låneränta för negativ funding/blank spot.
+
+Alla dessa punkter är nu rättade eller tydligt modellerade.
+
+Automatiska tester finns i:
+
+  scripts/test_paper_forward.py
+
+Testet kontrollerar bland annat:
+
+  - rätt tecken på positiv och negativ funding,
+  - att samma funding inte räknas två gånger,
+  - rätt tecken på basis-vinst,
+  - lånekostnad för kort spot,
+  - kostnad vid öppning, stängning och sidbyte,
+  - att saknad data inte stänger positioner,
+  - att basis-filtret fungerar.
+
+Kör testerna med:
+
+  python3 scripts/test_paper_forward.py
+
+
+KORRIGERADE FORSKNINGSRESULTAT FÖR FUNDING
+------------------------------------------
+
+Efter att även kort-spot-låneräntan räknats in blev de korrekta ungefärliga
+walk-forward-resultaten för den likviditetsvalda 50-coin-portföljen:
+
+Vid 1x:
+  - cirka 10,9 procent per år,
+  - cirka 0,028 procent per dag i snitt,
+  - Sharpe cirka 7,1,
+  - cirka 71 procent vinstdagar,
+  - historisk max drawdown cirka -0,4 procent.
+
+Vid 5x:
+  - cirka 62 procent per år i modellen,
+  - cirka 0,134 procent per dag,
+  - historisk max drawdown cirka -1,9 procent,
+  - historiskt sämsta dag cirka -1,9 procent.
+
+Vid 7x:
+  - cirka 96 procent per år i modellen,
+  - cirka 0,186 procent per dag,
+  - historisk max drawdown cirka -2,6 procent,
+  - historiskt sämsta dag cirka -2,6 procent.
+
+Vid cirka 10x når modellen 0,25 procent per dag, men sämsta historiska dag blir
+cirka -3,7 procent. Därför finns INGEN testad nivå som samtidigt klarar både
+0,25 procent per dag och max -2 procent på sämsta dagen.
+
+Det tidigare påståendet att alla mål klarades vid 7x var för optimistiskt och
+berodde på två modellfel:
+
+  - cash-räntan skalades felaktigt med hävstång,
+  - låneräntan för kort spot saknades.
+
+Det rätta budskapet är:
+
+  Funding-idén ser fortfarande lovande ut i historiska tester, men målet
+  0,25 procent per dag kräver för hög risk för att samtidigt klara alla
+  riskgränser. Paper-forward-testet avgör om edgen finns live.
+
+
+ÖVRIGA DELAR AV PROJEKTET
+-------------------------
+
+BACKTEST
+
+backtest/
+  Motorn som låtsashandlar på gammal data. Den försöker räkna realistiska
+  vinster, förluster, stop-loss, spread, slippage och courtage.
+
+run_backtest.py
+  Startkommandot för vanliga historiska strategitester.
+
+Exempel:
+
+  python3 run_backtest.py --symbol GC=F --entry-tf 1d --strategy all
+
+
+STRATEGIER
+
+strategies/
+  Här ligger ungefär 35 strategiidéer.
+
+Några viktiga grupper:
+
+  - MACD pullback: försöker följa trend efter en rekyl.
+  - Donchian breakout: handlar när priset bryter en tidigare kanal.
+  - RSI mean reversion: försöker köpa översålda nedgångar.
+  - Squeeze breakout: handlar efter att volatiliteten varit komprimerad.
+  - Bidirectional: kan handla både upp och ner.
+  - RSI(2): snabb mean reversion på daglig data.
+  - Triple timeframe: flera tidsramar måste hålla med.
+  - Conviction stack: checklista med flera villkor.
+  - Forex-sessioner: London, Asien, överlapp och breakout.
+  - Harmonic patterns: geometriska prisformationer.
+
+VIKTIGT:
+
+Många strategier finns för forskning. Att kod finns betyder inte att strategin
+är rekommenderad eller lönsam. De rena 15m/1h-daytrading-testerna på krypto
+förlorade efter realistiska kostnader.
+
+
+PAPER-BOTAR FÖR VANLIGA PRISSTRATEGIER
+
+run_live.py och live/
+  Simulerar vanliga köp/sälj-signaler med låtsaspengar.
+
+Exempel på en engångskontroll:
+
+  python3 run_live.py --once --strategy macd_pullback --symbol GC=F
+
+Projektet har olika portföljfiler med OOS-kandidater för:
+
+  - krypto,
+  - aktier och råvaror,
+  - RSI(2) mean reversion,
+  - conviction,
+  - forex.
+
+De är kandidater för paper-forward, inte garantier.
+
+
+DATA
+
+Projektet kan använda:
+
+  - Binance för krypto,
+  - Binance Vision för historisk funding och priser,
+  - OKX för paper-systemets live funding/priser,
+  - Dukascopy för forex,
+  - Yahoo som gratis reserv för aktier, index och råvaror,
+  - Polygon som valfri bättre aktiedata med API-nyckel.
+
+Nedladdad data sparas i:
+
+  data/cache/
+
+Om en nedladdning avbryts behöver normalt inte allt laddas om. Färdiga coin-filer
+ligger kvar och nästa körning fortsätter med det som saknas.
+
+
+RISK OCH ÖVERVAKNING
+
+risk/
+  Innehåller riskgränser och hälsokontroller för vanliga strategier.
+
+dashboard/app.py
+  En webböversikt som bara läser paper-status. Den handlar ingenting.
+
+scripts/daily_health_check.py
+  Kontrollerar om strategier mår sämre än väntat.
+
+
+ALPACA
+
+live/alpaca_broker.py och scripts/alpaca_live.py
+  Det finns integration för Alpaca, främst aktier/ETF.
+
+Detta är INTE funding-boten och ska inte blandas ihop med krypto-funding.
+Alpaca-flödet kan använda riktiga pengar om någon aktivt konfigurerar live-nycklar.
+
+
+VAD SOM ÄR REKOMMENDERAT JUST NU
+--------------------------------
+
+1. Låt funding-paper-kontot köra i minst 4–8 veckor.
+2. Kör det först på låg simulerad hävstång, helst 1x. 5x kan följas som ett
+   separat scenario men ska inte ses som säkert.
+3. Jämför faktisk paper-avkastning, funding, basis, kostnader och låneränta.
+4. Bygg inte en riktig auto-bot förrän paper-resultatet stöder hypotesen.
+5. Om en live-bot byggs: börja på testnet/demo, inte med riktiga pengar.
+6. Använd aldrig API-nycklar med uttagsrätt.
+
+
+ENKLA KOMMANDON
+---------------
+
+Gå först till projektmappen:
+
+  cd ~/trading-backtester
+
+Uppdatera paper-kontot:
+
+  bash run_funding.sh paper
+
+Visa paper-kontot utan att uppdatera:
+
+  python3 -m research.paper_forward --show
+
+Starta om paper-kontot med 100000 och 1x:
+
+  python3 -m research.paper_forward --init --capital 100000 --leverage 1
+
+OBS: --init börjar om kontot. Använd inte --init av misstag när du vill fortsätta.
+
+Kör funding-backtest:
+
+  bash run_funding.sh validera
+
+Visa funding-signal:
+
+  bash run_funding.sh signal 1
+
+Kör automatiska bugtester:
+
+  python3 scripts/test_paper_forward.py
+
+Läs denna fil:
+
+  cat HELA_TRADINGPROJEKTET_ENKELT_FORKLARAT.txt
+
+
+VAD SOM INTE FINNS ÄN
+---------------------
+
+Det finns ännu inte:
+
+  - en automatisk riktig funding-bot,
+  - automatisk riktig spot/perp-orderläggning,
+  - automatisk marginal- och likvidationskontroll för funding,
+  - bevis från flera veckors live paper-forward,
+  - en garanti för framtida vinst.
+
+Det som finns är:
+
+  - en omfattande forskningsmiljö,
+  - historiska backtest,
+  - walk-forward-test,
+  - paper-botar,
+  - ett förbättrat paper-system som kan samla live-bevis utan risk.
+
+
+SLUTSATS
+--------
+
+Vi har skapat en lovande strategiidé och en säker simulator – inte ännu en
+automatisk pengamaskin.
+
+Det viktigaste nästa steget är inte mer hävstång. Det är att låta den rättade
+paper-motorn samla riktiga observationer i flera veckor. Om verklig funding,
+basis, avgifter och lånekostnader tillsammans ger en stabil positiv kurva,
+då har vi bättre grund för att bygga en automatisk testnet-bot.
+
