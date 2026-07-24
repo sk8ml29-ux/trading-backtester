@@ -6,10 +6,12 @@
 #     bash run_funding.sh signal        # visar dagens bok (vad man ska köpa/sälja)
 #     bash run_funding.sh signal 5      # samma, med hävstång 5
 #     bash run_funding.sh validera      # kör hela backtestet (siffrorna)
+#     bash run_funding.sh paper 100000 5   # PAPER: följ strategin live utan pengar
+#                                          # (kör detta var 8:e timme / dagligen)
 #
 #  Skriptet gör automatiskt:
 #    1) installerar det som behövs (pandas/numpy)
-#    2) laddar ner marknadsdatan EN gång om den saknas (kan ta 20-40 min)
+#    2) laddar ner marknadsdatan EN gång om den saknas (behövs ej för 'paper')
 #    3) kör strategin
 # =============================================================================
 set -e
@@ -27,6 +29,25 @@ else
   echo "[1/3] Beroenden finns redan. OK."
 fi
 
+MODE="${1:-signal}"
+
+# --- PAPER-läge: följ strategin live via OKX, utan marknadsdata-nedladdning ----
+if [ "$MODE" = "paper" ]; then
+  CAP="${2:-100000}"
+  LEV="${3:-5}"
+  echo "[2/3] Paper-läge (live via OKX, inga riktiga pengar)."
+  if [ -f data/paper/state.json ]; then
+    echo "[3/3] Uppdaterar paper-kontot ..."
+    python3 -m research.paper_forward --update
+  else
+    echo "[3/3] Startar nytt paper-konto: kapital $CAP, hävstång ${LEV}x ..."
+    python3 -m research.paper_forward --init --capital "$CAP" --leverage "$LEV" --update
+  fi
+  echo "----------------------------------------------------------------"
+  echo "KLART. Kör 'bash run_funding.sh paper' igen var 8:e timme/dagligen."
+  exit 0
+fi
+
 # --- 2. Marknadsdata (laddas ner en gång; hoppar över det som redan finns) ----
 COUNT=$(ls data/cache/vision_funding_*.csv 2>/dev/null | wc -l | tr -d ' ')
 if [ "${COUNT:-0}" -lt 50 ]; then
@@ -41,7 +62,6 @@ else
 fi
 
 # --- 3. Kör strategin ---------------------------------------------------------
-MODE="${1:-signal}"
 echo "[3/3] Kör: $MODE"
 echo "----------------------------------------------------------------"
 if [ "$MODE" = "validera" ] || [ "$MODE" = "champion" ]; then
