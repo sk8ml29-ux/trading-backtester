@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from research.funding_harvest import load_all, metrics, scorecard, LEG_COST, PPY
-from research.binance_vision import BASKET, CACHE
+from research.binance_vision import CACHE
 
 
 # ---------------------------------------------------------------------------
@@ -403,7 +403,6 @@ def main():
         print(f"\n  cost-stress (taker-only 0.44% RT) OOS: ann={m_stress['ann_return_pct']}% "
               f"sharpe={m_stress['sharpe']} dd={m_stress['max_dd_pct']}%")
         if args.out:
-            import json
             out = dict(n_coins=len(data), champion=CHAMPION,
                        oos_split_1x=m_oos, oos_scorecard_1x=scorecard(m_oos),
                        walk_forward_1x=mwf, wf_scorecard_1x=scorecard(mwf),
