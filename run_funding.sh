@@ -8,6 +8,9 @@
 #     bash run_funding.sh validera      # kör hela backtestet (siffrorna)
 #     bash run_funding.sh paper 100000 5   # PAPER: följ strategin live utan pengar
 #                                          # (kör detta var 8:e timme / dagligen)
+#     bash run_funding.sh bot test         # OKX DEMO: kolla anslutning/nycklar
+#     bash run_funding.sh bot dry 10000 1  # OKX DEMO: visa orderplan (skickar inget)
+#     bash run_funding.sh bot exec 10000 1 yes  # OKX DEMO: lägg ordrar (låtsaspengar)
 #
 #  Skriptet gör automatiskt:
 #    1) installerar det som behövs (pandas/numpy)
@@ -30,6 +33,25 @@ else
 fi
 
 MODE="${1:-signal}"
+
+# --- BOT-läge: OKX DEMO-bot (låtsaspengar). Ingen marknadsdata-nedladdning. -----
+if [ "$MODE" = "bot" ]; then
+  SUB="${2:-dry}"
+  CAP="${3:-10000}"
+  LEV="${4:-1}"
+  echo "[2/3] Bot-läge (OKX DEMO, låtsaspengar)."
+  case "$SUB" in
+    test)   python3 -m live.funding_bot test ;;
+    status) python3 -m live.funding_bot status ;;
+    dry)    python3 -m live.funding_bot dry --capital "$CAP" --leverage "$LEV" ;;
+    exec)   python3 -m live.funding_bot exec --capital "$CAP" --leverage "$LEV" ${5:+--yes} ;;
+    close)  python3 -m live.funding_bot close ${5:+--yes} ;;
+    *) echo "Okänt bot-kommando: $SUB (använd test|status|dry|exec|close)"; exit 1 ;;
+  esac
+  echo "----------------------------------------------------------------"
+  echo "KLART."
+  exit 0
+fi
 
 # --- PAPER-läge: följ strategin live via OKX, utan marknadsdata-nedladdning ----
 if [ "$MODE" = "paper" ]; then
