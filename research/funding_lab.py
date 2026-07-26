@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from research.funding_harvest import load_all, metrics, scorecard, LEG_COST, PPY
-from research.binance_vision import BASKET, CACHE
+from research.binance_vision import CACHE
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +169,12 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
     basis_pnl = (SW * (Sr - Pr)).sum(axis=1)
     dSW = SW.diff().abs().sum(axis=1).fillna(SW.abs().sum(axis=1))
     cost = dSW * leg_cost
-    step = funding_pnl + basis_pnl - cost
+    # g=-1 means long perp / SHORT spot. Short spot is borrowed and therefore
+    # has a real financing cost. Use a conservative default unless overridden.
+    borrow_apr = p.get("short_spot_borrow_apr", 0.10)
+    short_spot_notional = (-SW.clip(upper=0.0)).sum(axis=1)
+    borrow_cost = short_spot_notional * borrow_apr / (PPY * 3.0)  # 3 x 8h/day
+    step = funding_pnl + basis_pnl - cost - borrow_cost
 
     # Idle-capital yield: whatever base capital is NOT deployed as delta-neutral
     # book earns a near-riskless cash/stablecoin rate. This runs precisely when
@@ -190,6 +195,7 @@ def simulate(pc: dict, p: dict, leg_cost: float = LEG_COST):
     diag = dict(gross_funding=float(funding_pnl.clip(lower=0).sum()),
                 net_funding=float(funding_pnl.sum()),
                 total_cost=float(cost.sum()),
+                total_borrow_cost=float(borrow_cost.sum()),
                 avg_active=float(active.sum(axis=1).mean()),
                 avg_gross_exposure=float(SW.abs().sum(axis=1).mean()),
                 avg_deploy_frac=float(deploy_frac.mean()))
@@ -281,7 +287,7 @@ BASE = dict(lookback=12, enter=0.0001, exit_=0.0, mode="both", leverage=1.0,
 CHAMPION = dict(lookback=24, enter=0.00015, exit_=0.0, mode="both", leverage=1.0,
                 alloc="equal", deploy="fixed", slots=8, predict="mean",
                 adapt_k=0.0, basis_filter=True, compound=False,
-                cash_yield=0.05)
+                cash_yield=0.05, short_spot_borrow_apr=0.10)
 
 TOP_N_LIQUID = 50          # curate universe to the most liquid perps
 
@@ -372,7 +378,8 @@ def main():
         print("  scorecard(OOS 1x):", scorecard(m_oos))
         # walk-forward with a small robust grid
         grid = [dict(CHAMPION, lookback=lb, slots=s, enter=en)
-                for lb in (18, 24) for s in (10, 12) for en in (0.0001, 0.00015)]
+                for lb in (18, 24) for s in (6, 8, 10)
+                for en in (0.0001, 0.00015)]
         wf, picks = walk_forward(pc, grid, n_folds=4)
         mwf = metrics(wf)
         print(f"\nWALK-FORWARD OOS 1x: ann={mwf['ann_return_pct']}% sharpe={mwf['sharpe']} "
@@ -381,7 +388,11 @@ def main():
         print("  leverage sweep (walk-forward OOS):")
         sweep = {}
         for lev in (1, 3, 5, 8, 10):
-            mm = metrics(wf * lev)
+            # Re-run the whole walk-forward at this leverage. Multiplying the
+            # 1x curve would incorrectly multiply the idle-cash yield too.
+            lev_grid = [dict(p, leverage=lev) for p in grid]
+            lev_wf, _ = walk_forward(pc, lev_grid, n_folds=4)
+            mm = metrics(lev_wf)
             sweep[f"{lev}x"] = dict(ann=mm["ann_return_pct"], per_day=mm["net_per_day_pct"],
                                     dd=mm["max_dd_pct"], worst=mm["worst_day_pct"],
                                     win=mm["win_days_pct"], sharpe=mm["sharpe"])
@@ -392,7 +403,6 @@ def main():
         print(f"\n  cost-stress (taker-only 0.44% RT) OOS: ann={m_stress['ann_return_pct']}% "
               f"sharpe={m_stress['sharpe']} dd={m_stress['max_dd_pct']}%")
         if args.out:
-            import json
             out = dict(n_coins=len(data), champion=CHAMPION,
                        oos_split_1x=m_oos, oos_scorecard_1x=scorecard(m_oos),
                        walk_forward_1x=mwf, wf_scorecard_1x=scorecard(mwf),

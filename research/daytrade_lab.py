@@ -16,10 +16,8 @@ Everything here is additive (new file); the core engine/strategies are untouched
 """
 from __future__ import annotations
 
-import argparse
-import json
 import math
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -191,7 +189,7 @@ def simulate(
         j = entry_idx
         end_j = min(entry_idx + max_hold, n - 1)
         while j <= end_j:
-            hi, lo, cl = h[j], l[j], c[j]
+            hi, lo = h[j], l[j]
             if side == 1:
                 # trailing stop update
                 if trail_atr > 0:

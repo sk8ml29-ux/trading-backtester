@@ -1,5 +1,5 @@
 {
-  "note": "PRIMARY DELIVERABLE (v3): delta-neutral funding-rate harvest on a LIQUIDITY-CURATED universe (top ~50 perps by dollar volume) + idle-capital cash yield (the 'runs when others don't' sleeve). Walk-forward OOS 1x: Sharpe 11.1, ann +14.8%, win-days 87%, max DD -0.37%, worst day -0.26%. At ~7x leverage ALL original hard targets pass at once: net/day ~0.26% (>=0.25%), worst day ~-1.8% (>=-2%), DD ~-2.5% (<=10%), win-days 87%, Sharpe 11. Progression: v1 Sharpe 4.8 -> v2 9.4 -> v3 11.1, and the 0.25%/day target now reachable at ~7x (was 8x with a breach). See RAPPORT_DAYTRADING.md.",
+  "note": "CORRECTED AFTER ACCOUNTING AUDIT 2026-07-24: delta-neutral funding harvest on top ~50 liquid perps + idle-capital cash yield. The previous v3 figures were too optimistic because (1) short-spot borrowing cost was omitted and (2) the leverage sweep incorrectly multiplied the cash yield. Correct walk-forward OOS at 1x: ~10.9%/yr, 0.0283%/day, Sharpe 7.1, ~71% winning days, DD about -0.4%. At 5x: ~0.134%/day and worst day about -1.9%. The 0.25%/day target is reached only around 10x, where worst day is about -3.7%; therefore NO tested leverage meets both the return target and the -2% daily-loss target. Paper-forward must validate live behavior before real money.",
   "strategy": "funding_harvest_delta_neutral_v3",
   "engine": "research/funding_lab.py",
   "data_source": "Binance Vision public dumps (funding + perp/spot 8h klines), data/cache/vision_* (~101 coins downloaded; top 50 by liquidity used)",
@@ -25,25 +25,27 @@
     "predict": "mean",
     "basis_filter": true,
     "cash_yield": 0.05,
+    "short_spot_borrow_apr": 0.10,
     "top_n_liquid": 50,
-    "leverage_recommended": 5.0,
-    "leverage_to_hit_0.25pct_day": 7.0
+    "paper_start_leverage_recommended": 1.0,
+    "research_only_leverage": 5.0,
+    "leverage_to_hit_0.25pct_day": 10.0
   },
   "costs_per_leg": {"perp": 0.0006, "spot": 0.0009, "round_trip_delta_neutral": 0.0030},
   "walk_forward_oos_1x": {
-    "ann_return_pct": 14.82, "net_per_day_pct": 0.0379, "win_days_pct": 87.08,
-    "sharpe": 11.10, "max_dd_pct": -0.37, "worst_day_pct": -0.257
+    "ann_return_pct": 10.86, "net_per_day_pct": 0.0283, "win_days_pct": 70.74,
+    "sharpe": 7.11, "max_dd_pct": -0.37, "worst_day_pct": -0.37
   },
   "walk_forward_leverage_sweep": {
-    "1x": {"ann_pct": 14.82, "per_day_pct": 0.0379, "dd_pct": -0.37, "worst_day_pct": -0.257},
-    "3x": {"ann_pct": 51.27, "per_day_pct": 0.1136, "dd_pct": -1.10, "worst_day_pct": -0.771},
-    "5x": {"ann_pct": 99.13, "per_day_pct": 0.1894, "dd_pct": -1.83, "worst_day_pct": -1.286},
-    "7x_interp": {"per_day_pct": 0.265, "dd_pct": -2.5, "worst_day_pct": -1.8, "note": "all hard targets pass"},
-    "8x": {"ann_pct": 200.3, "per_day_pct": 0.3031, "dd_pct": -2.92, "worst_day_pct": -2.057},
-    "10x": {"ann_pct": 294.53, "per_day_pct": 0.3788, "dd_pct": -3.65, "worst_day_pct": -2.571}
+    "1x": {"ann_pct": 10.86, "per_day_pct": 0.0283, "dd_pct": -0.37, "worst_day_pct": -0.37},
+    "3x": {"ann_pct": 34.22, "per_day_pct": 0.0809, "dd_pct": -1.11, "worst_day_pct": -1.111},
+    "5x": {"ann_pct": 62.34, "per_day_pct": 0.1336, "dd_pct": -1.85, "worst_day_pct": -1.851},
+    "7x": {"ann_pct": 96.18, "per_day_pct": 0.1862, "dd_pct": -2.59, "worst_day_pct": -2.592},
+    "8x": {"ann_pct": 115.58, "per_day_pct": 0.2125, "dd_pct": -2.96, "worst_day_pct": -2.962},
+    "10x": {"ann_pct": 160.16, "per_day_pct": 0.2651, "dd_pct": -3.71, "worst_day_pct": -3.702}
   },
-  "cost_stress_taker_only_leg0.0022_oos": {"sharpe": 8.69, "ann_pct": 9.7, "note": "survives pessimistic fees"},
-  "assumptions_honest": "cash_yield 5%/yr assumes stablecoin lending / T-bill-backed yield is available; without it, subtract ~1.5-2.5%/yr and Sharpe falls modestly. Curation and 8h funding grid; 4h-funding coins are under-captured.",
+  "cost_stress_taker_only_leg0.0022_oos_split": {"sharpe": 3.96, "ann_pct": 4.18, "dd_pct": -0.54, "note": "still positive under pessimistic fees; this field is the fixed 55/45 OOS split"},
+  "assumptions_honest": "Cash yield 5%/yr assumes stablecoin lending/T-bill-backed yield is available. Short spot borrow is conservatively modeled at 10%/yr but actual rates and availability vary materially. Curation uses dollar volume and an 8h grid; 4h-funding coins are under-captured. Backtest is not a promise.",
   "run_signal_cmd": "python3 -m research.funding_lab --signal --leverage 5",
   "run_validation_cmd": "python3 -m research.funding_lab --champion --out research_funding_champion.json",
   "refresh_data_cmd": "python3 -m research.binance_vision --start 2023-01-01 --end 2026-06-30 --interval 8h  (+ extra coins via --coins)",

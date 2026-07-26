@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 from research.daytrade_lab import (
-    Costs, load, slice_dates, simulate, daily_metrics, cost_share,
+    Costs, load, slice_dates, simulate, daily_metrics,
 )
 from research.daytrade_strategies import STRATS, GRIDS
 

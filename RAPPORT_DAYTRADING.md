@@ -7,47 +7,37 @@
 
 ---
 
-## 0a. PROJEKTNIVÅ v3: "kör-när-de-andra-inte" + likviditets-kurering → 0,25 %/dag vid ~7x
+## 0a. REDOVISNINGSAUDIT 2026-07-24 — KORRIGERADE SIFFROR
 
-Mål: få *hela* projektet närmare 0,25 %/dag, helst vid lägre (säkrare) hävstång.
-Två tillägg som höjde både avkastning OCH Sharpe (motor: `research/funding_lab.py`):
+Ett fullständigt bugtest hittade två modellfel i tidigare v3-tabeller:
 
-1. **Idle-cash-sleeve (kör när funding är tunn):** upp till 30–56 % av kapitalet står
-   overksamt när få coins kvalar in. Det kapitalet läggs nu i stablecoin/cash-ränta
-   (~5 %/år, nära riskfritt). Det lyfter golvet **exakt i lågfunding-regim** — precis
-   "något som kör när de andra inte gör det". Höjer Sharpe (riskfri komponent) och
-   vinstdagar (färre platta dagar).
-2. **Likviditets-kurering:** universumet laddades ut till **101 coins**, men att kasta in
-   små/illikvida alts *ökade svansen* (sämsta dag −1,26 % vs −0,26 %). Lösning: använd de
-   **50 mest likvida** (efter dollar-volym). Behåller avkastningen, återställer den lilla
-   svansen. (Invers-vol-viktning och per-trade-conviction testades och **förkastades**.)
+1. hävstångssvepet multiplicerade felaktigt även cash-räntan med hävstång,
+2. låneräntan för *kort spot* (negativ funding-sida) saknades.
 
-### Walk-forward OOS (full validering, omoptimerad per veck)
-| Version | Sharpe | Årsavk (1x) | Vinstdagar | Sämsta dag | Hävstång för 0,25 %/dag |
-|---|---|---|---|---|---|
-| v1 | 4,8 | 5,8 % | 64 % | −0,47 % | — |
-| v2 | 9,4 | 13,5 % | 77 % | −0,31 % | 8x (svans −2,5 %, bröt gränsen) |
-| **v3** | **11,1** | **14,8 %** | **87 %** | **−0,26 %** | **~7x (svans −1,8 %, klarar allt)** |
+Paper-motorn saknade dessutom första inträdeskostnaden och verklig basis-P&L. Allt
+detta är nu rättat. Tidigare v2/v3-tabeller längre ner är forskningshistorik och ska
+**inte** användas för kapitalbeslut.
 
-### v3 hävstångssvep (walk-forward), 50 likvida coins + 5 % cash-ränta
-| Hävstång | Årsavk | net/dag | Max DD | Sämsta dag | Vinstdagar |
-|---|---|---|---|---|---|
-| 5x (rek.) | +99 % | 0,189 % | −1,83 % | −1,29 % | 87 % |
-| **7x** | **~+180 %** | **~0,26 %** | **~−2,5 %** | **~−1,8 %** | 87 % |
-| 8x | +200 % | 0,303 % | −2,92 % | −2,06 % | 87 % |
+### Korrigerad walk-forward OOS (50 likvida coins, 5 % cash-ränta, 10 % kort-spot-lån)
+| Hävstång | Årsavk | net/dag | Max DD | Sämsta dag | Vinstdagar | Sharpe |
+|---|---|---|---|---|---|---|
+| 1x | +10,9 % | 0,028 % | −0,4 % | −0,4 % | 71 % | 7,1 |
+| 5x | +62,3 % | 0,134 % | −1,9 % | −1,9 % | 68 % | 6,7 |
+| 7x | +96,2 % | 0,186 % | −2,6 % | −2,6 % | 68 % | 6,7 |
+| 8x | +115,6 % | 0,213 % | −3,0 % | −3,0 % | 68 % | 6,6 |
+| 10x | +160,2 % | 0,265 % | −3,7 % | −3,7 % | 68 % | 6,6 |
 
-**Vid ~7x passeras nu ALLA ursprungliga hårda mål samtidigt** (net/dag ≥0,25 %,
-vinstdagar 87 %, DD −2,5 %, sämsta dag −1,8 %, Sharpe 11, ≥200 trades) — och vid lägre
-hävstång än v2. Kostnadsstress (taker-only, 0,44 % rundtur): Sharpe 8,7.
+**Korrigerad dom:** funding-idén förblir positiv och riskjusterat stark i historiska
+tester, men **ingen testad hävstång klarar samtidigt** 0,25 %/dag och sämsta dag ≥ −2 %.
+0,25 %-målet nås först kring 10x, där historisk sämsta dag är cirka −3,7 %. Starta
+paper på 1x; 5x är ett forskningsscenario, inte ett live-råd.
 
-**Ärlig brasklapp:** cash-räntan (5 %/år) förutsätter att stablecoin-utlåning/T-bill-yield
-finns; utan den ~1,5–2,5 %/år lägre. Kurering per dollar-volym; 4h-funding-coins
-underskattas på 8h-gridden.
+Kostnadsstress (taker-only, 0,44 % rundtur) vid 1x: cirka +10,3 %/år, Sharpe 6,8.
 
-### Kör v3
+### Kör den korrigerade modellen
 ```bash
 python3 -m research.funding_lab --champion --out research_funding_champion.json   # full validering (50 likvida coins)
-python3 -m research.funding_lab --signal --leverage 5                             # dagens bok
+python3 -m research.funding_lab --signal --leverage 1                             # forskningssignal, låg risk
 ```
 
 ---
@@ -67,7 +57,7 @@ strategiändring** (höjde inte risk-justerad vinst) — sparad som forskning
 
 ---
 
-## 0b. FÖRBÄTTRINGSLOOP (5 varv): dubblad Sharpe + dagsmålet nås
+## 0b. FORSKNINGSHISTORIK FÖRE AUDIT (SIFFRORNA ÄR ERSATTA)
 
 Efter första leveransen kördes 5 experimentloopar (allt validerat OOS + walk-forward,
 fulla kostnader). Motor: `research/funding_lab.py` (ärligare turnover-kostnad — debiteras
@@ -81,40 +71,14 @@ på faktisk *signerad viktförändring*, inte bara teckenbyten).
 | 4 | Bättre funding-prognos (24-bars mean) + basis-filter | Sharpe upp, mindre whipsaw; ta bara det ben som basisen stödjer |
 | 5 | Walk-forward + kostnadsstress | **Robust — samma parametrar valdes i ALLA folds** (ej överfit) |
 
-**Champion-config:** equal-weight, fasta 12 slots, 24-bars mean-funding, basis-filter,
-`both`, ~55 coins. Parametrar i `research/daytrade_best_params.json`.
-
-### Walk-forward OOS (rullande, omoptimerad per veck — hårdaste testet), 1x hävstång
-| Mått | v1 (första leverans) | **v2 (efter loop)** |
-|---|---|---|
-| Sharpe | 4,78 (split) / 6,62 (WF) | **9,38** |
-| Årsavkastning | 5,8 % | **13,5 %** |
-| Vinstdagar | 64 % | **77,3 %** |
-| Max drawdown | −0,87 % | **−0,31 %** |
-| Sämsta dag | −0,47 % | −0,31 % |
-
-### Hävstångssvep (walk-forward OOS) — nu nås 0,25 %/dag
-| Hävstång | Årsavk | net/dag | Max DD | Sämsta dag | Vinstdagar |
-|---|---|---|---|---|---|
-| 5x (rek.) | +88 % | 0,174 % | −1,55 % | −1,55 % | 77 % |
-| 8x | +174 % | **0,278 %** | −2,47 % | −2,47 % | 77 % |
-| 10x | +252 % | 0,348 % | −3,09 % | −3,09 % | 77 % |
-
-**Dom nu:** vid **~8x** passeras *alla* ursprungliga hårda mål på walk-forward samtidigt
-utom att sämsta-dag (−2,47 %) nätt överstiger −2 %-gränsen — dvs **net/dag ≥ 0,25 % ✅,
-vinstdagar 77 % ✅, DD −2,5 % ✅, Sharpe 9,4 ✅, ≥200 trades ✅**. Vid ~7x får du net/dag
-~0,24 % med sämsta dag ~−2,1 %. Kostnadsstress (taker-only, 0,44 % rundtur): Sharpe 7,3.
-Detta är **~dubbla Sharpe och dagsmålet uppnått vid ~1/3 av drawdownen** jämfört med v1.
-
-### Kör v2
-```bash
-python3 -m research.funding_lab --champion --out research_funding_champion.json   # full validering
-python3 -m research.funding_lab --signal --leverage 5                             # dagens bok
-```
+De fem experimentlooparna gav fortfarande värdefulla designresultat: equal-weight,
+likviditetskurering, fast slot-allokering, längre funding-prognos och basisfilter höll
+bättre än koncentration och conviction-viktning. **Alla gamla avkastningssiffror i denna
+forskningsfas är dock ersatta av den korrigerade tabellen i §0a.**
 
 ---
 
-## 0. GENOMBROTT: Delta-neutral funding-skörd (den riktiga edgen)
+## 0. URSPRUNGLIG FUNDING-FORSKNING (HISTORIK — SIFFROR ERSATTA AV §0a)
 
 Efter att TA/cross-sectional visat sig sakna robust edge (§1–§5 nedan) hittade jag
 den verkliga, kostnadståliga edgen i **carry, inte prisriktning**: att skörda
@@ -132,45 +96,10 @@ tills den avtar → låg turnover, så rundturskostnaden (~0,30 %) amorteras öv
 Funding + perp- och spot-klines (8h) för **24 likvida coins**, 2023-01 → 2026-06.
 Full ärlig kostnadsmodell (perp-leg 0,06 % + spot-leg 0,09 % per sida).
 
-### Resultat — out-of-sample (senaste 45 %, ~2024-09 → 2026-06), hävstång 1x
-| Mått | Värde |
-|---|---|
-| Sharpe (annualiserad) | **4,78** |
-| Vinstdagar / aktiva vinstdagar | **64,0 % / 66,9 %** |
-| Max drawdown | **−0,87 %** |
-| Sämsta dag | **−0,47 %** |
-| Årsavkastning | +5,76 % |
-| Kostnadsandel av brutto-funding | 55,9 % |
-
-**Walk-forward (rullande, omoptimerad per veck, hårdaste testet):** Sharpe **6,62**,
-vinstdagar **69,2 %**, max DD **−2,23 %**, +25,3 % över ~2,8 år. Årsvis OOS positiv varje
-år (2024/2025/2026). **Kostnadsstress** (taker-only, ingen BNB-rabatt, 0,44 % rundtur):
-Sharpe 1,87, DD −2,2 %, fortfarande positiv → edgen överlever pessimistiska avgifter.
-
-### Hävstång är avkastningsratten (marknadsneutralt ⇒ DD skalar linjärt)
-| Hävstång | Årsavk (OOS) | Max DD | Sämsta dag |
-|---|---|---|---|
-| 1x | +5,8 % | −0,9 % | −0,5 % |
-| 3x (rekommenderad) | **+18,2 %** | −2,6 % | −1,4 % |
-| 5x | +32,1 % | −4,3 % | −2,3 % |
-| 8x | +55,9 % | −6,9 % | −3,7 % |
-
-### Scorecard mot målen (vid ~3x hävstång, OOS)
-| Mål | Utfall | Dom |
-|---|---|---|
-| net/dag ≥ 0,25 % | ~0,05 % | ❌ (kräver ~16x = farligt; se nedan) |
-| vinstdagar ≥ 60 % | 64 % | ✅ |
-| vinstdagar ≥ 50 % (golv) | 64 % | ✅ |
-| max DD ≤ 10 % | −2,6 % | ✅ |
-| sämsta dag ≥ −2 % | −1,4 % | ✅ |
-| Sharpe ≥ 1,5 | 4,78 | ✅ |
-| ≥ 200 trades | tusentals funding-events | ✅ |
-
-**Dom:** **6 av 7 mål passeras.** Det enda som inte nås är 0,25 % net/dag (≈ 91 %/år) —
-det kräver > 10x hävstång på en carry-bok vilket är oansvarigt (likvidations-/basisrisk).
-Med rimlig hävstång (3–4x) får du **~18–26 %/år, Sharpe ~5–7, max drawdown < 4 %, ~65–70 %
-vinstdagar och nästan aldrig en förlustdag** — marknadsneutralt och robust genom walk-forward
-och kostnadsstress. Detta är en **äkta, körbar edge** — inte överfittad TA.
+Denna fas visade att funding-carry var betydligt mer lovande än kortsiktig TA och
+ledde till hysteres, delta-neutral spot/perp och full Binance Vision-data. De
+ursprungliga avkastningstabellerna är borttagna eftersom de saknade kort-spot-låneränta.
+Använd endast de korrigerade resultaten i §0a.
 
 ### Kör den (paper)
 ```bash

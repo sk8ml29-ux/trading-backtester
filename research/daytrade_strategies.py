@@ -8,7 +8,6 @@ evaluated on the *closed* bar; the simulator opens at the next bar's open.
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from research.daytrade_lab import ema, rsi, atr, rolling_z

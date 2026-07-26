@@ -37,7 +37,7 @@ def _get(url: str, tries: int = 5):
             req = urllib.request.Request(url, headers=_UA)
             with urllib.request.urlopen(req, context=_CTX, timeout=30) as r:
                 return json.loads(r.read().decode())
-        except Exception as e:
+        except Exception:
             if a == tries - 1:
                 raise
             time.sleep(1.5 * (a + 1))
