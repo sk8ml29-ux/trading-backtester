@@ -163,10 +163,11 @@ def save_state(s: dict):
     tmp.replace(STATE)
 
 
-def build_book(capital: float, leverage: float) -> tuple[dict, dict]:
+def build_book(capital: float, leverage: float,
+               enter: float | None = None) -> tuple[dict, dict]:
     funding = fetch_all_funding(LIQUID)
     prices = fetch_market_prices(list(funding))
-    book = target_book(funding, {}, leverage, prices)
+    book = target_book(funding, {}, leverage, prices, enter=enter)
     return book, prices
 
 
@@ -201,6 +202,9 @@ def main():
     ap.add_argument("--capital", type=float, default=10000.0,
                     help="Demo-kapital (USDT) att dimensionera efter")
     ap.add_argument("--leverage", type=float, default=1.0)
+    ap.add_argument("--enter", type=float, default=None,
+                    help="ENDAST TEST: sänk funding-tröskeln för att validera "
+                         "demo-orderläggning (t.ex. 0.00002). Använd ej live.")
     ap.add_argument("--yes", action="store_true", help="bekräfta exec/close")
     args = ap.parse_args()
 
@@ -231,7 +235,9 @@ def main():
 
     # dry / exec / close all need the current book + instruments
     print("Hämtar funding, priser och instrument från OKX ...")
-    book, prices = build_book(args.capital, args.leverage)
+    if args.enter is not None:
+        print(f"OBS: testtröskel enter={args.enter} (endast för demo-validering).")
+    book, prices = build_book(args.capital, args.leverage, enter=args.enter)
     s = load_state()
     held = s.get("held", {})
 

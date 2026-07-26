@@ -126,9 +126,15 @@ def fetch_market_prices(coins: list[str]) -> dict:
 
 
 def target_book(
-    funding: dict, prev_positions: dict, leverage: float, prices: dict
+    funding: dict, prev_positions: dict, leverage: float, prices: dict,
+    enter: float | None = None,
 ):
-    """Decide today's positions with simple hysteresis. Returns {coin: {g, weight}}."""
+    """Decide today's positions with simple hysteresis. Returns {coin: {g, weight}}.
+
+    ``enter`` overrides the entry threshold (default = champion ENTER). Lowering
+    it is only for validating the demo order path, never for real trading.
+    """
+    enter = ENTER if enter is None else enter
     # per-coin forecast + hysteresis vs previous position
     desired = {}
     all_coins = set(funding) | set(prev_positions)
@@ -145,9 +151,9 @@ def target_book(
         g = prev_g
         if prev_g == 0:
             # Champion basis filter: enter only when current basis supports side.
-            if pred > ENTER and price["basis"] >= 0:
+            if pred > enter and price["basis"] >= 0:
                 g = 1
-            elif pred < -ENTER and price["basis"] <= 0:
+            elif pred < -enter and price["basis"] <= 0:
                 g = -1
         elif prev_g == 1:
             if pred < EXIT:
