@@ -1,0 +1,83 @@
+LAGLIG STRATEGI FÖR SVENSK PRIVATPERSON — ÄRLIG SAMMANFATTNING
+==============================================================
+
+Datum: 2026-07-26
+
+BAKGRUND
+--------
+Funding-strategin kräver perpetuals (krypto-terminer) + blankning. Inom EU
+(MiCA/MiFID) är det i praktiken stängt för privatpersoner — börserna geoblockar
+EES. Därför byggde jag om till något du FÅR handla lagligt i Sverige:
+
+  - endast LÅNG position eller KONTANT (ingen blankning),
+  - ingen hävstång, inga perps, inga lån,
+  - tillgångar du kan köpa via vanlig mäklare (Avanza/Nordnet) eller reglerad
+    spot-/ETP-handel.
+
+Metod: TRENDFÖLJNING (long/flat). Äg tillgången bara medan den är i uppåttrend
+(pris över 200-dagars medel för krypto, 150 för ETF); annars stå i kontanter.
+Det behåller större delen av uppgången men kapar de djupa fallen.
+
+Motor: research/legal_trend.py. Allt validerat out-of-sample (walk-forward) med
+realistiska kostnader.
+
+
+ÄRLIGA RESULTAT (walk-forward, efter kostnader)
+-----------------------------------------------
+
+1) KRYPTO SPOT TRENDFÖLJNING  (bäst avkastning, hög risk)
+   Tillgångar: BTC, ETH, SOL (spot eller krypto-ETP)
+   - CAGR (årsavkastning): ca 50 % per år
+   - Sharpe: ca 1,1
+   - Max drawdown: ca -50 % till -62 %
+   - Jämfört med köp-och-behåll: nästan HALVERAD drawdown (-85 % -> -50%)
+     med lika bra eller bättre avkastning.
+   Dom: en ÄKTA edge (mest riskreducering), men fortfarande hög risk. Krypto
+   är volatilt även med trendfilter.
+
+2) ETF-PORTFÖLJ TRENDFÖLJNING  (lugnare, men slår inte köp-och-behåll)
+   SPY/QQQ/IWM/EEM/GLD/SLV/TLT
+   - Trend: ca 5-7 %/år, Sharpe ca 0,6-0,7, maxDD ca -16 %
+   - Köp-och-behåll: ca 9,5 %/år, Sharpe 0,73, maxDD -27 %
+   Dom: här slår enkel köp-och-behåll trendföljningen. Trend ger bara lägre
+   drawdown, inte mer avkastning.
+
+3) KOMBINERAD inv-vol (krypto+ETF)  — TESTAD OCH FÖRKASTAD
+   Risk-viktning svälte ut krypto (avkastningsmotorn) -> negativ. Skrotad.
+
+
+ÄRLIG JÄMFÖRELSE MOT FUNDING
+----------------------------
+Funding (ej lagligt för dig): Sharpe ~7, liten drawdown, men kräver perps.
+Lagligt bästa (krypto-trend): Sharpe ~1,1, stor drawdown, hög avkastning.
+
+Ingen laglig retail-strategi matchar funding-edgen. Det är sanningen. Det
+lagliga valet är en avvägning:
+  - Vill du ha HÖG avkastning och tål stora svängningar -> krypto-trend.
+  - Vill du ha LUGNT -> bred ETF-portfölj (köp och behåll), ~9 %/år.
+
+
+SÅ HÄR KÖR DU (inga nycklar, inga risker att testa)
+---------------------------------------------------
+Dagens läge (vad man ska äga vs stå kontant just nu):
+    python3 -m research.legal_trend --signal
+
+Full validering med siffror:
+    python3 -m research.legal_trend --out research_legal_trend.json
+
+I praktiken:
+  - "HÅLL" = äg tillgången (köp spot/ETP/ETF via din mäklare).
+  - "KONTANT" = stå utanför tills trenden vänder upp igen.
+  - Kolla läget t.ex. 1 gång/vecka. Låg turnover -> få affärer, låga avgifter.
+
+Just nu (exempel): krypto står i nedtrend -> KONTANT (utanför); flera aktie-ETF:er
+i uppåttrend -> HÅLL. Strategin skyddar dig alltså från krypto-fallet nu.
+
+
+VIKTIGT / ÄRLIGT
+----------------
+- Backtest är inte ett löfte. Krypto-trend kan ha -50 % perioder även framåt.
+- Detta är inte skatterådgivning; vinster beskattas i Sverige (Skatteverket).
+- Börja litet, förstå svängningarna, och blanda gärna med lugnare tillgångar.
+- Funding-boten och all kod finns kvar om reglerna ändras eller om du någon gång
+  får laglig tillgång till perps (t.ex. som professionell kund).
