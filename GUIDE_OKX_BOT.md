@@ -39,6 +39,13 @@ export OKX_API_PASSPHRASE="din_demo_passphrase"
 Tips: vill du slippa skriva det varje gång, lägg de tre raderna sist i filen
 `~/.bashrc` så laddas de automatiskt när du loggar in.
 
+**EEA/EU-konto?** Om din OKX-URL innehåller `my.okx.com` eller `en-eu` måste du också
+peka boten mot EU-adressen (annars felkod 50119 "API key doesn't exist"):
+```bash
+export OKX_BASE='https://eea.okx.com'
+```
+(US-konto: `https://us.okx.com`. Globalt konto: hoppa över — standard räcker.)
+
 ## Steg 3 — Testa anslutningen (säkert)
 ```bash
 cd ~/trading-backtester

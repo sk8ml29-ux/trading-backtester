@@ -23,7 +23,9 @@ import ssl
 import urllib.request
 from datetime import datetime, timezone
 
-BASE = "https://www.okx.com"
+# EEA/EU accounts (my.okx.com / en-eu) must use https://eea.okx.com, US accounts
+# https://us.okx.com; global uses https://www.okx.com. Override via OKX_BASE.
+BASE = os.environ.get("OKX_BASE", "https://www.okx.com").rstrip("/")
 _UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 _CTX = ssl.create_default_context()
 _CTX.check_hostname = False
@@ -39,9 +41,9 @@ class OKXDemoClient:
 
     def __init__(self, key: str | None = None, secret: str | None = None,
                  passphrase: str | None = None, demo: bool = True):
-        self.key = key or os.environ.get("OKX_API_KEY", "")
-        self.secret = secret or os.environ.get("OKX_API_SECRET", "")
-        self.passphrase = passphrase or os.environ.get("OKX_API_PASSPHRASE", "")
+        self.key = (key or os.environ.get("OKX_API_KEY", "")).strip()
+        self.secret = (secret or os.environ.get("OKX_API_SECRET", "")).strip()
+        self.passphrase = (passphrase or os.environ.get("OKX_API_PASSPHRASE", "")).strip()
         # Hard lock: this client is only ever used for demo in this project.
         self.demo = demo
 
@@ -128,7 +130,7 @@ class OKXDemoClient:
 def connectivity_report() -> str:
     """Human-readable check: reachable? keys present? account readable?"""
     c = OKXDemoClient()
-    lines = ["OKX demo-anslutning:"]
+    lines = [f"OKX demo-anslutning (endpoint: {BASE}):"]
     try:
         c.get_time()
         lines.append("  [OK] Når OKX.")
