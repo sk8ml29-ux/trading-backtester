@@ -150,6 +150,23 @@ def diff_plan(desired: dict, held: dict) -> list:
     return plan
 
 
+def reconcile_held(prev_held: dict, desired: dict, failed_coins: set) -> dict:
+    """Tracked positions after an exec: only reflect orders that succeeded.
+
+    - a desired coin with no failure -> now held (opened/rebalanced)
+    - a coin dropped from desired with no failure -> removed (closed)
+    - any coin with a failed order -> keep its previous tracked state
+    """
+    new_held = dict(prev_held)
+    for coin, pos in desired.items():
+        if coin not in failed_coins:
+            new_held[coin] = pos
+    for coin in list(new_held):
+        if coin not in desired and coin not in failed_coins:
+            new_held.pop(coin, None)
+    return new_held
+
+
 def load_state() -> dict:
     if STATE.exists():
         return json.loads(STATE.read_text())
@@ -279,6 +296,7 @@ def main():
     _log(f"EXEC {args.mode}: {len(plan)} ordrar, kapital {args.capital}, "
          f"hävstång {args.leverage}")
     sent, failed = 0, 0
+    failed_coins: set[str] = set()
     for o in plan:
         td_mode = "cash" if o["leg"] == "spot" else "cross"
         try:
@@ -293,17 +311,23 @@ def main():
         except OKXError as e:
             _log(f"  FEL {o['inst_id']} {o['side']} sz={o['sz']}: {e}")
             failed += 1
+            failed_coins.add(o["coin"])
 
-    # update tracked book
-    s["held"] = desired
+    # Update tracked book to reflect what ACTUALLY happened, not the intent.
+    new_held = reconcile_held(held, desired, failed_coins)
+    s["held"] = new_held
     s["capital"] = args.capital
     s["leverage"] = args.leverage
     s.setdefault("history", []).append(dict(
         time=datetime.now(tz=timezone.utc).isoformat(),
-        mode=args.mode, sent=sent, failed=failed, legs=len(desired)))
+        mode=args.mode, sent=sent, failed=failed, legs=len(new_held)))
     save_state(s)
-    print(f"\nKlart: {sent} ordrar skickade till DEMO, {failed} misslyckades. "
-          f"Logg: {LOG}")
+    if failed:
+        print(f"\nKlart: {sent} ordrar OK, {failed} MISSLYCKADES. "
+              f"Botens bok uppdaterades bara för det som faktiskt gick igenom. "
+              f"Logg: {LOG}")
+    else:
+        print(f"\nKlart: {sent} ordrar skickade till DEMO, 0 fel. Logg: {LOG}")
 
 
 if __name__ == "__main__":

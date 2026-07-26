@@ -86,6 +86,27 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(sum(o["action"] == "close" for o in plan), 2)
         self.assertEqual(sum(o["action"] == "open" for o in plan), 2)
 
+    def test_reconcile_all_failed_keeps_prev(self):
+        # all orders failed -> tracked book unchanged (no phantom positions)
+        desired = {"BTC": self._pos(1)}
+        held = fb.reconcile_held({}, desired, failed_coins={"BTC"})
+        self.assertEqual(held, {})
+
+    def test_reconcile_success_opens(self):
+        desired = {"BTC": self._pos(1)}
+        held = fb.reconcile_held({}, desired, failed_coins=set())
+        self.assertIn("BTC", held)
+
+    def test_reconcile_successful_close_removes(self):
+        prev = {"BTC": self._pos(1)}
+        held = fb.reconcile_held(prev, {}, failed_coins=set())
+        self.assertEqual(held, {})
+
+    def test_reconcile_failed_close_keeps_position(self):
+        prev = {"BTC": self._pos(1)}
+        held = fb.reconcile_held(prev, {}, failed_coins={"BTC"})
+        self.assertIn("BTC", held)
+
     def test_caps_flag_oversized_leg(self):
         desired = {"BTC": {"g": 1, "notional": 9000.0, "spot_base": 1, "spot_side": "buy",
                            "perp_ct": 1, "perp_side": "sell"}}
