@@ -395,12 +395,16 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     combined_metrics = metrics(combined, benchmark)
     losing_folds = sum(r["metrics"].get("net_return_pct", 0) <= 0 for r in fold_rows)
     verdict = {
-        "positive": combined_metrics.get("net_return_pct", 0) > 0,
-        "annual_return_ge_5": combined_metrics.get("ann_return_pct", 0) >= 5,
-        "sharpe_ge_1_5": combined_metrics.get("sharpe", 0) >= 1.5,
-        "max_drawdown_le_5": abs(combined_metrics.get("max_drawdown_pct", 100)) <= 5,
-        "abs_btc_beta_le_0_10": abs(combined_metrics.get("btc_beta", 100)) <= 0.10,
-        "losing_folds_le_1": losing_folds <= 1,
+        "positive": bool(combined_metrics.get("net_return_pct", 0) > 0),
+        "annual_return_ge_5": bool(combined_metrics.get("ann_return_pct", 0) >= 5),
+        "sharpe_ge_1_5": bool(combined_metrics.get("sharpe", 0) >= 1.5),
+        "max_drawdown_le_5": bool(
+            abs(combined_metrics.get("max_drawdown_pct", 100)) <= 5
+        ),
+        "abs_btc_beta_le_0_10": bool(
+            abs(combined_metrics.get("btc_beta", 100)) <= 0.10
+        ),
+        "losing_folds_le_1": bool(losing_folds <= 1),
     }
     verdict["pass"] = all(verdict.values())
     return {
