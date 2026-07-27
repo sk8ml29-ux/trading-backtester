@@ -441,7 +441,7 @@ def evaluate(
         "post_training_start": str(pd.Timestamp(validation_start)),
         "folds": fold_rows,
         "combined_post_training": combined_metrics,
-        "oos_symbol_net_pnl": {
+        "post_training_symbol_net_pnl": {
             symbol: round(float(value), 6)
             for symbol, value in oos_symbol_pnl.items()
         },

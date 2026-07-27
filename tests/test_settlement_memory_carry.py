@@ -168,6 +168,42 @@ class SettlementMemoryCarryTests(unittest.TestCase):
         self.assertEqual(cost, 0.0)
         self.assertEqual(turnover, 0.0)
 
+    def test_paper_max_hold_forces_real_exit_before_reentry(self):
+        params = Params(
+            funding_lookback=3,
+            min_history_steps=4,
+            min_funding=0.00005,
+            min_reserve=-1.0,
+            slots=1,
+            leverage=1.0,
+            survival_horizon=3,
+            max_hold_steps=5,
+        )
+        times = pd.date_range("2024-01-01", periods=8, freq="8h", tz="UTC")
+        funding = {
+            "A": pd.DataFrame(
+                {"time": times, "rate": np.full(len(times), 0.001)}
+            )
+        }
+        prices = {
+            "A": {"basis": 0.001, "perp_price": 100.1, "spot_price": 100.0}
+        }
+        previous = {
+            "A": {
+                "g": 1,
+                "weight": 1.0,
+                "pred": 0.001,
+                "reserve": 0.01,
+                "perp_price": 100.1,
+                "spot_price": 100.0,
+                "perp_units": 10.0,
+                "spot_units": 10.0,
+                "held_settlements": 5,
+            }
+        }
+
+        self.assertEqual(target_book(funding, prices, previous, params), {})
+
     def test_paper_marks_fixed_units_and_counts_settlements(self):
         now = pd.Timestamp("2024-01-02", tz="UTC")
         old = {

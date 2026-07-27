@@ -85,6 +85,7 @@ def target_book(funding: dict, prices: dict, previous: dict, params: Params) -> 
         (coin, row)
         for coin, row in scored.items()
         if coin not in keep
+        and coin not in previous
         and row["pred"] >= params.min_funding
         and row["latest_funding"] > 0
         and row["reserve"] >= params.min_reserve
