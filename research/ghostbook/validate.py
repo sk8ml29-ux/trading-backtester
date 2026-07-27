@@ -147,6 +147,71 @@ def universe_split(panel: pd.DataFrame, col: str, cfg: BTConfig,
     return pd.DataFrame(rows)
 
 
+# Crypto perps offered as MiFID-regulated instruments inside the EEA, plus the
+# closest Binance equivalents. Kept explicit because whether the strategy works
+# on this list decides whether a resident of the EEA can run it at all.
+EEA_REGULATED = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT",
+                 "AVAXUSDT", "BCHUSDT", "ZECUSDT", "LINKUSDT", "LTCUSDT", "DOTUSDT",
+                 "1000PEPEUSDT", "HYPEUSDT", "BNBUSDT", "TONUSDT", "SUIUSDT",
+                 "AAVEUSDT", "UNIUSDT", "NEARUSDT", "TRXUSDT", "FILUSDT"]
+
+
+def breadth_report(panel: pd.DataFrame, col: str, split: str,
+                   sizes=(20, 30, 40, 60, 80, 120)) -> pd.DataFrame:
+    """How performance scales with the number of names in the cross-section."""
+    p = panel.copy()
+    p["_rank"] = p.groupby("time")["liq_usd"].rank(ascending=False, method="first")
+    rows = []
+    for n in sizes:
+        sub = p[p["_rank"] <= n]
+        cfg = BTConfig(rebal_h=24, min_names=min(15, n - 2),
+                       max_weight=max(0.06, 2.5 / n))
+        got = {}
+        for tag, (s, e) in {"is": (None, split), "oos": (split, None),
+                            "all": (None, None)}.items():
+            r = run(sub, col, cfg, start=s, end=e)
+            if r.get("ok"):
+                got[f"{tag}_sharpe"] = r["stats"]["sharpe"]
+                got[f"{tag}_cagr"] = r["stats"]["cagr"]
+        if got:
+            rows.append(dict(n_names=n, **got))
+    return pd.DataFrame(rows)
+
+
+def tradeable_universe_report(panel: pd.DataFrame, col: str, split: str) -> pd.DataFrame:
+    """The strategy on baskets an EEA resident can and cannot actually reach.
+
+    Also splits the liquid cross-section by listing age, which shows the edge is
+    genuinely relational: neither the mature half nor the young half reproduces
+    what the mixed basket does.
+    """
+    p = panel.copy()
+    p["_rank"] = p.groupby("time")["liq_usd"].rank(ascending=False, method="first")
+    first = p.groupby("symbol")["time"].min()
+    p["age_d"] = (p["time"] - p["symbol"].map(first)).dt.days
+
+    baskets = {
+        "full universe (120)": p["_rank"] <= 120,
+        "top 20 by liquidity": p["_rank"] <= 20,
+        "EEA-regulated only": p["symbol"].isin(EEA_REGULATED),
+        "liquid + mature only": (p["_rank"] <= 60) & (p["age_d"] > 365),
+        "liquid + young only": (p["_rank"] <= 60) & (p["age_d"] <= 365),
+    }
+    rows = []
+    for label, mask in baskets.items():
+        sub = p[mask]
+        cfg = BTConfig(rebal_h=24, min_names=8, max_weight=0.15)
+        got = dict(basket=label, avg_names=float(sub.groupby("time").size().mean()))
+        for tag, (s, e) in {"is": (None, split), "oos": (split, None),
+                            "all": (None, None)}.items():
+            r = run(sub, col, cfg, start=s, end=e)
+            if r.get("ok"):
+                got[f"{tag}_sharpe"] = r["stats"]["sharpe"]
+                got[f"{tag}_cagr"] = r["stats"]["cagr"]
+        rows.append(got)
+    return pd.DataFrame(rows)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--col", default="gb_ohv_ens2")
@@ -213,6 +278,16 @@ def main() -> None:
     us = universe_split(p, args.col, cfg, args.split)
     print(us.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
     res["universe"] = us.to_dict("records")
+
+    print("\n--- breadth: performance vs number of names ---")
+    br = breadth_report(p, args.col, args.split)
+    print(br.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+    res["breadth"] = br.to_dict("records")
+
+    print("\n--- baskets an EEA resident can actually reach ---")
+    tu = tradeable_universe_report(p, args.col, args.split)
+    print(tu.to_string(index=False, float_format=lambda v: f"{v:,.3f}"))
+    res["tradeable_universe"] = tu.to_dict("records")
 
     if args.out:
         with open(args.out, "w") as f:

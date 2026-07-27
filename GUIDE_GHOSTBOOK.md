@@ -164,14 +164,49 @@ Det här är minst lika viktigt som det som fungerade.
 
 ---
 
-## 6. Risker och begränsningar
+## 6. Det viktigaste förbehållet: universumets sammansättning
+
+Strategin är **tvärsnittslig**. Den säger inte "det här myntet ska upp" utan
+"den här bokens överhäng är värre än den där bokens". Den jämförelsen kräver ett
+**heterogent** universum.
+
+| Korg | Antal namn | Sharpe hela perioden | CAGR |
+|---|---|---|---|
+| Hela universumet | ~102 | **1,39** | +19,1 % |
+| Topp 20 efter rullande likviditet | 20 | **1,34** | +31,1 % |
+| Endast likvida och mogna (>1 år) | 41 | 0,79 | +12,1 % |
+| Endast likvida och unga (<1 år) | 29 | 0,13 | −1,3 % |
+| **Endast EES-reglerade instrument** | **~20** | **−0,08** | **−3,1 %** |
+
+Två saker faller ut:
+
+1. **Bredd är inte problemet.** Topp 20 efter rullande likviditet fungerar lika
+   bra som hela universumet. Tjugo namn räcker.
+2. **Sammansättningen är problemet.** När universumet delas efter ålder
+   presterar *ingen* halva i närheten av blandningen. Kanten sitter i
+   jämförelsen mellan olikartade böcker — dela upp den och den försvinner.
+
+**Konsekvensen är obekväm:** det reglerade EES-utbudet består av just mogna
+storbolagsmynt, alltså precis den homogena sammansättning där strategin inte
+fungerar. Testad på den korgen ger den Sharpe −0,08 över fyra år.
+
+**Strategin som den är validerad går därför inte att köra på det reglerade
+EES-utbudet i dag.** Det utbudet växer snabbt — från 5 till 19 par på några
+månader — så det kan ändras. Men just nu är det ärliga svaret nej.
+
+---
+
+## 7. Risker och begränsningar
 
 - **2026 är svagt.** Första halvåret 2026 gav −2,2 %. Antingen normal variation
   eller början på en försämring — det går inte att avgöra ännu.
-- **Kanten satt i de mest likvida namnen out-of-sample** (topp 40: Sharpe 2,64;
-  namn 41–120: −0,62). Men *in-sample* var hela universumet bäst. Att smalna av
-  till topp 40 vore att anpassa mot testperioden, så jag har låtit bli. Det är
-  en öppen fråga och en verklig risk.
+- **Kanten satt i de mest likvida namnen out-of-sample** (topp 40: Sharpe 2,46;
+  namn 41–120: −0,62). Men *in-sample* var hela universumet bäst (1,32 mot
+  0,94). Att smalna av till topp 40 vore att anpassa mot testperioden, så jag
+  har låtit bli. Det är en öppen fråga och en verklig risk.
+- **Sammansättningsberoendet i avsnitt 6 är den allvarligaste begränsningen.**
+  Strategin behöver ett blandat universum och tappar hela kanten på en homogen
+  storbolagskorg.
 - **En vald parameter kvarstår.** Tidsfönstren {72h, 168h} valdes på in-sample-
   data. Ensemblen över två fönster gör valet mindre skört än ett enda, men det
   är inte parameterfritt.
@@ -182,34 +217,35 @@ Det här är minst lika viktigt som det som fungerade.
 
 ---
 
-## 7. Juridik för dig som bor i Sverige
+## 8. Juridik för dig som bor i Sverige
 
 Det här är en regulatorisk genomgång, inte individuell juridisk rådgivning.
 
 - **Strategin är marknadsneutral och kräver blankning.** Utan kortbenet
-  försvinner hela värdet. Det betyder derivat eller lånad spot — det går inte
-  att köra som ren spothandel.
-- **Kortbenet bör läggas i en reglerad EES-produkt.** OKX erbjuder X-Perps inom
-  EES via OKX Europe Markets Ltd under MiFID-tillsyn. Kontrollera bolagets
-  tillstånd i myndighetsregister före insättning. Använd inte VPN för att nå
-  globala perpetuals utanför EES.
+  försvinner hela värdet — long-only ger korrelation 0,97 mot marknaden och
+  −11,5 % per år. Det betyder derivat eller lånad spot; ren spothandel går inte.
 - **Handel för egen räkning kräver normalt inget tillstånd** från
   Finansinspektionen så länge du inte förvaltar andras pengar, ger råd, agerar
   market maker eller bedriver verklig högfrekvenshandel. Den här strategin
   handlar en gång per dygn, vilket är långt från högfrekvens.
+- **Men instrumenten är blockeringen, inte tillståndet.** Enligt avsnitt 6
+  fungerar strategin inte på det utbud som i dag erbjuds reglerat inom EES.
+  Att i stället nå globala perpetuals — särskilt via VPN — bryter mot börsens
+  egna villkor och ställer dig utanför EES-regleringens skydd. Gör inte det.
 - **Beskattning:** vinster är normalt kapitalinkomst med 30 % skatt. Förluster
   på kryptotillgångar är typiskt bara avdragsgilla till 70 %, vilket är en
   verklig kostnad för en strategi som handlar ofta. Dokumentera varje avslut
-  löpande — 120 positioner som omsätts dagligen blir en betydande
+  löpande — cirka 100 positioner som omsätts dagligen blir en betydande
   deklarationsbörda. **Räkna på skatten innan du skalar upp.**
-- **Ett viktigt praktiskt problem:** det reglerade EES-utbudet omfattar
-  betydligt färre instrument än de ~120 namn strategin vill handla. Med ett
-  smalare universum blir tvärsnittet tunnare och resultaten ovan gäller inte
-  rakt av. Det behöver testas separat.
+
+**Sammanfattat:** forskningen och paper-forward är oproblematiska att köra nu.
+Riktiga pengar förutsätter att det reglerade EES-utbudet breddas till ett mer
+heterogent instrumenturval — och att strategin då valideras om på just den
+korgen.
 
 ---
 
-## 8. Så kör du det
+## 9. Så kör du det
 
 ```bash
 # dagens målportfölj
@@ -246,7 +282,7 @@ mot backtestets Sharpe innan du överväger riktigt kapital.
 
 ---
 
-## 9. Kodkarta
+## 10. Kodkarta
 
 | Fil | Ansvar |
 |---|---|
