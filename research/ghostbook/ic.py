@@ -18,22 +18,36 @@ import pandas as pd
 
 def ic_series(panel: pd.DataFrame, feature: str, ret_col: str = "fwd_ret",
               min_names: int = 15) -> pd.Series:
-    """Spearman IC per timestamp."""
+    """Spearman IC per timestamp.
+
+    Computed as a Pearson correlation of within-timestamp ranks, expressed
+    through grouped sums so the whole panel is handled in a few vectorised
+    passes instead of one Python call per timestamp.
+    """
     sub = panel[["time", feature, ret_col]].dropna()
     if sub.empty:
         return pd.Series(dtype=float)
 
-    def one(g: pd.DataFrame) -> float:
-        if len(g) < min_names:
-            return np.nan
-        a = g[feature].rank()
-        b = g[ret_col].rank()
-        sa, sb = a.std(), b.std()
-        if sa == 0 or sb == 0:
-            return np.nan
-        return float(((a - a.mean()) * (b - b.mean())).mean() / (sa * sb))
-
-    return sub.groupby("time")[[feature, ret_col]].apply(one).dropna()
+    g = sub.groupby("time")
+    a = g[feature].rank()
+    b = g[ret_col].rank()
+    tmp = pd.DataFrame({"time": sub["time"].to_numpy(), "a": a.to_numpy(),
+                        "b": b.to_numpy()})
+    tmp["ab"] = tmp["a"] * tmp["b"]
+    tmp["aa"] = tmp["a"] ** 2
+    tmp["bb"] = tmp["b"] ** 2
+    agg = tmp.groupby("time").agg(n=("a", "size"), sa=("a", "sum"), sb=("b", "sum"),
+                                  sab=("ab", "sum"), saa=("aa", "sum"), sbb=("bb", "sum"))
+    agg = agg[agg["n"] >= min_names]
+    if agg.empty:
+        return pd.Series(dtype=float)
+    n = agg["n"].to_numpy(float)
+    cov = agg["sab"].to_numpy() - agg["sa"].to_numpy() * agg["sb"].to_numpy() / n
+    va = agg["saa"].to_numpy() - agg["sa"].to_numpy() ** 2 / n
+    vb = agg["sbb"].to_numpy() - agg["sb"].to_numpy() ** 2 / n
+    den = np.sqrt(va * vb)
+    out = np.where(den > 0, cov / den, np.nan)
+    return pd.Series(out, index=agg.index).dropna()
 
 
 def ic_stats(ic: pd.Series, sample_gap_h: int = 8, horizon_h: int = 8) -> dict:

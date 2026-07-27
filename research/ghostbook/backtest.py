@@ -47,6 +47,7 @@ class BTConfig:
     vol_lookback: int = 14 * 24
     min_names: int = 20
     neutral: bool = True          # demean weights -> dollar-neutral
+    long_only: bool = False       # spot expression: drop the short leg
     capital_usd: float = 100_000.0
     cost: CostModel = field(default_factory=CostModel)
 
@@ -102,6 +103,10 @@ def build_weights(score: pd.DataFrame, cfg: BTConfig,
     if cfg.neutral:
         w = w.sub(w.mean(axis=1), axis=0)
 
+    if cfg.long_only:
+        # Spot-tradeable expression: keep the bullish half of the book only.
+        w = w.clip(lower=0.0)
+
     gross = w.abs().sum(axis=1).replace(0.0, np.nan)
     w = w.div(gross, axis=0) * cfg.gross
     w = w.clip(-cfg.max_weight, cfg.max_weight)
@@ -139,7 +144,7 @@ def run(panel: pd.DataFrame, score_col: str, cfg: BTConfig = BTConfig(),
     if cfg.vol_scale:
         lb = max(3, cfg.vol_lookback // cfg.rebal_h)
         vol = (px.pct_change().rolling(lb, min_periods=lb // 2).std()
-               .replace(0.0, np.nan))
+               .shift(1).replace(0.0, np.nan))
 
     sc = sc.where(ret.notna() & px.notna())
     w = build_weights(sc, cfg, vol)

@@ -197,19 +197,43 @@ def reconstruct(metrics: pd.DataFrame, cfg: MapConfig = MapConfig()) -> pd.DataF
     return out
 
 
+def _cache_dir():
+    from .vision_bulk import CACHE
+    d = CACHE / "maps"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _cache_tag(cfg: MapConfig) -> str:
+    return (f"{cfg.close_rule}_b{cfg.log_bucket}_c{cfg.checkpoint_min}"
+            f"_L{cfg.fuel_leverage:g}_f{cfg.fuel_band:g}")
+
+
 def reconstruct_universe(metrics_by_symbol: dict[str, pd.DataFrame],
                          cfg: MapConfig = MapConfig(),
-                         verbose: bool = True) -> dict[str, pd.DataFrame]:
+                         verbose: bool = True,
+                         use_cache: bool = True) -> dict[str, pd.DataFrame]:
     out: dict[str, pd.DataFrame] = {}
+    d = _cache_dir()
+    tag = _cache_tag(cfg)
     for i, (sym, m) in enumerate(metrics_by_symbol.items(), 1):
-        try:
-            r = reconstruct(m, cfg)
-        except Exception as e:                       # a bad symbol must not kill the run
-            if verbose:
-                print(f"  {sym}: FAIL {repr(e)[:90]}", flush=True)
-            continue
+        path = d / f"{sym}__{tag}.parquet"
+        if use_cache and path.exists():
+            try:
+                r = pd.read_parquet(path)
+            except Exception:
+                r = pd.DataFrame()
+        else:
+            try:
+                r = reconstruct(m, cfg)
+            except Exception as e:                   # a bad symbol must not kill the run
+                if verbose:
+                    print(f"  {sym}: FAIL {repr(e)[:90]}", flush=True)
+                continue
+            if use_cache:
+                r.to_parquet(path)
         if not r.empty:
             out[sym] = r
-        if verbose and i % 25 == 0:
+        if verbose and i % 50 == 0:
             print(f"  positionmap {i}/{len(metrics_by_symbol)} kept={len(out)}", flush=True)
     return out
