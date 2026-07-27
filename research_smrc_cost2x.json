@@ -1,0 +1,183 @@
+{
+  "strategy": "settlement_memory_reserve_carry",
+  "params": {
+    "funding_lookback": 24,
+    "min_funding": 5e-05,
+    "min_reserve": 0.0005,
+    "round_trip_cost": 0.006,
+    "basis_capture": 0.5,
+    "max_basis": 0.01,
+    "max_hold_steps": 90,
+    "survival_horizon": 36,
+    "survival_prior": 0.7,
+    "min_history_steps": 540,
+    "liquidity_lookback": 90,
+    "top_liquid": 20,
+    "slots": 6,
+    "leverage": 1.5
+  },
+  "training_end": "2023-06-30 23:59:59.999999",
+  "held_out_start": "2023-07-01 00:00:00",
+  "folds": [
+    {
+      "fold": 1,
+      "start": "2023-07-01 00:00:00",
+      "end": "2023-12-30 16:00:00",
+      "metrics": {
+        "n_days": 183,
+        "net_return_pct": 0.559,
+        "ann_return_pct": 1.123,
+        "net_per_day_pct": 0.00306,
+        "sharpe": 1.074,
+        "max_drawdown_pct": -0.681,
+        "worst_day_pct": -0.312,
+        "win_days_pct": 8.2,
+        "btc_beta": 0.0
+      }
+    },
+    {
+      "fold": 2,
+      "start": "2023-12-30 16:00:00",
+      "end": "2024-06-30 08:00:00",
+      "metrics": {
+        "n_days": 184,
+        "net_return_pct": 7.926,
+        "ann_return_pct": 16.432,
+        "net_per_day_pct": 0.04157,
+        "sharpe": 5.545,
+        "max_drawdown_pct": -1.126,
+        "worst_day_pct": -0.596,
+        "win_days_pct": 27.72,
+        "btc_beta": 0.0
+      }
+    },
+    {
+      "fold": 3,
+      "start": "2024-06-30 08:00:00",
+      "end": "2024-12-30 00:00:00",
+      "metrics": {
+        "n_days": 183,
+        "net_return_pct": 0.249,
+        "ann_return_pct": 0.501,
+        "net_per_day_pct": 0.00138,
+        "sharpe": 0.435,
+        "max_drawdown_pct": -0.797,
+        "worst_day_pct": -0.58,
+        "win_days_pct": 8.2,
+        "btc_beta": 0.0
+      }
+    },
+    {
+      "fold": 4,
+      "start": "2024-12-30 00:00:00",
+      "end": "2025-06-30 16:00:00.002000",
+      "metrics": {
+        "n_days": 183,
+        "net_return_pct": 0.0,
+        "ann_return_pct": 0.0,
+        "net_per_day_pct": 0.0,
+        "sharpe": 0.0,
+        "max_drawdown_pct": 0.0,
+        "worst_day_pct": 0.0,
+        "win_days_pct": 0.0,
+        "btc_beta": 0.0
+      }
+    },
+    {
+      "fold": 5,
+      "start": "2025-06-30 16:00:00.002000",
+      "end": "2025-12-30 08:00:00.001000",
+      "metrics": {
+        "n_days": 184,
+        "net_return_pct": 0.0,
+        "ann_return_pct": 0.0,
+        "net_per_day_pct": 0.0,
+        "sharpe": 0.0,
+        "max_drawdown_pct": 0.0,
+        "worst_day_pct": 0.0,
+        "win_days_pct": 0.0,
+        "btc_beta": 0.0
+      }
+    },
+    {
+      "fold": 6,
+      "start": "2025-12-30 08:00:00.001000",
+      "end": "2026-07-01 00:00:00.005000",
+      "metrics": {
+        "n_days": 183,
+        "net_return_pct": 0.0,
+        "ann_return_pct": 0.0,
+        "net_per_day_pct": 0.0,
+        "sharpe": 0.0,
+        "max_drawdown_pct": 0.0,
+        "worst_day_pct": 0.0,
+        "win_days_pct": 0.0,
+        "btc_beta": 0.0
+      }
+    }
+  ],
+  "combined_oos": {
+    "n_days": 1096,
+    "net_return_pct": 8.8,
+    "ann_return_pct": 2.851,
+    "net_per_day_pct": 0.00772,
+    "sharpe": 2.13,
+    "max_drawdown_pct": -1.126,
+    "worst_day_pct": -0.596,
+    "win_days_pct": 7.3,
+    "btc_beta": 0.0019
+  },
+  "oos_symbol_net_pnl": {
+    "OPUSDT": 0.025757,
+    "ARBUSDT": 0.018189,
+    "FILUSDT": 0.017465,
+    "APTUSDT": 0.015139,
+    "ETCUSDT": 0.011649,
+    "ADAUSDT": 0.009401,
+    "LTCUSDT": 0.003015,
+    "LINKUSDT": 0.002145,
+    "XRPUSDT": 0.001944,
+    "ATOMUSDT": 0.0,
+    "SOLUSDT": 0.0,
+    "BTCUSDT": 0.0,
+    "BCHUSDT": 0.0,
+    "BNBUSDT": 0.0,
+    "TRXUSDT": 0.0,
+    "DOTUSDT": 0.0,
+    "AAVEUSDT": -0.001487,
+    "INJUSDT": -0.001494,
+    "ETHUSDT": -0.001585,
+    "AVAXUSDT": -0.002051,
+    "DOGEUSDT": -0.002244,
+    "SUIUSDT": -0.003172,
+    "UNIUSDT": -0.00396,
+    "NEARUSDT": -0.00423
+  },
+  "top_symbol_positive_profit_share": 0.246,
+  "diagnostics_full_history": {
+    "funding_pnl": 0.23358725265261343,
+    "basis_pnl": 0.01362451671238357,
+    "trading_cost": 0.12790205389365855,
+    "turnover": 42.632655512881584,
+    "avg_pair_notional": 0.09405250205086137,
+    "avg_gross_exposure": 0.18810500410172273,
+    "active_symbols": 22
+  },
+  "verdict": {
+    "positive": true,
+    "annual_return_ge_5": false,
+    "sharpe_ge_1_5": true,
+    "max_drawdown_le_5": true,
+    "abs_btc_beta_le_0_10": true,
+    "negative_folds_le_1": true,
+    "active_folds_ge_4": false,
+    "top_symbol_profit_share_le_25pct": true,
+    "pass": false
+  },
+  "production_ready": false,
+  "research_limitations": [
+    "Static downloaded symbol basket excludes historical delistings and retains survivorship risk.",
+    "Historical fills cannot prove two-leg execution quality on a live venue.",
+    "Paper-forward validation is required before any capital decision."
+  ]
+}
