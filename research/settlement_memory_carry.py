@@ -235,13 +235,14 @@ def _simulate_steps(
     features: dict[str, pd.DataFrame],
     params: Params,
     turn_cost: float = PER_PAIR_TURN_COST,
-) -> tuple[pd.Series, dict]:
+) -> tuple[pd.Series, pd.DataFrame, dict]:
     """Run a two-leg ledger with fixed units between entry and exit."""
     weights = target_weights(features, params)
     funding = _panel(features, "funding").reindex(weights.index).fillna(0.0)
     perp = _panel(features, "perp").reindex(weights.index).ffill()
     spot = _panel(features, "spot").reindex(weights.index).ffill()
     step = pd.Series(0.0, index=weights.index)
+    symbol_step = pd.DataFrame(0.0, index=weights.index, columns=weights.columns)
     funding_pnl = basis_pnl = trading_cost = turnover = 0.0
     positions: dict[str, tuple[float, float, float]] = {}
     perp_cost_share = 0.00060 / PER_PAIR_TURN_COST
@@ -259,6 +260,7 @@ def _simulate_steps(
                 fpnl = perp_units * perp.at[ts, symbol] * funding.at[ts, symbol]
                 pair_pnl = spnl + ppnl
                 step.at[ts] += pair_pnl + fpnl
+                symbol_step.at[ts, symbol] += pair_pnl + fpnl
                 basis_pnl += pair_pnl
                 funding_pnl += fpnl
 
@@ -272,6 +274,7 @@ def _simulate_steps(
                 spot_cost_share * spot_notional + perp_cost_share * perp_notional
             )
             step.at[ts] -= cost
+            symbol_step.at[ts, symbol] -= cost
             trading_cost += cost
             turnover += (spot_notional + perp_notional) / 2
         for symbol in desired - current:
@@ -281,6 +284,7 @@ def _simulate_steps(
             positions[symbol] = (weight, spot_units, perp_units)
             cost = weight * turn_cost
             step.at[ts] -= cost
+            symbol_step.at[ts, symbol] -= cost
             trading_cost += cost
             turnover += weight
 
@@ -294,6 +298,7 @@ def _simulate_steps(
                 spot_cost_share * spot_notional + perp_cost_share * perp_notional
             )
             step.at[ts] -= cost
+            symbol_step.at[ts, symbol] -= cost
             trading_cost += cost
             turnover += (spot_notional + perp_notional) / 2
 
@@ -307,7 +312,7 @@ def _simulate_steps(
         "avg_gross_exposure": float(2 * gross.mean()),
         "active_symbols": int((weights.abs().sum(axis=0) > 0).sum()),
     }
-    return step, diag
+    return step, symbol_step, diag
 
 
 def simulate(
@@ -317,7 +322,7 @@ def simulate(
 ) -> tuple[pd.Series, dict]:
     """Return daily portfolio returns and diagnostics."""
     cost = params.round_trip_cost / 2 if turn_cost is None else turn_cost
-    step, diag = _simulate_steps(features, params, cost)
+    step, _, diag = _simulate_steps(features, params, cost)
     daily = (1.0 + step).groupby(step.index.floor("D")).prod() - 1.0
     return daily, diag
 
@@ -361,7 +366,7 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     idx = idx.sort_values()
     boundaries = [idx[int(i * len(idx) / (folds + 1))] for i in range(1, folds + 1)]
     boundaries.append(idx[-1] + pd.Timedelta(hours=8))
-    step, diag = _simulate_steps(
+    step, symbol_step, diag = _simulate_steps(
         features, params, turn_cost=params.round_trip_cost / 2
     )
     fold_rows = []
@@ -393,6 +398,13 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     if btc is not None:
         benchmark = btc["spot"].resample("1D").last().pct_change(fill_method=None)
     combined_metrics = metrics(combined, benchmark)
+    oos_symbol_pnl = symbol_step.loc[combined_steps.index].sum().sort_values(
+        ascending=False
+    )
+    positive_total = float(oos_symbol_pnl.clip(lower=0).sum())
+    top_profit_share = (
+        float(oos_symbol_pnl.iloc[0] / positive_total) if positive_total > 0 else 1.0
+    )
     negative_folds = sum(r["metrics"].get("net_return_pct", 0) < 0 for r in fold_rows)
     active_folds = sum(
         r["metrics"].get("net_return_pct", 0) != 0 for r in fold_rows
@@ -409,6 +421,7 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
         ),
         "negative_folds_le_1": bool(negative_folds <= 1),
         "active_folds_ge_4": bool(active_folds >= 4),
+        "top_symbol_profit_share_le_25pct": bool(top_profit_share <= 0.25),
     }
     verdict["pass"] = all(verdict.values())
     return {
@@ -416,6 +429,11 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
         "params": asdict(params),
         "folds": fold_rows,
         "combined_oos": combined_metrics,
+        "oos_symbol_net_pnl": {
+            symbol: round(float(value), 6)
+            for symbol, value in oos_symbol_pnl.items()
+        },
+        "top_symbol_positive_profit_share": round(top_profit_share, 4),
         "diagnostics_full_history": diag,
         "verdict": verdict,
     }
