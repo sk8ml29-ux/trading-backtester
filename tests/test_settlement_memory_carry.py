@@ -8,6 +8,7 @@ from research.settlement_memory_carry import (
     Params,
     _survival_reserve,
     build_features,
+    evaluate,
     simulate,
 )
 
@@ -145,6 +146,38 @@ class SettlementMemoryCarryTests(unittest.TestCase):
         self.assertEqual(set(book), {"A", "B"})
         self.assertTrue(all(position["g"] == 1 for position in book.values()))
         self.assertAlmostEqual(sum(p["weight"] for p in book.values()), 1.0)
+
+    def test_validation_excludes_parameter_training_period(self):
+        idx = pd.date_range("2023-01-01", periods=1_200, freq="8h")
+        raw = pd.DataFrame(
+            {
+                "funding": np.full(len(idx), 0.0002),
+                "perp": np.full(len(idx), 100.0),
+                "spot": np.full(len(idx), 100.0),
+                "dollar_volume": np.full(len(idx), 10_000_000.0),
+            },
+            index=idx,
+        )
+        params = Params(
+            funding_lookback=3,
+            min_history_steps=3,
+            liquidity_lookback=3,
+            slots=1,
+            top_liquid=1,
+            leverage=1.0,
+        )
+        result = evaluate(
+            build_features({"BTCUSDT": raw}, params),
+            params,
+            folds=2,
+            validation_start="2023-07-01",
+        )
+
+        self.assertEqual(result["held_out_start"], "2023-07-01 00:00:00")
+        self.assertTrue(
+            all(pd.Timestamp(fold["start"]) >= pd.Timestamp("2023-07-01")
+                for fold in result["folds"])
+        )
 
 
 if __name__ == "__main__":

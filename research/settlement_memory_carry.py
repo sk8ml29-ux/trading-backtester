@@ -359,13 +359,23 @@ def sliced(features: dict[str, pd.DataFrame], lo: pd.Timestamp, hi: pd.Timestamp
     return {s: d[(d.index >= lo) & (d.index < hi)] for s, d in features.items()}
 
 
-def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) -> dict:
+def evaluate(
+    features: dict[str, pd.DataFrame],
+    params: Params,
+    folds: int = 6,
+    validation_start: str = "2023-07-01",
+) -> dict:
     idx = pd.Index([])
     for frame in features.values():
         idx = idx.union(frame.index)
     idx = idx.sort_values()
-    boundaries = [idx[int(i * len(idx) / (folds + 1))] for i in range(1, folds + 1)]
-    boundaries.append(idx[-1] + pd.Timedelta(hours=8))
+    validation_idx = idx[idx >= pd.Timestamp(validation_start)]
+    if len(validation_idx) < folds:
+        raise ValueError("validation period is too short for requested folds")
+    boundaries = [
+        validation_idx[int(i * len(validation_idx) / folds)] for i in range(folds)
+    ]
+    boundaries.append(validation_idx[-1] + pd.Timedelta(hours=8))
     step, symbol_step, diag = _simulate_steps(
         features, params, turn_cost=params.round_trip_cost / 2
     )
@@ -427,6 +437,8 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     return {
         "strategy": "settlement_memory_reserve_carry",
         "params": asdict(params),
+        "training_end": str(pd.Timestamp(validation_start) - pd.Timedelta(microseconds=1)),
+        "held_out_start": str(pd.Timestamp(validation_start)),
         "folds": fold_rows,
         "combined_oos": combined_metrics,
         "oos_symbol_net_pnl": {
@@ -443,6 +455,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--symbols", default=",".join(BASKET))
     parser.add_argument("--folds", type=int, default=6)
+    parser.add_argument("--validation-start", default="2023-07-01")
     parser.add_argument("--cost-multiplier", type=float, default=1.0)
     parser.add_argument("--out")
     args = parser.parse_args()
@@ -452,7 +465,9 @@ def main() -> None:
     if not data:
         raise SystemExit("No Vision data. Run: python -m research.binance_vision")
     print(f"loaded {len(data)} symbols")
-    result = evaluate(build_features(data, params), params, args.folds)
+    result = evaluate(
+        build_features(data, params), params, args.folds, args.validation_start
+    )
     print(json.dumps(result, indent=2))
     if args.out:
         Path(args.out).write_text(json.dumps(result, indent=2) + "\n")
