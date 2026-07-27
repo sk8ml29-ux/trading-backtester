@@ -103,19 +103,28 @@ def fetch_klines(symbol: str, market: str, interval: str, start: str, end: str,
         df = pd.read_csv(z.open(name), header=None)
         # Binance kline columns; some months include a header row -> coerce
         df = df.rename(columns={0: "open_time", 1: "open", 2: "high", 3: "low",
-                                4: "close", 5: "volume"})
-        frames.append(df[["open_time", "open", "high", "low", "close", "volume"]])
+                                4: "close", 5: "volume", 6: "close_time"})
+        frames.append(
+            df[["open_time", "close_time", "open", "high", "low", "close", "volume"]]
+        )
         time.sleep(0.03)
     if not frames:
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
     out = pd.concat(frames, ignore_index=True)
     out["open_time"] = pd.to_numeric(out["open_time"], errors="coerce")
-    out = out.dropna(subset=["open_time"])
+    out["close_time"] = pd.to_numeric(out["close_time"], errors="coerce")
+    out = out.dropna(subset=["open_time", "close_time"])
     # open_time is ms in older dumps and microseconds in newer ones; normalize
     # to ms per-row (values >= 1e14 are microseconds -> divide by 1000).
     ot = out["open_time"].astype("int64")
     ot = ot.where(ot < 10**14, ot // 1000)
-    out["time"] = pd.to_datetime(ot, unit="ms")
+    # Index by the first whole millisecond *after* the bar closes. An 8h bar
+    # opened at 00:00 closes at 07:59:59.999 and is therefore observable at
+    # 08:00. Indexing it by open_time lets a settlement-time signal see eight
+    # hours of future prices.
+    ct = out["close_time"].astype("int64")
+    ct = ct.where(ct < 10**14, ct // 1000)
+    out["time"] = pd.to_datetime(ct + 1, unit="ms")
     for c in ["open", "high", "low", "close", "volume"]:
         out[c] = pd.to_numeric(out[c], errors="coerce")
     out = (out[["time", "open", "high", "low", "close", "volume"]].dropna()
