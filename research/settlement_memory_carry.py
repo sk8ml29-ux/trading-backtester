@@ -448,6 +448,12 @@ def evaluate(
         "top_symbol_positive_profit_share": round(top_profit_share, 4),
         "diagnostics_full_history": diag,
         "verdict": verdict,
+        "production_ready": False,
+        "research_limitations": [
+            "Static downloaded symbol basket excludes historical delistings and retains survivorship risk.",
+            "Historical fills cannot prove two-leg execution quality on a live venue.",
+            "Paper-forward validation is required before any capital decision.",
+        ],
     }
 
 

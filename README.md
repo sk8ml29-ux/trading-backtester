@@ -2,6 +2,29 @@
 
 Python backtester and **paper-trading bot** for three strategies (Trading Rush / Rayner / Turtle synthesis).
 
+## Settlement Memory Reserve Carry (research)
+
+The research suite also contains SMRC, a delta-neutral long-spot/short-perpetual
+carry strategy. It estimates the remaining lifetime of a positive funding
+streak and opens only when expected carry plus conservative basis convergence
+exceeds the complete two-leg trading reserve.
+
+```bash
+# Download public funding, spot and perpetual history
+python -m research.binance_vision --start 2021-01-01 --end 2026-06-30 --interval 8h
+
+# Reproduce held-out validation and doubled-cost stress
+python -m research.settlement_memory_carry --out research_smrc_oos.json
+python -m research.settlement_memory_carry --cost-multiplier 2 --out research_smrc_cost2x.json
+
+# Start/update the zero-risk OKX paper tracker (never places orders)
+python -m research.smrc_paper --init --capital 100000
+python -m research.smrc_paper --update
+```
+
+See `RAPPORT_SMRC.md` for results, limitations, legality and the production
+gate. Historical profitability is not a live-return guarantee.
+
 | Strategy | ID | Market regime |
 |----------|-----|---------------|
 | MACD Pullback | `macd_pullback` | Uptrend (default) |
