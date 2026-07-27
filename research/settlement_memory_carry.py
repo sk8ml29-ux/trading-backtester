@@ -323,7 +323,10 @@ def simulate(
     """Return daily portfolio returns and diagnostics."""
     cost = params.round_trip_cost / 2 if turn_cost is None else turn_cost
     step, _, diag = _simulate_steps(features, params, cost)
-    daily = (1.0 + step).groupby(step.index.floor("D")).prod() - 1.0
+    # Ledger notionals are fractions of the original capital and remain fixed
+    # until exit. Therefore P&L is additive; compounding would assume unmodelled
+    # resizing of both legs.
+    daily = step.groupby(step.index.floor("D")).sum()
     return daily, diag
 
 
@@ -331,7 +334,7 @@ def metrics(daily: pd.Series, benchmark: pd.Series | None = None) -> dict:
     dr = daily.replace([np.inf, -np.inf], np.nan).dropna()
     if len(dr) < 10:
         return {"n_days": int(len(dr))}
-    equity = (1 + dr).cumprod()
+    equity = 1.0 + dr.cumsum()
     dd = equity / equity.cummax() - 1
     std = dr.std(ddof=0)
     beta = 0.0
@@ -345,7 +348,7 @@ def metrics(daily: pd.Series, benchmark: pd.Series | None = None) -> dict:
     return {
         "n_days": int(len(dr)),
         "net_return_pct": round((equity.iloc[-1] - 1) * 100, 3),
-        "ann_return_pct": round((equity.iloc[-1] ** (1 / elapsed_years) - 1) * 100, 3),
+        "ann_return_pct": round((equity.iloc[-1] - 1) / elapsed_years * 100, 3),
         "net_per_day_pct": round(dr.mean() * 100, 5),
         "sharpe": round(dr.mean() / std * math.sqrt(PER_YEAR), 3) if std else 0.0,
         "max_drawdown_pct": round(dd.min() * 100, 3),
@@ -386,7 +389,7 @@ def evaluate(
         # Exact settlement boundaries: no floor-to-day leakage. The strategy
         # runs continuously across reporting folds without synthetic exits.
         test_steps = step[(step.index >= lo) & (step.index < hi)]
-        test = (1 + test_steps).groupby(test_steps.index.floor("D")).prod() - 1
+        test = test_steps.groupby(test_steps.index.floor("D")).sum()
         oos.append(test_steps)
         fold_rows.append(
             {
@@ -397,12 +400,7 @@ def evaluate(
             }
         )
     combined_steps = pd.concat(oos).sort_index()
-    combined = (
-        (1 + combined_steps)
-        .groupby(combined_steps.index.floor("D"))
-        .prod()
-        - 1
-    )
+    combined = combined_steps.groupby(combined_steps.index.floor("D")).sum()
     btc = features.get("BTCUSDT")
     benchmark = None
     if btc is not None:
@@ -437,10 +435,12 @@ def evaluate(
     return {
         "strategy": "settlement_memory_reserve_carry",
         "params": asdict(params),
-        "training_end": str(pd.Timestamp(validation_start) - pd.Timedelta(microseconds=1)),
-        "held_out_start": str(pd.Timestamp(validation_start)),
+        "parameter_selection_cutoff": str(
+            pd.Timestamp(validation_start) - pd.Timedelta(microseconds=1)
+        ),
+        "post_training_start": str(pd.Timestamp(validation_start)),
         "folds": fold_rows,
-        "combined_oos": combined_metrics,
+        "combined_post_training": combined_metrics,
         "oos_symbol_net_pnl": {
             symbol: round(float(value), 6)
             for symbol, value in oos_symbol_pnl.items()
@@ -450,6 +450,7 @@ def evaluate(
         "verdict": verdict,
         "production_ready": False,
         "research_limitations": [
+            "The post-training period was inspected during development and is not untouched OOS.",
             "Static downloaded symbol basket excludes historical delistings and retains survivorship risk.",
             "Historical fills cannot prove two-leg execution quality on a live venue.",
             "Paper-forward validation is required before any capital decision.",

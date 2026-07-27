@@ -21,8 +21,6 @@ import pandas as pd
 CACHE = Path(__file__).resolve().parent.parent / "data" / "cache"
 _UA = {"User-Agent": "Mozilla/5.0"}
 _CTX = ssl.create_default_context()
-_CTX.check_hostname = False
-_CTX.verify_mode = ssl.CERT_NONE
 
 BASE = "https://www.okx.com"
 

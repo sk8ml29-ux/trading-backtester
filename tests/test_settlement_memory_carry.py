@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from research.smrc_paper import target_book
+from research.smrc_paper import mark_held_book, reconcile_book, target_book
 from research.settlement_memory_carry import (
     Params,
     _survival_reserve,
@@ -147,6 +147,59 @@ class SettlementMemoryCarryTests(unittest.TestCase):
         self.assertTrue(all(position["g"] == 1 for position in book.values()))
         self.assertAlmostEqual(sum(p["weight"] for p in book.values()), 1.0)
 
+    def test_paper_keeps_fixed_units_without_free_rehedge(self):
+        old = {
+            "A": {
+                "weight": 0.5,
+                "spot_units": 5.0,
+                "perp_units": 5.0,
+                "spot_price": 100.0,
+                "perp_price": 100.0,
+                "held_settlements": 3,
+                "reserve": 0.01,
+            }
+        }
+        target = {"A": {**old["A"], "spot_price": 110.0, "perp_price": 105.0}}
+        prices = {"A": {"spot_price": 110.0, "perp_price": 105.0}}
+        book, cost, turnover = reconcile_book(old, target, prices, equity=1_000)
+
+        self.assertEqual(book["A"]["spot_units"], 5.0)
+        self.assertEqual(book["A"]["perp_units"], 5.0)
+        self.assertEqual(cost, 0.0)
+        self.assertEqual(turnover, 0.0)
+
+    def test_paper_marks_fixed_units_and_counts_settlements(self):
+        now = pd.Timestamp("2024-01-02", tz="UTC")
+        old = {
+            "A": {
+                "spot_units": 2.0,
+                "perp_units": 2.0,
+                "spot_price": 100.0,
+                "perp_price": 100.0,
+                "held_settlements": 0,
+            }
+        }
+        funding = {
+            "A": pd.DataFrame(
+                {
+                    "time": [now - pd.Timedelta(hours=8), now],
+                    "rate": [0.001, 0.001],
+                }
+            )
+        }
+        prices = {"A": {"spot_price": 110.0, "perp_price": 105.0}}
+        pnl, settlements = mark_held_book(
+            old,
+            funding,
+            prices,
+            int((now - pd.Timedelta(hours=16)).timestamp() * 1000),
+            int(now.timestamp() * 1000),
+        )
+
+        self.assertAlmostEqual(pnl, 10.42)
+        self.assertEqual(settlements, 2)
+        self.assertEqual(old["A"]["held_settlements"], 2)
+
     def test_validation_excludes_parameter_training_period(self):
         idx = pd.date_range("2023-01-01", periods=1_200, freq="8h")
         raw = pd.DataFrame(
@@ -173,7 +226,7 @@ class SettlementMemoryCarryTests(unittest.TestCase):
             validation_start="2023-07-01",
         )
 
-        self.assertEqual(result["held_out_start"], "2023-07-01 00:00:00")
+        self.assertEqual(result["post_training_start"], "2023-07-01 00:00:00")
         self.assertTrue(
             all(pd.Timestamp(fold["start"]) >= pd.Timestamp("2023-07-01")
                 for fold in result["folds"])

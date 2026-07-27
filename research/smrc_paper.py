@@ -19,18 +19,21 @@ import pandas as pd
 
 from research.paper_forward import (
     LIQUID,
-    basis_pnl,
     fetch_all_funding,
     fetch_market_prices,
-    realized_pnl,
-    turnover_cost,
 )
-from research.settlement_memory_carry import Params, _survival_reserve
+from research.settlement_memory_carry import (
+    PER_PAIR_TURN_COST,
+    Params,
+    _survival_reserve,
+)
 
 STATE = Path(__file__).resolve().parent.parent / "data" / "paper" / "smrc_state.json"
 LOCK = STATE.with_suffix(".lock")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MIN_COVERAGE = 0.70
+PERP_COST_SHARE = 0.00060 / PER_PAIR_TURN_COST
+SPOT_COST_SHARE = 1.0 - PERP_COST_SHARE
 
 
 def _now_ms() -> int:
@@ -55,6 +58,7 @@ def target_book(funding: dict, prices: dict, previous: dict, params: Params) -> 
         )
         scored[coin] = {
             "pred": pred,
+            "latest_funding": float(rates.iloc[-1]),
             "reserve": reserve,
             "basis": basis,
             **price,
@@ -67,7 +71,13 @@ def target_book(funding: dict, prices: dict, previous: dict, params: Params) -> 
             # Missing public data is not a trading signal.
             keep[coin] = dict(old)
             continue
-        if row["pred"] > 0 and row["reserve"] > 0 and row["basis"] >= -0.005:
+        if (
+            row["pred"] > 0
+            and row["latest_funding"] > 0
+            and row["reserve"] > 0
+            and row["basis"] >= -0.005
+            and old.get("held_settlements", 0) < params.max_hold_steps
+        ):
             keep[coin] = {**old, **row}
 
     capacity = max(params.slots - len(keep), 0)
@@ -76,6 +86,7 @@ def target_book(funding: dict, prices: dict, previous: dict, params: Params) -> 
         for coin, row in scored.items()
         if coin not in keep
         and row["pred"] >= params.min_funding
+        and row["latest_funding"] > 0
         and row["reserve"] >= params.min_reserve
         and 0 <= row["basis"] <= params.max_basis
     ]
@@ -92,9 +103,76 @@ def target_book(funding: dict, prices: dict, previous: dict, params: Params) -> 
             "reserve": row["reserve"],
             "perp_price": row.get("perp_price"),
             "spot_price": row.get("spot_price"),
+            "spot_units": row.get("spot_units"),
+            "perp_units": row.get("perp_units"),
+            "held_settlements": row.get("held_settlements", 0),
         }
         for coin, row in keep.items()
     }
+
+
+def mark_held_book(
+    positions: dict,
+    funding: dict,
+    prices: dict,
+    last_ts_ms: int,
+    now_ms: int,
+) -> tuple[float, float]:
+    """Mark fixed units and realized funding in dollars."""
+    lo = pd.Timestamp(last_ts_ms, unit="ms", tz="UTC")
+    hi = pd.Timestamp(now_ms, unit="ms", tz="UTC")
+    pnl = 0.0
+    settlements = 0
+    for coin, pos in positions.items():
+        current = prices[coin]
+        spot_units = float(pos["spot_units"])
+        perp_units = float(pos["perp_units"])
+        pnl += spot_units * (current["spot_price"] - pos["spot_price"])
+        pnl -= perp_units * (current["perp_price"] - pos["perp_price"])
+        window = funding[coin]
+        window = window[(window["time"] > lo) & (window["time"] <= hi)]
+        pnl += perp_units * current["perp_price"] * float(window["rate"].sum())
+        pos["held_settlements"] = pos.get("held_settlements", 0) + len(window)
+        settlements += len(window)
+    return pnl, float(settlements)
+
+
+def reconcile_book(
+    old: dict, target: dict, prices: dict, equity: float
+) -> tuple[dict, float, float]:
+    """Open/close fixed units and return (book, dollar_cost, pair_turnover)."""
+    cost = 0.0
+    turnover = 0.0
+    for coin in set(old) - set(target):
+        pos = old[coin]
+        current = prices[coin]
+        spot_notional = pos["spot_units"] * current["spot_price"]
+        perp_notional = pos["perp_units"] * current["perp_price"]
+        cost += PER_PAIR_TURN_COST * (
+            SPOT_COST_SHARE * spot_notional + PERP_COST_SHARE * perp_notional
+        )
+        turnover += (spot_notional + perp_notional) / 2
+
+    book = {}
+    for coin, row in target.items():
+        current = prices[coin]
+        if coin in old:
+            position = dict(row)
+            position["spot_units"] = old[coin]["spot_units"]
+            position["perp_units"] = old[coin]["perp_units"]
+            position["held_settlements"] = old[coin].get("held_settlements", 0)
+        else:
+            notional = equity * row["weight"]
+            position = dict(row)
+            position["spot_units"] = notional / current["spot_price"]
+            position["perp_units"] = notional / current["perp_price"]
+            position["held_settlements"] = 0
+            cost += notional * PER_PAIR_TURN_COST
+            turnover += notional
+        position["spot_price"] = current["spot_price"]
+        position["perp_price"] = current["perp_price"]
+        book[coin] = position
+    return book, cost, turnover
 
 
 def load_state() -> dict | None:
@@ -150,9 +228,9 @@ def update(args: argparse.Namespace) -> None:
     if state is None:
         if not args.init:
             raise SystemExit("No paper state. Start with --init.")
-        book = target_book(funding, prices, {}, params)
-        cost, turnover = turnover_cost({}, book)
-        equity = args.capital * (1 - cost)
+        target = target_book(funding, prices, {}, params)
+        book, cost, turnover = reconcile_book({}, target, prices, args.capital)
+        equity = args.capital - cost
         state = {
             "schema_version": SCHEMA_VERSION,
             "capital": args.capital,
@@ -174,19 +252,28 @@ def update(args: argparse.Namespace) -> None:
         show(state)
         return
 
+    if state.get("schema_version") != SCHEMA_VERSION:
+        if state.get("positions"):
+            raise SystemExit(
+                "Safety stop: legacy paper state has open positions. "
+                "Close/reset it manually before schema migration."
+            )
+        state["schema_version"] = SCHEMA_VERSION
+
     held = state["positions"]
     missing = set(held) - set(funding) | (set(held) - set(prices))
     if missing:
         raise SystemExit("Safety stop: missing held instruments: " + ", ".join(sorted(missing)))
 
-    funding_return, _ = realized_pnl(
-        held, funding, state["last_ts_ms"], now
+    mark_pnl, settlements = mark_held_book(
+        held, funding, prices, state["last_ts_ms"], now
     )
-    basis_return, _ = basis_pnl(held, prices)
-    new_book = target_book(funding, prices, held, params)
-    cost, turnover = turnover_cost(held, new_book)
-    net = funding_return + basis_return - cost
-    state["equity"] *= 1 + net
+    target = target_book(funding, prices, held, params)
+    new_book, cost, turnover = reconcile_book(
+        held, target, prices, state["equity"] + mark_pnl
+    )
+    net = mark_pnl - cost
+    state["equity"] += net
     state["positions"] = new_book
     state["last_ts"] = str(pd.Timestamp(now, unit="ms", tz="UTC"))
     state["last_ts_ms"] = now
@@ -194,8 +281,8 @@ def update(args: argparse.Namespace) -> None:
         {
             "time": state["last_ts"],
             "pnl": net,
-            "funding": funding_return,
-            "basis": basis_return,
+            "mark_and_funding": mark_pnl,
+            "settlements": settlements,
             "trading_cost": cost,
             "turnover": turnover,
         }
