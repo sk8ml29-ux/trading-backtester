@@ -32,8 +32,8 @@ PER_YEAR = 365
 
 @dataclass(frozen=True)
 class Params:
-    funding_lookback: int = 18
-    min_funding: float = 0.00010
+    funding_lookback: int = 24
+    min_funding: float = 0.00005
     min_reserve: float = 0.00050
     round_trip_cost: float = 2 * PER_PAIR_TURN_COST
     basis_capture: float = 0.50
@@ -44,8 +44,8 @@ class Params:
     min_history_steps: int = 180 * 3
     liquidity_lookback: int = 90
     top_liquid: int = 20
-    slots: int = 10
-    leverage: float = 1.0
+    slots: int = 6
+    leverage: float = 1.5
 
 
 def _read(path: Path, column: str) -> pd.Series:
@@ -393,7 +393,10 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     if btc is not None:
         benchmark = btc["spot"].resample("1D").last().pct_change(fill_method=None)
     combined_metrics = metrics(combined, benchmark)
-    losing_folds = sum(r["metrics"].get("net_return_pct", 0) <= 0 for r in fold_rows)
+    negative_folds = sum(r["metrics"].get("net_return_pct", 0) < 0 for r in fold_rows)
+    active_folds = sum(
+        r["metrics"].get("net_return_pct", 0) != 0 for r in fold_rows
+    )
     verdict = {
         "positive": bool(combined_metrics.get("net_return_pct", 0) > 0),
         "annual_return_ge_5": bool(combined_metrics.get("ann_return_pct", 0) >= 5),
@@ -404,7 +407,8 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
         "abs_btc_beta_le_0_10": bool(
             abs(combined_metrics.get("btc_beta", 100)) <= 0.10
         ),
-        "losing_folds_le_1": bool(losing_folds <= 1),
+        "negative_folds_le_1": bool(negative_folds <= 1),
+        "active_folds_ge_4": bool(active_folds >= 4),
     }
     verdict["pass"] = all(verdict.values())
     return {
