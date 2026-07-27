@@ -13,7 +13,7 @@ exceeds the complete two-leg trading reserve.
 # Download public funding, spot and perpetual history
 python -m research.binance_vision --start 2021-01-01 --end 2026-06-30 --interval 8h
 
-# Reproduce held-out validation and doubled-cost stress
+# Reproduce post-training historical evaluation and doubled-cost stress
 python -m research.settlement_memory_carry --out research_smrc_oos.json
 python -m research.settlement_memory_carry --cost-multiplier 2 --out research_smrc_cost2x.json
 

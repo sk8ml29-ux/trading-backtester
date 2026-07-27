@@ -3,20 +3,22 @@
 ## Resultat
 
 Settlement Memory Reserve Carry (SMRC) blev historiskt lönsam efter konservativa
-tvåbenskostnader i den frysta held-out-perioden 2023-07-01–2026-06-30.
+tvåbenskostnader i post-training-perioden 2023-07-01–2026-06-30. Perioden
+inspekterades under utvecklingen och är därför **inte strikt orörd OOS**.
 
 | Mått | Normal kostnad | Dubbel kostnad |
 |---|---:|---:|
-| Nettoavkastning | +21,44 % | +8,80 % |
-| Annualiserad avkastning | +6,69 % | +2,85 % |
+| Nettoavkastning | +19,44 % | +8,45 % |
+| Annualiserad avkastning | +6,48 % | +2,82 % |
 | Sharpe | 4,97 | 2,13 |
-| Max drawdown | −0,32 % | −1,13 % |
+| Max drawdown | −0,32 % | −1,04 % |
 | Sämsta dag | −0,17 % | −0,60 % |
 | BTC-beta | 0,0019 | 0,0019 |
 | Största coins andel av positiva vinster | 16,2 % | 24,6 % |
 
-Normalmodellen klarar den historiska grinden. Dubbelkostnadstestet är fortfarande
-positivt men klarar inte kravet 5 % per år.
+Normalmodellen klarar den adaptiva historiska grinden. Dubbelkostnadstestet är
+fortfarande positivt men klarar varken kravet 5 % per år eller fyra aktiva
+segment.
 
 Strategin är **inte produktionsklar**. De sista två halvårssegmenten gjorde inga
 affärer eftersom finansieringsreserven var för låg. Det är avsiktlig
@@ -49,7 +51,8 @@ streak-hazard, återstående-carry-reserv, basis-kredit och hård tvåbensgrind.
 ## Validering
 
 - Data: publika Binance Vision-dumpar, 24 USDT-marknader.
-- Parameterträning slutade 2023-06-30. Held-out började 2023-07-01.
+- Parameterurvalets cutoff var 2023-06-30. Post-training började 2023-07-01,
+  men perioden är inte orörd OOS eftersom den inspekterades under utvecklingen.
 - Sex fasta halvårssegment; ingen parameterändring mellan segment.
 - Funding vid settlement `t` kan inte tjänas av en position öppnad efter `t`.
 - Klines indexeras när de är stängda, inte när de öppnas.
@@ -62,14 +65,15 @@ streak-hazard, återstående-carry-reserv, basis-kredit och hård tvåbensgrind.
 
 ## Begränsningar
 
-1. Den statiska symbolkorgen innehåller överlevande kontrakt och saknar
+1. Post-training-resultatet är adaptiv historisk evidens, inte strikt OOS.
+2. Den statiska symbolkorgen innehåller överlevande kontrakt och saknar
    historiskt avnoterade marknader. Det lämnar survivorshiprisk.
-2. Kline-close är inte en orderbok. Samtidig fill av två ben, latency,
+3. Kline-close är inte en orderbok. Samtidig fill av två ben, latency,
    marginalregler, liquidation och börsdefault kan ge sämre liveutfall.
-3. Vinsten var regimberoende och koncentrerad till 2023–2024. De två sista
+4. Vinsten var regimberoende och koncentrerad till 2023–2024. De två sista
    halvårssegmenten var inaktiva.
-4. 1,5× är hävstång. Den låga historiska drawdownen eliminerar inte tailrisk.
-5. Paper-forward på OKX är en annan venue än Binance-backtestet. Det är ett
+5. 1,5× är hävstång. Den låga historiska drawdownen eliminerar inte tailrisk.
+6. Paper-forward på OKX är en annan venue än Binance-backtestet. Det är ett
    avsiktligt portabilitetstest, inte exakt replikering.
 
 ## Laglighet och drift

@@ -16,8 +16,8 @@
     "slots": 6,
     "leverage": 1.5
   },
-  "training_end": "2023-06-30 23:59:59.999999",
-  "held_out_start": "2023-07-01 00:00:00",
+  "parameter_selection_cutoff": "2023-06-30 23:59:59.999999",
+  "post_training_start": "2023-07-01 00:00:00",
   "folds": [
     {
       "fold": 1,
@@ -25,10 +25,10 @@
       "end": "2023-12-30 16:00:00",
       "metrics": {
         "n_days": 183,
-        "net_return_pct": 3.532,
-        "ann_return_pct": 7.209,
-        "net_per_day_pct": 0.01899,
-        "sharpe": 5.281,
+        "net_return_pct": 3.473,
+        "ann_return_pct": 6.966,
+        "net_per_day_pct": 0.01898,
+        "sharpe": 5.282,
         "max_drawdown_pct": -0.321,
         "worst_day_pct": -0.097,
         "win_days_pct": 16.94,
@@ -41,11 +41,11 @@
       "end": "2024-06-30 08:00:00",
       "metrics": {
         "n_days": 184,
-        "net_return_pct": 12.394,
-        "ann_return_pct": 26.243,
-        "net_per_day_pct": 0.06359,
-        "sharpe": 9.929,
-        "max_drawdown_pct": -0.3,
+        "net_return_pct": 11.692,
+        "ann_return_pct": 23.321,
+        "net_per_day_pct": 0.06355,
+        "sharpe": 9.932,
+        "max_drawdown_pct": -0.269,
         "worst_day_pct": -0.171,
         "win_days_pct": 58.15,
         "btc_beta": 0.0
@@ -57,12 +57,12 @@
       "end": "2024-12-30 00:00:00",
       "metrics": {
         "n_days": 183,
-        "net_return_pct": 4.254,
-        "ann_return_pct": 8.714,
-        "net_per_day_pct": 0.02279,
-        "sharpe": 6.25,
-        "max_drawdown_pct": -0.142,
-        "worst_day_pct": -0.142,
+        "net_return_pct": 4.169,
+        "ann_return_pct": 8.361,
+        "net_per_day_pct": 0.02278,
+        "sharpe": 6.253,
+        "max_drawdown_pct": -0.137,
+        "worst_day_pct": -0.141,
         "win_days_pct": 25.68,
         "btc_beta": 0.0
       }
@@ -116,12 +116,12 @@
       }
     }
   ],
-  "combined_oos": {
+  "combined_post_training": {
     "n_days": 1096,
-    "net_return_pct": 21.441,
-    "ann_return_pct": 6.69,
-    "net_per_day_pct": 0.01775,
-    "sharpe": 4.972,
+    "net_return_pct": 19.441,
+    "ann_return_pct": 6.48,
+    "net_per_day_pct": 0.01774,
+    "sharpe": 4.974,
     "max_drawdown_pct": -0.321,
     "worst_day_pct": -0.171,
     "win_days_pct": 17.61,
@@ -156,7 +156,7 @@
   "top_symbol_positive_profit_share": 0.162,
   "diagnostics_full_history": {
     "funding_pnl": 0.3566914651836392,
-    "basis_pnl": 0.035872212032938514,
+    "basis_pnl": 0.0358722120329385,
     "trading_cost": 0.08556410732486149,
     "turnover": 57.03915099537105,
     "avg_pair_notional": 0.1912633305988515,
@@ -176,6 +176,7 @@
   },
   "production_ready": false,
   "research_limitations": [
+    "The post-training period was inspected during development and is not untouched OOS.",
     "Static downloaded symbol basket excludes historical delistings and retains survivorship risk.",
     "Historical fills cannot prove two-leg execution quality on a live venue.",
     "Paper-forward validation is required before any capital decision."
