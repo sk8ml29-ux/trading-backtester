@@ -127,7 +127,7 @@
     "win_days_pct": 17.61,
     "btc_beta": 0.0019
   },
-  "oos_symbol_net_pnl": {
+  "post_training_symbol_net_pnl": {
     "OPUSDT": 0.03177,
     "NEARUSDT": 0.026999,
     "XRPUSDT": 0.026813,
@@ -156,7 +156,7 @@
   "top_symbol_positive_profit_share": 0.162,
   "diagnostics_full_history": {
     "funding_pnl": 0.3566914651836392,
-    "basis_pnl": 0.0358722120329385,
+    "basis_pnl": 0.035872212032938486,
     "trading_cost": 0.08556410732486149,
     "turnover": 57.03915099537105,
     "avg_pair_notional": 0.1912633305988515,

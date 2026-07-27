@@ -127,7 +127,7 @@
     "win_days_pct": 7.3,
     "btc_beta": 0.0019
   },
-  "oos_symbol_net_pnl": {
+  "post_training_symbol_net_pnl": {
     "OPUSDT": 0.025757,
     "ARBUSDT": 0.018189,
     "FILUSDT": 0.017465,
