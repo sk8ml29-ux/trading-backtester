@@ -48,6 +48,8 @@ class BTConfig:
     min_names: int = 20
     neutral: bool = True          # demean weights -> dollar-neutral
     long_only: bool = False       # spot expression: drop the short leg
+    smooth_hl_h: float = 0.0      # EWMA half-life applied to the score
+    no_trade_band: float = 0.0    # skip trades smaller than band * max_weight
     capital_usd: float = 100_000.0
     cost: CostModel = field(default_factory=CostModel)
 
@@ -117,6 +119,46 @@ def build_weights(score: pd.DataFrame, cfg: BTConfig,
     return w.fillna(0.0)
 
 
+def _apply_band(target: pd.DataFrame, ret: pd.DataFrame,
+                cfg: BTConfig) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Walk the book forward, letting positions drift and only trading real moves.
+
+    Returns the weights actually held and the traded amounts. With a zero band
+    this reduces to rebalancing fully to target every period, which is the
+    behaviour the earlier vectorised path had.
+    """
+    tgt = target.to_numpy(float)
+    rets = np.nan_to_num(ret.to_numpy(float))
+    n_t, n_s = tgt.shape
+    held = np.zeros(n_s)
+    out_w = np.zeros_like(tgt)
+    out_tr = np.zeros_like(tgt)
+    thresh = cfg.no_trade_band * cfg.max_weight
+
+    for i in range(n_t):
+        if i > 0:
+            drifted = held * (1.0 + rets[i - 1])
+            g = np.abs(drifted).sum()
+            if g > 0:
+                drifted = drifted / g * cfg.gross
+        else:
+            drifted = held
+
+        want = np.nan_to_num(tgt[i])
+        if thresh > 0:
+            move = np.abs(want - drifted) > thresh
+            new = np.where(move, want, drifted)
+        else:
+            new = want
+
+        out_tr[i] = np.abs(new - drifted)
+        out_w[i] = new
+        held = new
+
+    return (pd.DataFrame(out_w, index=target.index, columns=target.columns),
+            pd.DataFrame(out_tr, index=target.index, columns=target.columns))
+
+
 def run(panel: pd.DataFrame, score_col: str, cfg: BTConfig = BTConfig(),
         start: str | None = None, end: str | None = None) -> dict:
     """Backtest one score column. Returns equity curve plus summary stats."""
@@ -147,6 +189,12 @@ def run(panel: pd.DataFrame, score_col: str, cfg: BTConfig = BTConfig(),
                .shift(1).replace(0.0, np.nan))
 
     sc = sc.where(ret.notna() & px.notna())
+    if cfg.smooth_hl_h and cfg.smooth_hl_h > 0:
+        # Averaging the score over time removes the part of the reshuffling
+        # that is noise rather than a change of view, which is pure cost saved.
+        hl = max(1.0, cfg.smooth_hl_h / cfg.rebal_h)
+        sc = sc.ewm(halflife=hl, min_periods=1, ignore_na=True).mean()
+
     w = build_weights(sc, cfg, vol)
     if w.empty:
         return dict(ok=False, reason="no weights")
@@ -154,14 +202,8 @@ def run(panel: pd.DataFrame, score_col: str, cfg: BTConfig = BTConfig(),
     ret = ret.reindex_like(w).fillna(0.0)
     liq = liq.reindex_like(w)
 
+    w, traded = _apply_band(w, ret, cfg)
     gross_pnl = (w * ret).sum(axis=1)
-
-    # Turnover: compare the new target against yesterday's weights after they
-    # drifted with the market.
-    drift = w.shift(1).fillna(0.0) * (1.0 + ret.shift(1).fillna(0.0))
-    dg = drift.abs().sum(axis=1).replace(0.0, np.nan)
-    drift = drift.div(dg, axis=0).fillna(0.0) * cfg.gross
-    traded = (w - drift).abs()
     turnover = traded.sum(axis=1)
 
     side_cost = cfg.cost.per_side_bps() / 1e4
