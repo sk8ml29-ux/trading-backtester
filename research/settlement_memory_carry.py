@@ -52,7 +52,6 @@ def _read(path: Path, column: str) -> pd.Series:
     df = pd.read_csv(path, parse_dates=["time"], index_col="time")
     out = pd.to_numeric(df[column], errors="coerce")
     out = out[~out.index.duplicated(keep="last")].sort_index()
-    out.index = out.index.round("h")
     return out
 
 
@@ -67,15 +66,21 @@ def load_coin(symbol: str) -> pd.DataFrame | None:
 
     funding = _read(fp, "funding_rate").rename("funding")
     perp_df = pd.read_csv(pp, parse_dates=["time"], index_col="time")
-    spot = _read(sp, "close").rename("spot")
-    perp_df.index = perp_df.index.round("h")
+    spot_raw = _read(sp, "close")
     perp_df = perp_df[~perp_df.index.duplicated(keep="last")].sort_index()
-    perp = pd.to_numeric(perp_df["close"], errors="coerce").rename("perp")
-    dollar_volume = (
+    perp_raw = pd.to_numeric(perp_df["close"], errors="coerce")
+    volume_raw = (
         pd.to_numeric(perp_df["close"], errors="coerce")
         * pd.to_numeric(perp_df["volume"], errors="coerce")
-    ).rename("dollar_volume")
-    frame = pd.concat([funding, perp, spot, dollar_volume], axis=1, join="inner")
+    )
+    # Funding can be stamped a few milliseconds after the nominal settlement.
+    # Select only the latest kline that had actually closed by that timestamp.
+    perp = perp_raw.reindex(funding.index, method="ffill").rename("perp")
+    spot = spot_raw.reindex(funding.index, method="ffill").rename("spot")
+    dollar_volume = volume_raw.reindex(funding.index, method="ffill").rename(
+        "dollar_volume"
+    )
+    frame = pd.concat([funding, perp, spot, dollar_volume], axis=1)
     frame = frame.replace([np.inf, -np.inf], np.nan).dropna()
     if len(frame) < 300:
         return None
@@ -186,63 +191,134 @@ def target_weights(features: dict[str, pd.DataFrame], params: Params) -> pd.Data
         active = []
         for symbol in reserve.columns:
             r = reserve.at[ts, symbol]
+            if not np.isfinite(r):
+                # A missing observation is not an exit signal. Hold the prior
+                # target until fresh funding and marks are available.
+                if state[symbol]:
+                    active.append(symbol)
+                continue
             if state[symbol]:
                 held[symbol] += 1
                 if (
-                    not np.isfinite(r)
-                    or funding.at[ts, symbol] <= 0
+                    funding.at[ts, symbol] <= 0
                     or r <= 0
                     or basis.at[ts, symbol] < -0.005
                     or held[symbol] >= params.max_hold_steps
                 ):
                     state[symbol] = False
                     held[symbol] = 0
-            elif bool(eligible.at[ts, symbol]) and r >= params.min_reserve:
-                state[symbol] = True
-                held[symbol] = 0
             if state[symbol]:
                 active.append(symbol)
-        denominator = max(len(active), params.slots)
+
+        # Keep existing legs, then fill empty slots with the highest causal
+        # expected reserve. This enforces the capital/position limit.
+        capacity = max(params.slots - len(active), 0)
+        if capacity:
+            candidates = [
+                symbol
+                for symbol in reserve.columns
+                if not state[symbol]
+                and bool(eligible.at[ts, symbol])
+                and reserve.at[ts, symbol] >= params.min_reserve
+            ]
+            candidates.sort(key=lambda s: reserve.at[ts, s], reverse=True)
+            for symbol in candidates[:capacity]:
+                state[symbol] = True
+                held[symbol] = 0
+                active.append(symbol)
         if active:
-            weights.loc[ts, active] = params.leverage / denominator
+            weights.loc[ts, active] = params.leverage / params.slots
     return weights
+
+
+def _simulate_steps(
+    features: dict[str, pd.DataFrame],
+    params: Params,
+    turn_cost: float = PER_PAIR_TURN_COST,
+) -> tuple[pd.Series, dict]:
+    """Run a two-leg ledger with fixed units between entry and exit."""
+    weights = target_weights(features, params)
+    funding = _panel(features, "funding").reindex(weights.index).fillna(0.0)
+    perp = _panel(features, "perp").reindex(weights.index).ffill()
+    spot = _panel(features, "spot").reindex(weights.index).ffill()
+    step = pd.Series(0.0, index=weights.index)
+    funding_pnl = basis_pnl = trading_cost = turnover = 0.0
+    positions: dict[str, tuple[float, float, float]] = {}
+    perp_cost_share = 0.00060 / PER_PAIR_TURN_COST
+    spot_cost_share = 1.0 - perp_cost_share
+
+    for i, ts in enumerate(weights.index):
+        # Mark the book held over (t-1, t), then credit settlement t. New
+        # decisions below cannot receive this settlement.
+        for symbol, (weight, spot_units, perp_units) in list(positions.items()):
+            if i:
+                spnl = spot_units * (spot.at[ts, symbol] - spot.iloc[i - 1][symbol])
+                ppnl = -perp_units * (
+                    perp.at[ts, symbol] - perp.iloc[i - 1][symbol]
+                )
+                fpnl = perp_units * perp.at[ts, symbol] * funding.at[ts, symbol]
+                pair_pnl = spnl + ppnl
+                step.at[ts] += pair_pnl + fpnl
+                basis_pnl += pair_pnl
+                funding_pnl += fpnl
+
+        desired = {s for s in weights.columns if weights.at[ts, s] > 0}
+        current = set(positions)
+        for symbol in current - desired:
+            weight, spot_units, perp_units = positions.pop(symbol)
+            spot_notional = spot_units * spot.at[ts, symbol]
+            perp_notional = perp_units * perp.at[ts, symbol]
+            cost = turn_cost * (
+                spot_cost_share * spot_notional + perp_cost_share * perp_notional
+            )
+            step.at[ts] -= cost
+            trading_cost += cost
+            turnover += (spot_notional + perp_notional) / 2
+        for symbol in desired - current:
+            weight = float(weights.at[ts, symbol])
+            spot_units = weight / spot.at[ts, symbol]
+            perp_units = weight / perp.at[ts, symbol]
+            positions[symbol] = (weight, spot_units, perp_units)
+            cost = weight * turn_cost
+            step.at[ts] -= cost
+            trading_cost += cost
+            turnover += weight
+
+    # Charge a real exit at the final observed marks.
+    if len(weights):
+        ts = weights.index[-1]
+        for symbol, (_, spot_units, perp_units) in positions.items():
+            spot_notional = spot_units * spot.at[ts, symbol]
+            perp_notional = perp_units * perp.at[ts, symbol]
+            cost = turn_cost * (
+                spot_cost_share * spot_notional + perp_cost_share * perp_notional
+            )
+            step.at[ts] -= cost
+            trading_cost += cost
+            turnover += (spot_notional + perp_notional) / 2
+
+    gross = weights.shift(1).fillna(0.0).abs().sum(axis=1)
+    diag = {
+        "funding_pnl": float(funding_pnl),
+        "basis_pnl": float(basis_pnl),
+        "trading_cost": float(trading_cost),
+        "turnover": float(turnover),
+        "avg_pair_notional": float(gross.mean()),
+        "avg_gross_exposure": float(2 * gross.mean()),
+        "active_symbols": int((weights.abs().sum(axis=0) > 0).sum()),
+    }
+    return step, diag
 
 
 def simulate(
     features: dict[str, pd.DataFrame],
     params: Params,
-    turn_cost: float = PER_PAIR_TURN_COST,
+    turn_cost: float | None = None,
 ) -> tuple[pd.Series, dict]:
     """Return daily portfolio returns and diagnostics."""
-    weights = target_weights(features, params)
-    funding = _panel(features, "funding").reindex(weights.index).fillna(0.0)
-    perp = _panel(features, "perp").reindex(weights.index)
-    spot = _panel(features, "spot").reindex(weights.index)
-    perp_ret = perp.pct_change(fill_method=None).fillna(0.0)
-    spot_ret = spot.pct_change(fill_method=None).fillna(0.0)
-
-    # A target chosen after t cannot receive settlement t. Shift one complete
-    # interval; it earns funding and basis movement at t+1.
-    held = weights.shift(1).fillna(0.0)
-    funding_pnl = (held * funding).sum(axis=1)
-    basis_pnl = (held * (spot_ret - perp_ret)).sum(axis=1)
-    turnover = (weights - held).abs().sum(axis=1)
-    trading_cost = turnover * turn_cost
-    step = funding_pnl + basis_pnl - trading_cost
-
-    # Liquidate at the evaluation boundary; otherwise every segment gets a free
-    # exit and walk-forward results are biased upward.
-    if len(step) and weights.iloc[-1].abs().sum() > 0:
-        step.iloc[-1] -= weights.iloc[-1].abs().sum() * turn_cost
+    cost = params.round_trip_cost / 2 if turn_cost is None else turn_cost
+    step, diag = _simulate_steps(features, params, cost)
     daily = (1.0 + step).groupby(step.index.floor("D")).prod() - 1.0
-    diag = {
-        "funding_pnl": float(funding_pnl.sum()),
-        "basis_pnl": float(basis_pnl.sum()),
-        "trading_cost": float(trading_cost.sum()),
-        "turnover": float(turnover.sum()),
-        "avg_gross": float(held.abs().sum(axis=1).mean()),
-        "active_symbols": int((weights.abs().sum(axis=0) > 0).sum()),
-    }
     return daily, diag
 
 
@@ -258,10 +334,13 @@ def metrics(daily: pd.Series, benchmark: pd.Series | None = None) -> dict:
         aligned = pd.concat([dr, benchmark], axis=1, join="inner").dropna()
         if len(aligned) > 2 and aligned.iloc[:, 1].var(ddof=0) > 0:
             beta = aligned.cov(ddof=0).iloc[0, 1] / aligned.iloc[:, 1].var(ddof=0)
+    elapsed_years = max(
+        (dr.index[-1] - dr.index[0]).total_seconds() / (365.0 * 86400), 1 / 365
+    )
     return {
         "n_days": int(len(dr)),
         "net_return_pct": round((equity.iloc[-1] - 1) * 100, 3),
-        "ann_return_pct": round((equity.iloc[-1] ** (PER_YEAR / len(dr)) - 1) * 100, 3),
+        "ann_return_pct": round((equity.iloc[-1] ** (1 / elapsed_years) - 1) * 100, 3),
         "net_per_day_pct": round(dr.mean() * 100, 5),
         "sharpe": round(dr.mean() / std * math.sqrt(PER_YEAR), 3) if std else 0.0,
         "max_drawdown_pct": round(dd.min() * 100, 3),
@@ -282,26 +361,33 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
     idx = idx.sort_values()
     boundaries = [idx[int(i * len(idx) / (folds + 1))] for i in range(1, folds + 1)]
     boundaries.append(idx[-1] + pd.Timedelta(hours=8))
-    start = idx[0]
+    step, diag = _simulate_steps(
+        features, params, turn_cost=params.round_trip_cost / 2
+    )
     fold_rows = []
     oos = []
     for i in range(folds):
         lo, hi = boundaries[i], boundaries[i + 1]
-        segment = sliced(features, start, hi)
-        # Preserve expanding feature/state history, then score only this OOS block.
-        daily, diag = simulate(segment, params)
-        test = daily[(daily.index >= lo.floor("D")) & (daily.index < hi.floor("D"))]
-        oos.append(test)
+        # Exact settlement boundaries: no floor-to-day leakage. The strategy
+        # runs continuously across reporting folds without synthetic exits.
+        test_steps = step[(step.index >= lo) & (step.index < hi)]
+        test = (1 + test_steps).groupby(test_steps.index.floor("D")).prod() - 1
+        oos.append(test_steps)
         fold_rows.append(
             {
                 "fold": i + 1,
                 "start": str(lo),
                 "end": str(hi),
                 "metrics": metrics(test),
-                "diagnostics": diag,
             }
         )
-    combined = pd.concat(oos).groupby(level=0).last().sort_index()
+    combined_steps = pd.concat(oos).sort_index()
+    combined = (
+        (1 + combined_steps)
+        .groupby(combined_steps.index.floor("D"))
+        .prod()
+        - 1
+    )
     btc = features.get("BTCUSDT")
     benchmark = None
     if btc is not None:
@@ -322,6 +408,7 @@ def evaluate(features: dict[str, pd.DataFrame], params: Params, folds: int = 6) 
         "params": asdict(params),
         "folds": fold_rows,
         "combined_oos": combined_metrics,
+        "diagnostics_full_history": diag,
         "verdict": verdict,
     }
 
