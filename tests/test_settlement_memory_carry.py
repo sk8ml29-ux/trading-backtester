@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
+from research.smrc_paper import target_book
 from research.settlement_memory_carry import (
     Params,
     _survival_reserve,
@@ -117,6 +118,33 @@ class SettlementMemoryCarryTests(unittest.TestCase):
         # One spot unit was bought at 100; the 100 -> 110 move earns 0.10 of
         # starting capital. No implicit per-settlement rehedge is performed.
         self.assertAlmostEqual(diag["basis_pnl"], 0.10, places=10)
+
+    def test_paper_target_is_positive_carry_only_and_slot_limited(self):
+        params = Params(
+            funding_lookback=3,
+            min_history_steps=4,
+            min_funding=0.00005,
+            min_reserve=-1.0,
+            slots=2,
+            leverage=1.0,
+            survival_horizon=3,
+        )
+        times = pd.date_range("2024-01-01", periods=8, freq="8h", tz="UTC")
+        funding = {
+            coin: pd.DataFrame(
+                {"time": times, "rate": np.full(len(times), rate)}
+            )
+            for coin, rate in {"A": 0.001, "B": 0.0008, "C": -0.001}.items()
+        }
+        prices = {
+            coin: {"basis": 0.001, "perp_price": 100.1, "spot_price": 100.0}
+            for coin in funding
+        }
+        book = target_book(funding, prices, {}, params)
+
+        self.assertEqual(set(book), {"A", "B"})
+        self.assertTrue(all(position["g"] == 1 for position in book.values()))
+        self.assertAlmostEqual(sum(p["weight"] for p in book.values()), 1.0)
 
 
 if __name__ == "__main__":
