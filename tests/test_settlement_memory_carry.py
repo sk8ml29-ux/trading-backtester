@@ -50,6 +50,7 @@ class SettlementMemoryCarryTests(unittest.TestCase):
             top_liquid=1,
             slots=1,
             survival_horizon=3,
+            leverage=1.0,
         )
         daily, diag = simulate(build_features({"X": raw}, params), params, turn_cost=0)
 
@@ -79,6 +80,7 @@ class SettlementMemoryCarryTests(unittest.TestCase):
             top_liquid=1,
             slots=1,
             survival_horizon=3,
+            leverage=1.0,
         )
         p1 = Params(round_trip_cost=0.003, **common)
         p2 = Params(round_trip_cost=0.006, **common)
@@ -108,6 +110,7 @@ class SettlementMemoryCarryTests(unittest.TestCase):
             top_liquid=1,
             slots=1,
             survival_horizon=3,
+            leverage=1.0,
         )
         _, diag = simulate(build_features({"X": raw}, params), params, turn_cost=0)
 
