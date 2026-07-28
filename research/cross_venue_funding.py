@@ -1,13 +1,13 @@
 """Cross-Venue Funding Dispersion (CVFD) research simulator.
 
-Hold equal coin units in opposite perpetual positions on Binance and OKX:
+Hold equal coin units in opposite perpetual positions on Binance and Hyperliquid:
 
-* positive spread (Binance funding > OKX): short Binance, long OKX;
-* negative spread: long Binance, short OKX.
+* positive spread (Binance funding > Hyperliquid): short Binance, long Hyperliquid;
+* negative spread: long Binance, short Hyperliquid.
 
 The strategy is direction-neutral but not risk-free. Venue-basis divergence,
 liquidation, counterparty failure and asynchronous execution remain material.
-Parameters below were pre-registered before inspecting the OKX history.
+Parameters below were pre-registered before inspecting Hyperliquid history.
 """
 from __future__ import annotations
 
@@ -21,13 +21,13 @@ import numpy as np
 import pandas as pd
 
 from research.binance_vision import CACHE as BINANCE_CACHE
-from research.okx_data import CACHE as OKX_CACHE, BASKET
+from research.hyperliquid_data import BASKET, CACHE as HYPERLIQUID_CACHE
 from research.settlement_memory_carry import _survival_reserve
 
 PER_YEAR = 365
 BINANCE_ONE_WAY = 0.00060
-OKX_ONE_WAY = 0.00070
-PAIR_ONE_WAY = BINANCE_ONE_WAY + OKX_ONE_WAY
+HYPERLIQUID_ONE_WAY = 0.00070
+PAIR_ONE_WAY = BINANCE_ONE_WAY + HYPERLIQUID_ONE_WAY
 
 
 @dataclass(frozen=True)
@@ -55,11 +55,11 @@ def _read(path: Path, column: str) -> pd.Series:
 
 
 def _funding_on_binance_grid(
-    binance: pd.Series, okx: pd.Series
+    binance: pd.Series, other_venue: pd.Series
 ) -> pd.DataFrame:
-    """Aggregate all OKX settlements into each Binance funding interval."""
+    """Aggregate all other-venue settlements into each Binance funding interval."""
     b = binance.copy()
-    o = okx.copy()
+    o = other_venue.copy()
     b.index = b.index.round("h")
     o.index = o.index.round("h")
     b = b.groupby(level=0).last().sort_index()
@@ -67,11 +67,11 @@ def _funding_on_binance_grid(
     rows = []
     previous = b.index[0] - pd.Timedelta(hours=8)
     for timestamp, rate in b.items():
-        okx_rate = float(o[(o.index > previous) & (o.index <= timestamp)].sum())
-        rows.append((timestamp, float(rate), okx_rate))
+        other_rate = float(o[(o.index > previous) & (o.index <= timestamp)].sum())
+        rows.append((timestamp, float(rate), other_rate))
         previous = timestamp
     return pd.DataFrame(
-        rows, columns=["time", "binance_funding", "okx_funding"]
+        rows, columns=["time", "binance_funding", "hyperliquid_funding"]
     ).set_index("time")
 
 
@@ -79,8 +79,8 @@ def load_pair(coin: str) -> pd.DataFrame | None:
     symbol = f"{coin}USDT"
     bf = BINANCE_CACHE / f"vision_funding_{symbol.lower()}.csv"
     bp = BINANCE_CACHE / f"vision_perp_{symbol.lower()}_8h.csv"
-    of = OKX_CACHE / f"okx_funding_{coin.lower()}.csv"
-    op = OKX_CACHE / f"okx_swap_{coin.lower()}_4H.csv"
+    of = HYPERLIQUID_CACHE / f"hyperliquid_funding_{coin.lower()}.csv"
+    op = HYPERLIQUID_CACHE / f"hyperliquid_perp_{coin.lower()}_4h.csv"
     if not all(path.exists() for path in (bf, bp, of, op)):
         return None
 
@@ -88,8 +88,8 @@ def load_pair(coin: str) -> pd.DataFrame | None:
         _read(bf, "funding_rate"), _read(of, "funding_rate")
     )
     binance_frame = pd.read_csv(bp, parse_dates=["time"], index_col="time")
-    okx_frame = pd.read_csv(op, parse_dates=["time"], index_col="time")
-    for frame in (binance_frame, okx_frame):
+    hyperliquid_frame = pd.read_csv(op, parse_dates=["time"], index_col="time")
+    for frame in (binance_frame, hyperliquid_frame):
         frame.sort_index(inplace=True)
         frame.drop_duplicates(inplace=True)
 
@@ -99,27 +99,26 @@ def load_pair(coin: str) -> pd.DataFrame | None:
         .reindex(index, method="ffill")
         .rename("binance_price")
     )
-    okx_price = (
-        pd.to_numeric(okx_frame["close"], errors="coerce")
+    hyperliquid_price = (
+        pd.to_numeric(hyperliquid_frame["close"], errors="coerce")
         .reindex(index, method="ffill")
-        .rename("okx_price")
+        .rename("hyperliquid_price")
     )
     binance_dollar_volume = (
         pd.to_numeric(binance_frame["close"], errors="coerce")
         * pd.to_numeric(binance_frame["volume"], errors="coerce")
     ).reindex(index, method="ffill")
-    # OKX volume is in base currency for spot/swap history.
-    okx_dollar_volume = (
-        pd.to_numeric(okx_frame["close"], errors="coerce")
-        * pd.to_numeric(okx_frame["volume"], errors="coerce")
+    hyperliquid_dollar_volume = (
+        pd.to_numeric(hyperliquid_frame["close"], errors="coerce")
+        * pd.to_numeric(hyperliquid_frame["volume"], errors="coerce")
     ).reindex(index, method="ffill")
     frame = pd.concat(
         [
             funding,
             binance_price,
-            okx_price,
+            hyperliquid_price,
             binance_dollar_volume.rename("binance_dollar_volume"),
-            okx_dollar_volume.rename("okx_dollar_volume"),
+            hyperliquid_dollar_volume.rename("hyperliquid_dollar_volume"),
         ],
         axis=1,
     ).replace([np.inf, -np.inf], np.nan).dropna()
@@ -143,7 +142,7 @@ def build_features(data: dict[str, pd.DataFrame], params: Params) -> dict[str, p
     )()
     for coin, raw in data.items():
         frame = raw.copy()
-        spread = frame["binance_funding"] - frame["okx_funding"]
+        spread = frame["binance_funding"] - frame["hyperliquid_funding"]
         positive_remaining, _ = _survival_reserve(spread, survival_params)
         negative_remaining, _ = _survival_reserve(-spread, survival_params)
         forecast = spread.rolling(
@@ -151,10 +150,14 @@ def build_features(data: dict[str, pd.DataFrame], params: Params) -> dict[str, p
         ).median()
         side = np.sign(forecast).fillna(0.0)
         expected = np.where(side >= 0, positive_remaining, negative_remaining)
-        basis = frame["binance_price"] / frame["okx_price"] - 1.0
+        basis = frame["binance_price"] / frame["hyperliquid_price"] - 1.0
         aligned_basis = side * basis
         liquidity = pd.concat(
-            [frame["binance_dollar_volume"], frame["okx_dollar_volume"]], axis=1
+            [
+                frame["binance_dollar_volume"],
+                frame["hyperliquid_dollar_volume"],
+            ],
+            axis=1,
         ).min(axis=1)
         frame["spread"] = spread
         frame["forecast"] = forecast
@@ -242,9 +245,9 @@ def simulate(
 ) -> tuple[pd.Series, pd.DataFrame, dict]:
     targets = target_sides(features, params)
     bp = _panel(features, "binance_price").reindex(targets.index).ffill()
-    op = _panel(features, "okx_price").reindex(targets.index).ffill()
+    op = _panel(features, "hyperliquid_price").reindex(targets.index).ffill()
     bf = _panel(features, "binance_funding").reindex(targets.index).fillna(0.0)
-    of = _panel(features, "okx_funding").reindex(targets.index).fillna(0.0)
+    of = _panel(features, "hyperliquid_funding").reindex(targets.index).fillna(0.0)
     symbol_step = pd.DataFrame(0.0, index=targets.index, columns=targets.columns)
     positions: dict[str, tuple[float, float, float]] = {}
     funding_pnl = basis_pnl = trading_cost = turnover = 0.0
@@ -280,7 +283,7 @@ def simulate(
             _, binance_units, okx_units = positions.pop(coin)
             cost = cost_multiplier * (
                 BINANCE_ONE_WAY * binance_units * bp.at[timestamp, coin]
-                + OKX_ONE_WAY * okx_units * op.at[timestamp, coin]
+                + HYPERLIQUID_ONE_WAY * okx_units * op.at[timestamp, coin]
             )
             symbol_step.at[timestamp, coin] -= cost
             trading_cost += cost
@@ -306,7 +309,7 @@ def simulate(
         for coin, (_, binance_units, okx_units) in positions.items():
             cost = cost_multiplier * (
                 BINANCE_ONE_WAY * binance_units * bp.at[timestamp, coin]
-                + OKX_ONE_WAY * okx_units * op.at[timestamp, coin]
+                + HYPERLIQUID_ONE_WAY * okx_units * op.at[timestamp, coin]
             )
             symbol_step.at[timestamp, coin] -= cost
             trading_cost += cost
@@ -401,7 +404,7 @@ def evaluate(
     )
     return {
         "strategy": "cross_venue_funding_dispersion",
-        "parameters_preregistered_before_okx_results": asdict(params),
+        "parameters_preregistered_before_hyperliquid_results": asdict(params),
         "cost_multiplier": cost_multiplier,
         "symbols": sorted(features),
         "folds": fold_rows,
@@ -432,7 +435,7 @@ def main() -> None:
     data = load_all([coin.strip().upper() for coin in args.coins.split(",")])
     if not data:
         raise SystemExit(
-            "No aligned Binance/OKX data. Run research.binance_vision and research.okx_data."
+            "No aligned Binance/Hyperliquid data. Run research.binance_vision and research.hyperliquid_data."
         )
     params = Params()
     result = evaluate(

@@ -11,18 +11,20 @@ from research.cross_venue_funding import (
 
 
 class CrossVenueFundingTests(unittest.TestCase):
-    def test_okx_settlements_are_aggregated_into_binance_interval(self):
+    def test_hourly_settlements_are_aggregated_into_binance_interval(self):
         binance_index = pd.date_range("2024-01-01 08:00", periods=3, freq="8h")
-        okx_index = pd.date_range("2024-01-01 04:00", periods=6, freq="4h")
+        other_index = pd.date_range("2024-01-01 04:00", periods=6, freq="4h")
         result = _funding_on_binance_grid(
             pd.Series([0.003, 0.003, 0.003], index=binance_index),
-            pd.Series([0.001] * 6, index=okx_index),
+            pd.Series([0.001] * 6, index=other_index),
         )
 
-        self.assertEqual(result["okx_funding"].tolist(), [0.002, 0.002, 0.002])
+        self.assertEqual(
+            result["hyperliquid_funding"].tolist(), [0.002, 0.002, 0.002]
+        )
         self.assertTrue(
             np.allclose(
-                result["binance_funding"] - result["okx_funding"], 0.001
+                result["binance_funding"] - result["hyperliquid_funding"], 0.001
             )
         )
 
@@ -37,9 +39,9 @@ class CrossVenueFundingTests(unittest.TestCase):
                 "liquidity": 1_000_000.0,
                 "age": np.arange(8),
                 "binance_price": 100.0,
-                "okx_price": 100.0,
+                "hyperliquid_price": 100.0,
                 "binance_funding": 0.001,
-                "okx_funding": 0.0,
+                "hyperliquid_funding": 0.0,
             },
             index=index,
         )
@@ -70,9 +72,9 @@ class CrossVenueFundingTests(unittest.TestCase):
                 "liquidity": 1_000_000.0,
                 "age": np.arange(4),
                 "binance_price": 100.0,
-                "okx_price": [100.0, 100.0, 105.0, 105.0],
+                "hyperliquid_price": [100.0, 100.0, 105.0, 105.0],
                 "binance_funding": 0.0,
-                "okx_funding": 0.0,
+                "hyperliquid_funding": 0.0,
             },
             index=index,
         )
