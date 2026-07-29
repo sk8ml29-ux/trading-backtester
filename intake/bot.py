@@ -45,6 +45,9 @@ ALLOWED_SUFFIXES = TEXT_SUFFIXES | {".pdf"}
 SECRET_PATTERNS = {
     "private_key": re.compile(r"-----BEGIN (?:RSA |EC )?PRIVATE KEY-----"),
     "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    "common_api_token": re.compile(
+        r"\b(?:sk_live_|ghp_|github_pat_|xox[baprs]-)[A-Za-z0-9_-]{12,}\b"
+    ),
     "secret_assignment": re.compile(
         r"(?i)\b(?:api[_-]?secret|secret[_-]?key|private[_-]?key|password)"
         r"\s*[:=]\s*[\"']?[A-Za-z0-9+/=_-]{12,}"
@@ -147,7 +150,23 @@ def _audit(paths: IntakePaths, event: str, details: dict) -> None:
         handle.write(json.dumps(row, default=str) + "\n")
 
 
+def _storage_safety(root: Path) -> str:
+    resolved = root.resolve()
+    workspace = WORKSPACE.resolve()
+    try:
+        relative = resolved.relative_to(workspace)
+    except ValueError:
+        return "outside_repository"
+    safe_root = Path("data") / "cache"
+    if relative != safe_root and safe_root not in relative.parents:
+        raise ValueError(
+            "Private intake root inside the repository must be under data/cache/"
+        )
+    return "git_ignored_data_cache"
+
+
 def initialize(paths: IntakePaths, force: bool = False) -> dict:
+    storage_safety = _storage_safety(paths.root)
     paths.root.mkdir(parents=True, exist_ok=True)
     for folder in (
         "legal", "trading", "prediction", "energy", "marketplace",
@@ -164,16 +183,51 @@ def initialize(paths: IntakePaths, force: bool = False) -> dict:
         "root": str(paths.root),
         "constraints": str(constraints),
         "created": True,
-        "git_ignored_by_parent": "data/cache/" in (WORKSPACE / ".gitignore").read_text(),
+        "storage_safety": storage_safety,
+        "git_ignored_by_parent": storage_safety == "git_ignored_data_cache",
     }
     _audit(paths, "init", result)
     return result
 
 
-def _text_sample(path: Path, limit: int = 2_000_000) -> str:
+def _scan_text(path: Path) -> tuple[list[str], list[str]]:
+    """Stream the complete text file with overlap so tokens cannot hide at boundaries."""
     if path.suffix.lower() not in TEXT_SUFFIXES:
-        return ""
-    return path.read_bytes()[:limit].decode("utf-8", errors="replace")
+        return [], []
+    secret_hits = set()
+    pii_hits = set()
+    overlap = ""
+    with path.open(encoding="utf-8", errors="replace") as handle:
+        while True:
+            chunk = handle.read(1024 * 1024)
+            if not chunk:
+                break
+            text = overlap + chunk
+            secret_hits.update(
+                name for name, pattern in SECRET_PATTERNS.items()
+                if pattern.search(text)
+            )
+            pii_hits.update(
+                name for name, pattern in PII_PATTERNS.items()
+                if pattern.search(text)
+            )
+            overlap = text[-512:]
+    return sorted(secret_hits), sorted(pii_hits)
+
+
+def _pdf_review_error(path: Path) -> str | None:
+    sidecar = path.with_suffix(path.suffix + ".reviewed.json")
+    if not sidecar.exists():
+        return "pdf_requires_manual_review_sidecar"
+    try:
+        review = json.loads(sidecar.read_text())
+    except Exception:
+        return "invalid_pdf_review_sidecar"
+    if review.get("manual_secret_pii_review") is not True:
+        return "pdf_manual_review_not_confirmed"
+    if review.get("sha256") != _sha256(path):
+        return "pdf_review_hash_mismatch"
+    return None
 
 
 def _csv_metadata(path: Path) -> dict:
@@ -219,13 +273,13 @@ def inspect_file(path: Path, root: Path) -> dict:
     warnings = []
     if suffix not in ALLOWED_SUFFIXES:
         errors.append("unsupported_file_type")
-    sample = _text_sample(path)
-    for name, pattern in SECRET_PATTERNS.items():
-        if pattern.search(sample):
-            errors.append(f"likely_secret:{name}")
-    for name, pattern in PII_PATTERNS.items():
-        if pattern.search(sample):
-            warnings.append(f"possible_pii:{name}")
+    secret_hits, pii_hits = _scan_text(path)
+    errors.extend(f"likely_secret:{name}" for name in secret_hits)
+    warnings.extend(f"possible_pii:{name}" for name in pii_hits)
+    if suffix == ".pdf":
+        pdf_error = _pdf_review_error(path)
+        if pdf_error:
+            errors.append(pdf_error)
     metadata = {}
     if suffix == ".csv":
         metadata = _csv_metadata(path)
@@ -299,7 +353,7 @@ def validate(paths: IntakePaths) -> dict:
         row["errors"] for row in files
     )
     _atomic_json(paths.root / "validation_report.json", report)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     manifest_path = paths.manifest_dir / f"manifest_{stamp}.json"
     _atomic_json(manifest_path, report)
     _atomic_json(paths.manifest_dir / "latest.json", report)
@@ -327,6 +381,8 @@ def _get_json(url: str, retries: int = 4):
 
 
 def collect_prediction(paths: IntakePaths, limit: int = 20) -> dict:
+    if not 1 <= limit <= 500:
+        raise ValueError("prediction limit must be between 1 and 500")
     query = urllib.parse.urlencode(
         {"active": "true", "closed": "false", "limit": limit}
     )
@@ -334,11 +390,17 @@ def collect_prediction(paths: IntakePaths, limit: int = 20) -> dict:
     snapshots = []
     for market in markets:
         token_ids = market.get("clobTokenIds")
+        outcomes = market.get("outcomes")
         if isinstance(token_ids, str):
             try:
                 token_ids = json.loads(token_ids)
             except json.JSONDecodeError:
                 token_ids = []
+        if isinstance(outcomes, str):
+            try:
+                outcomes = json.loads(outcomes)
+            except json.JSONDecodeError:
+                outcomes = []
         books = []
         for token_id in (token_ids or [])[:2]:
             books.append(
@@ -348,15 +410,25 @@ def collect_prediction(paths: IntakePaths, limit: int = 20) -> dict:
                 )
             )
         best_asks = []
+        best_ask_sizes = []
         for book in books:
-            prices = [
-                float(level["price"])
+            asks = [
+                (float(level["price"]), float(level.get("size", 0)))
                 for level in (book or {}).get("asks", [])
                 if "price" in level
             ]
-            best_asks.append(min(prices) if prices else None)
+            best = min(asks, default=None)
+            best_asks.append(best[0] if best else None)
+            best_ask_sizes.append(best[1] if best else None)
+        binary_complements = (
+            len(outcomes or []) == 2
+            and {str(value).strip().lower() for value in outcomes} == {"yes", "no"}
+            and len(token_ids or []) == 2
+        )
         complete_set_ask = (
-            sum(best_asks) if len(best_asks) == 2 and None not in best_asks else None
+            sum(best_asks)
+            if binary_complements and len(best_asks) == 2 and None not in best_asks
+            else None
         )
         snapshots.append(
             {
@@ -364,8 +436,15 @@ def collect_prediction(paths: IntakePaths, limit: int = 20) -> dict:
                 "slug": market.get("slug"),
                 "question": market.get("question"),
                 "condition_id": market.get("conditionId"),
+                "outcomes": outcomes,
                 "token_ids": token_ids,
                 "best_asks": best_asks,
+                "best_ask_sizes": best_ask_sizes,
+                "executable_complete_set_size": (
+                    min(best_ask_sizes)
+                    if complete_set_ask is not None and None not in best_ask_sizes
+                    else None
+                ),
                 "complete_set_ask_before_fees": complete_set_ask,
                 "books": books,
             }
@@ -381,7 +460,7 @@ def collect_prediction(paths: IntakePaths, limit: int = 20) -> dict:
         paths.root
         / "public"
         / "prediction"
-        / f"polymarket_{timestamp:%Y%m%dT%H%M%SZ}.json"
+        / f"polymarket_{timestamp:%Y%m%dT%H%M%S%fZ}.json"
     )
     _atomic_json(path, output)
     result = {"source": "prediction", "files": [str(path)], "markets": len(snapshots)}
@@ -418,7 +497,9 @@ def collect_markets(
     files = []
     rows = {}
     for coin in coins:
-        coin = coin.upper()
+        coin = coin.strip().upper()
+        if not re.fullmatch(r"[A-Z0-9]{2,15}", coin):
+            raise ValueError(f"Invalid market coin identifier: {coin!r}")
         symbol = f"{coin}USDT"
         binance_funding = fetch_binance_funding(symbol, start, end, refresh)
         binance_perp = fetch_binance_klines(

@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from intake.bot import (
     IntakePaths,
+    WORKSPACE,
     collect_prediction,
     initialize,
     inspect_file,
@@ -42,7 +43,7 @@ class IntakeBotTests(unittest.TestCase):
             (self.root / "user_constraints.json").read_text()
         )
 
-        self.assertTrue(result["git_ignored_by_parent"])
+        self.assertEqual(result["storage_safety"], "outside_repository")
         self.assertTrue(constraints["paper_only"])
         self.assertTrue((self.root / "trading").is_dir())
         self.assertTrue((self.root / "public" / "prediction").is_dir())
@@ -90,6 +91,38 @@ class IntakeBotTests(unittest.TestCase):
         row = next(item for item in report["files"] if item["path"] == "trading/bad.txt")
         self.assertIn("likely_secret:secret_assignment", row["errors"])
 
+    def test_secret_after_two_megabytes_is_still_detected(self):
+        initialize(self.paths)
+        bad = self.root / "trading" / "large.txt"
+        bad.write_text("x" * 2_100_000 + "\nghp_abcdefghijklmnop1234567890")
+        row = inspect_file(bad, self.root)
+
+        self.assertIn("likely_secret:common_api_token", row["errors"])
+
+    def test_pdf_requires_hash_bound_manual_review(self):
+        initialize(self.paths)
+        pdf = self.root / "legal" / "terms.pdf"
+        pdf.write_bytes(b"%PDF-1.4 test")
+        unreviewed = inspect_file(pdf, self.root)
+        sidecar = pdf.with_suffix(".pdf.reviewed.json")
+        sidecar.write_text(
+            json.dumps(
+                {
+                    "manual_secret_pii_review": True,
+                    "sha256": unreviewed["sha256"],
+                }
+            )
+        )
+        reviewed = inspect_file(pdf, self.root)
+
+        self.assertIn("pdf_requires_manual_review_sidecar", unreviewed["errors"])
+        self.assertEqual(reviewed["errors"], [])
+
+    def test_repository_root_outside_ignored_cache_is_rejected(self):
+        unsafe = IntakePaths(WORKSPACE / "private-data-unsafe")
+        with self.assertRaises(ValueError):
+            initialize(unsafe)
+
     def test_pii_is_warning_not_silently_ignored(self):
         initialize(self.paths)
         path = self.root / "energy" / "invoice.txt"
@@ -109,6 +142,7 @@ class IntakeBotTests(unittest.TestCase):
                     "question": "Test?",
                     "conditionId": "0x1",
                     "clobTokenIds": '["yes","no"]',
+                    "outcomes": '["Yes","No"]',
                 }
             ],
             {"asks": [{"price": "0.45", "size": "10"}], "bids": []},
@@ -121,6 +155,9 @@ class IntakeBotTests(unittest.TestCase):
         self.assertTrue(snapshot["read_only"])
         self.assertEqual(
             snapshot["markets"][0]["complete_set_ask_before_fees"], 0.95
+        )
+        self.assertEqual(
+            snapshot["markets"][0]["executable_complete_set_size"], 10.0
         )
 
     def test_status_explicitly_disables_mutating_capabilities(self):

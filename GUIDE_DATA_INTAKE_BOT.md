@@ -29,6 +29,9 @@ data/cache/private_intake/
 
 Hela `data/cache/` är git-ignorerad.
 
+En egen `--root` inne i repot accepteras endast under `data/cache/`. En katalog
+helt utanför repot accepteras också. Andra sökvägar stoppas.
+
 ## 2. Fyll i affärsgränser
 
 Öppna:
@@ -61,6 +64,23 @@ prediction/  externa marknads-/trade-exporter
 
 Ta bort namn, adress, personnummer, kontonummer och anläggnings-ID först.
 Originalen bör sparas separat utanför repot.
+
+PDF-innehåll kan inte granskas tillförlitligt utan en PDF-parser. En PDF
+blockerar därför `safe_to_analyze` tills en hashbunden sidofil skapats:
+
+```text
+terms.pdf
+terms.pdf.reviewed.json
+```
+
+```json
+{
+  "manual_secret_pii_review": true,
+  "sha256": "PDF-filens SHA-256 från validation_report.json"
+}
+```
+
+Bekräfta bara detta efter manuell granskning av hela PDF-innehållet.
 
 ## 4. API-nycklar
 
@@ -99,6 +119,10 @@ Kontrollen omfattar:
 - e-post, personnummer och IBAN-varningar,
 - symlänkar,
 - obligatoriska affärsgränser.
+
+Hela textfiler skannas strömmande, inte bara början. Automatisk skanning är
+ändå ett skyddsnät, inte ett bevis på att all PII eller varje leverantörsspecifik
+token har hittats.
 
 `safe_to_analyze` måste vara `true`.
 
@@ -151,7 +175,8 @@ Det sparar:
 - aktiv marknadsmetadata från Polymarket Gamma,
 - publika YES/NO-orderböcker från CLOB,
 - bästa asks,
-- YES + NO före avgifter,
+- YES + NO före avgifter endast när utfallen verifierats som binära komplement,
+- gemensamt exekverbart best-ask-djup,
 - fulla böcker och hämtningstid.
 
 Ingen wallet eller API-nyckel används.
