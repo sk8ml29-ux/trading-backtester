@@ -9,6 +9,8 @@ python -m intake.bot init
 python -m intake.bot collect --source prediction --prediction-limit 20
 python -m intake.bot collect --source markets --coins BTC,ETH
 python -m intake.bot collect --source energy --zones SE3
+python -m intake.bot collect --source binance-bulk \
+  --bulk-tier core --start 2020-01 --end 2026-06 --plan-only
 python -m intake.bot validate
 python -m intake.bot status
 ```
@@ -16,6 +18,8 @@ python -m intake.bot status
 Private exports are stored under the git-ignored
 `data/cache/private_intake/`. The bot cannot place orders, withdraw funds,
 sign wallets, or control hardware. See `GUIDE_DATA_INTAKE_BOT.md`.
+For the 791-symbol historical Binance archive, see
+`GUIDE_BINANCE_BULK_DATA.md`.
 
 ## Settlement Memory Reserve Carry (research)
 

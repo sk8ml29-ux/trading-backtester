@@ -165,7 +165,32 @@ python -m intake.bot collect --source energy \
 
 Data hämtas från Elpriset just nu och DST-normaliseras av energimodulen.
 
-## 8. Spela in prediction-market-orderböcker
+## 8. Hämta alla historiska Binance-symboler
+
+Planera core-tier för samtliga historiska USDT-perpetuals:
+
+```bash
+python -m intake.bot collect \
+  --source binance-bulk \
+  --bulk-tier core \
+  --start 2020-01 --end 2026-06 \
+  --plan-only
+```
+
+Hämta funding + 8h med checksum, resume och 20 GB diskgräns:
+
+```bash
+python -m intake.bot collect \
+  --source binance-bulk \
+  --bulk-tier core \
+  --start 2020-01 --end 2026-06 \
+  --workers 12 --max-gb 20
+```
+
+`--source all` startar medvetet inte bulkflödet; det måste väljas explicit.
+Se `GUIDE_BINANCE_BULK_DATA.md` för 1h/15m, PIT-universum och resume.
+
+## 9. Spela in prediction-market-orderböcker
 
 ```bash
 python -m intake.bot collect --source prediction \
@@ -192,7 +217,7 @@ Exempel med cron varje timme:
 5 * * * * cd /workspace && .venv/bin/python -m intake.bot collect --source prediction --prediction-limit 100 >> data/cache/private_intake/cron.log 2>&1
 ```
 
-## 9. Hämta allt
+## 10. Hämta de små standardkällorna
 
 Förhandsgranskning:
 
@@ -213,7 +238,7 @@ python -m intake.bot collect --source all \
   --start 2024-04-01 --end 2026-07-28
 ```
 
-## 10. Status
+## 11. Status
 
 ```bash
 python -m intake.bot status
