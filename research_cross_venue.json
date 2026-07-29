@@ -218,7 +218,9 @@
   "limitations": [
     "Static surviving-contract basket omits delisted perpetuals.",
     "Candle marks do not model simultaneous fills or order-book depth.",
+    "Hyperliquid funding notional uses perpetual close as an oracle-price proxy.",
     "Capital, margin and liquidation are venue-specific and separately funded.",
+    "The return-target rejection applies to the preregistered maximum 2x pair notional.",
     "Historical research cannot prove legal venue access in the user's jurisdiction."
   ]
 }
