@@ -28,6 +28,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import date
@@ -780,6 +781,50 @@ def _default_end() -> str:
     return _previous_complete_month()
 
 
+def status_report() -> dict:
+    catalog = load_catalog()
+    manifest = (
+        json.loads(MANIFEST_PATH.read_text())
+        if MANIFEST_PATH.exists()
+        else {"jobs": {}}
+    )
+    merge = (
+        json.loads((ROOT / "merge_manifest.json").read_text())
+        if (ROOT / "merge_manifest.json").exists()
+        else {"outputs": [], "errors": [], "complete_for_requested_jobs": None}
+    )
+    status_counts = Counter(
+        row.get("status", "unknown") for row in manifest["jobs"].values()
+    )
+    return {
+        "catalog_symbols": catalog["symbols_with_history"],
+        "historical_or_delisted": catalog["historical_or_delisted"],
+        "manifest_jobs": len(manifest["jobs"]),
+        "download_status": dict(sorted(status_counts.items())),
+        "merge_outputs": len(merge["outputs"]),
+        "funding_outputs": sum(
+            row.get("dataset") == "funding" for row in merge["outputs"]
+        ),
+        "perp_outputs": sum(
+            row.get("dataset") == "perp" for row in merge["outputs"]
+        ),
+        "merged_rows": sum(row.get("rows", 0) for row in merge["outputs"]),
+        "merge_errors": len(merge["errors"]),
+        "complete_for_requested_jobs": merge.get("complete_for_requested_jobs"),
+        "raw_gb": round(
+            sum(path.stat().st_size for path in RAW.rglob("*") if path.is_file())
+            / 1024**3,
+            3,
+        ) if RAW.exists() else 0,
+        "merged_gb": round(
+            sum(path.stat().st_size for path in MERGED.rglob("*") if path.is_file())
+            / 1024**3,
+            3,
+        ) if MERGED.exists() else 0,
+        "free_gb": round(shutil.disk_usage(WORKSPACE).free / 1024**3, 2),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="python -m intake.binance_bulk")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -806,22 +851,7 @@ def main() -> None:
     if args.command == "catalog":
         result = build_catalog(workers=args.workers, max_symbols=args.max_symbols)
     elif args.command == "status":
-        catalog = load_catalog()
-        manifest = (
-            json.loads(MANIFEST_PATH.read_text()) if MANIFEST_PATH.exists()
-            else {"jobs": {}}
-        )
-        result = {
-            "catalog_symbols": catalog["symbols_with_history"],
-            "historical_or_delisted": catalog["historical_or_delisted"],
-            "manifest_jobs": len(manifest["jobs"]),
-            "raw_gb": round(
-                sum(path.stat().st_size for path in RAW.rglob("*") if path.is_file())
-                / 1024**3,
-                3,
-            ) if RAW.exists() else 0,
-            "free_gb": round(shutil.disk_usage(WORKSPACE).free / 1024**3, 2),
-        }
+        result = status_report()
     else:
         catalog = load_catalog()
         selected = args.symbols.split(",") if args.symbols else None

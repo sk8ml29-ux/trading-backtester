@@ -44,6 +44,7 @@ from intake.binance_bulk import (
     load_catalog as load_bulk_catalog,
     merge_jobs as merge_bulk_jobs,
     plan_jobs as plan_bulk_jobs,
+    status_report as bulk_status_report,
 )
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -631,7 +632,7 @@ def status(paths: IntakePaths) -> dict:
     files = [path for path in paths.root.rglob("*") if path.is_file()]
     report_path = paths.root / "validation_report.json"
     previous = json.loads(report_path.read_text()) if report_path.exists() else None
-    return {
+    result = {
         "root": str(paths.root),
         "private_files": len(files),
         "last_validation": previous.get("generated_at") if previous else None,
@@ -645,6 +646,9 @@ def status(paths: IntakePaths) -> dict:
             "public_read_only_collection": True,
         },
     }
+    if BULK_CATALOG_PATH.exists():
+        result["binance_bulk"] = bulk_status_report()
+    return result
 
 
 def main() -> None:

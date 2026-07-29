@@ -24,6 +24,7 @@ from intake.binance_bulk import (
     merge_jobs,
     plan_jobs,
     storage_key,
+    status_report,
     symbols_at,
 )
 
@@ -448,6 +449,56 @@ class BinanceBulkTests(unittest.TestCase):
         key = storage_key("币安人生USDT")
         self.assertNotIn("/", key)
         self.assertIn("%", key)
+
+    def test_status_reports_download_and_merge_coverage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog = root / "catalog.json"
+            manifest = root / "download.json"
+            raw = root / "raw"
+            merged = root / "merged"
+            raw.mkdir()
+            merged.mkdir()
+            catalog.write_text(
+                json.dumps(
+                    {
+                        "symbols_with_history": 2,
+                        "historical_or_delisted": 1,
+                    }
+                )
+            )
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "jobs": {
+                            "a": {"status": "downloaded"},
+                            "b": {"status": "missing"},
+                        }
+                    }
+                )
+            )
+            (root / "merge_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "outputs": [
+                            {"dataset": "funding", "rows": 10},
+                            {"dataset": "perp", "rows": 20},
+                        ],
+                        "errors": [{"error": "missing"}],
+                        "complete_for_requested_jobs": False,
+                    }
+                )
+            )
+            with patch("intake.binance_bulk.ROOT", root), patch(
+                "intake.binance_bulk.RAW", raw
+            ), patch("intake.binance_bulk.MERGED", merged), patch(
+                "intake.binance_bulk.CATALOG_PATH", catalog
+            ), patch("intake.binance_bulk.MANIFEST_PATH", manifest):
+                result = status_report()
+
+            self.assertEqual(result["download_status"], {"downloaded": 1, "missing": 1})
+            self.assertEqual(result["merged_rows"], 30)
+            self.assertFalse(result["complete_for_requested_jobs"])
 
 
 if __name__ == "__main__":

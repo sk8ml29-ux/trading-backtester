@@ -14,6 +14,23 @@ survivorship bias.
 
 Katalogen kan förändras när Binance publicerar nya eller äldre arkiv.
 
+## Genomförd core-körning
+
+Core 2020-01–2026-06 kördes färdigt i denna miljö:
+
+- 37 811 filer nedladdade och verifierade,
+- 2 redan existerande filer omverifierade,
+- 95 officiellt saknade 8h-månader,
+- 791 merged fundingserier,
+- 790 merged 8h-perpserier,
+- 4 108 069 merged rader,
+- cirka 296 MB faktisk raw + merged lagring,
+- endast `GAIBUSDT` saknar helt merged 8h-serie.
+
+`complete_for_requested_jobs=false` är avsiktligt eftersom de 95 saknade
+arkivmånaderna redovisas öppet. De verifierade serierna är användbara, men en
+analys måste respektera luckorna.
+
 ## Datanivåer
 
 | Tier | Data | Syfte | Storlek |
