@@ -266,9 +266,18 @@ def validate(paths: IntakePaths) -> dict:
     constraint_errors = []
     try:
         constraints = json.loads(constraints_path.read_text())
-        for key in ("country", "tax_residency", "maximum_drawdown_pct", "paper_only"):
+        for key in (
+            "country",
+            "tax_residency",
+            "capital_sek",
+            "maximum_drawdown_pct",
+            "maximum_leverage",
+            "paper_only",
+        ):
             if key not in constraints:
                 constraint_errors.append(f"missing_constraint:{key}")
+            elif constraints[key] in (None, "", []):
+                constraint_errors.append(f"unfilled_constraint:{key}")
         if constraints.get("paper_only") is not True:
             constraint_errors.append("paper_only_must_be_true_for_intake")
     except Exception as exc:

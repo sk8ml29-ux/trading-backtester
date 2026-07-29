@@ -24,6 +24,18 @@ class IntakeBotTests(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
+    def fill_constraints(self):
+        path = self.root / "user_constraints.json"
+        constraints = json.loads(path.read_text())
+        constraints.update(
+            {
+                "capital_sek": 100_000,
+                "maximum_drawdown_pct": 10,
+                "maximum_leverage": 2,
+            }
+        )
+        path.write_text(json.dumps(constraints))
+
     def test_init_creates_private_structure_and_paper_constraints(self):
         result = initialize(self.paths)
         constraints = json.loads(
@@ -46,6 +58,7 @@ class IntakeBotTests(unittest.TestCase):
 
     def test_validation_hashes_csv_and_writes_manifest(self):
         initialize(self.paths)
+        self.fill_constraints()
         csv_path = self.root / "trading" / "trades_test.csv"
         csv_path.write_text("timestamp,symbol,price\n2026-01-01T00:00:00Z,BTC,1\n")
         report = validate(self.paths)
@@ -56,6 +69,16 @@ class IntakeBotTests(unittest.TestCase):
         self.assertEqual(len(row["sha256"]), 64)
         self.assertTrue((self.paths.manifest_dir / "latest.json").exists())
         self.assertTrue(report["safe_to_analyze"])
+
+    def test_unfilled_business_constraints_block_analysis(self):
+        initialize(self.paths)
+        report = validate(self.paths)
+
+        self.assertFalse(report["safe_to_analyze"])
+        self.assertIn(
+            "unfilled_constraint:capital_sek",
+            report["summary"]["constraint_errors"],
+        )
 
     def test_likely_secret_blocks_analysis(self):
         initialize(self.paths)
