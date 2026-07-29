@@ -3,6 +3,7 @@ import io
 import json
 import tempfile
 import unittest
+import urllib.error
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -12,8 +13,10 @@ import pandas as pd
 from intake.binance_bulk import (
     DiskBudget,
     Job,
+    _atomic_csv,
     build_catalog,
     discover_symbols,
+    download_jobs,
     download_job,
     estimate_plan,
     funding_months,
@@ -122,6 +125,41 @@ class BinanceBulkTests(unittest.TestCase):
         self.assertEqual(symbols_at(catalog, "2022-06"), ["OLDUSDT"])
         self.assertEqual(symbols_at(catalog, "2023-01"), ["NEWUSDT"])
 
+    def test_catalog_refresh_preserves_previous_row_after_network_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "catalog.json"
+            previous_row = {
+                "symbol": "BTCUSDT",
+                "storage_key": "BTCUSDT",
+                "first_month": "2020-01",
+                "last_month": "2026-06",
+                "funding_months": ["2020-01", "2026-06"],
+                "month_count": 2,
+                "status_inferred": "recent",
+                "source": "official_binance_vision_s3",
+            }
+            output.write_text(
+                json.dumps({"symbols": {"BTCUSDT": previous_row}})
+            )
+            with patch(
+                "intake.binance_bulk.discover_symbols",
+                return_value=["BTCUSDT"],
+            ), patch(
+                "intake.binance_bulk.funding_months",
+                side_effect=RuntimeError("temporary failure"),
+            ):
+                catalog = build_catalog(
+                    workers=1, output=output
+                )
+
+            self.assertEqual(
+                catalog["symbols"]["BTCUSDT"]["first_month"], "2020-01"
+            )
+            self.assertEqual(
+                catalog["symbols"]["BTCUSDT"]["catalog_refresh"],
+                "preserved_after_error",
+            )
+
     def test_plan_is_tiered_and_includes_historical_symbols(self):
         catalog = {
             "symbols": {
@@ -158,6 +196,76 @@ class BinanceBulkTests(unittest.TestCase):
             self.assertEqual(first["status"], "downloaded")
             self.assertEqual(second["status"], "verified_existing")
             self.assertEqual(hashlib.sha256(job.path.read_bytes()).hexdigest(), checksum)
+
+    def test_missing_checksum_does_not_hide_existing_archive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            job = Job(
+                "funding", "BTCUSDT", "2024-01", None,
+                "https://example.test/file.zip", root / "file.zip",
+            )
+            error = urllib.error.HTTPError(
+                job.url + ".CHECKSUM", 404, "missing", {}, None
+            )
+            with patch(
+                "intake.binance_bulk._official_checksum", side_effect=error
+            ), patch("intake.binance_bulk._head_status", return_value=200):
+                with self.assertRaises(RuntimeError):
+                    download_job(job, DiskBudget(root, 1))
+
+    def test_double_404_is_recorded_as_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            job = Job(
+                "funding", "BTCUSDT", "2019-01", None,
+                "https://example.test/file.zip", root / "file.zip",
+            )
+            error = urllib.error.HTTPError(
+                job.url + ".CHECKSUM", 404, "missing", {}, None
+            )
+            with patch(
+                "intake.binance_bulk._official_checksum", side_effect=error
+            ), patch("intake.binance_bulk._head_status", return_value=404):
+                result = download_job(job, DiskBudget(root, 1))
+
+            self.assertEqual(result["status"], "missing")
+
+    def test_transient_retry_cannot_downgrade_verified_manifest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = root / "file.zip"
+            raw.write_bytes(b"verified")
+            checksum = hashlib.sha256(raw.read_bytes()).hexdigest()
+            job = Job(
+                "funding", "BTCUSDT", "2024-01", None, "", raw
+            )
+            manifest = root / "manifest.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "jobs": {
+                            job.key: {
+                                "status": "downloaded",
+                                "path": str(raw),
+                                "sha256": checksum,
+                            }
+                        },
+                    }
+                )
+            )
+            with patch("intake.binance_bulk.ROOT", root), patch(
+                "intake.binance_bulk.download_job",
+                side_effect=RuntimeError("temporary network failure"),
+            ):
+                result = download_jobs(
+                    [job], max_gb=1, workers=1, manifest_path=manifest
+                )
+            saved = json.loads(manifest.read_text())["jobs"][job.key]
+
+            self.assertEqual(len(result["errors"]), 1)
+            self.assertEqual(saved["status"], "downloaded")
+            self.assertEqual(saved["last_retry_status"], "error")
 
     def test_merge_preserves_causal_kline_close_time(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -297,6 +405,26 @@ class BinanceBulkTests(unittest.TestCase):
                     for row in result["errors"]
                 )
             )
+
+    def test_merge_disk_reserve_is_checked_before_temp_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "merged.csv"
+            disk_usage = type(
+                "DiskUsage", (), {"total": 10, "used": 6, "free": 4 * 1024**3}
+            )()
+            with patch("intake.binance_bulk.ROOT", root), patch(
+                "intake.binance_bulk.shutil.disk_usage",
+                return_value=disk_usage,
+            ):
+                with self.assertRaises(RuntimeError):
+                    _atomic_csv(
+                        output,
+                        pd.DataFrame({"time": ["2024-01-01"], "value": [1]}),
+                        maximum_bytes=1024**3,
+                    )
+
+            self.assertFalse(output.exists())
 
     def test_unicode_symbol_uses_safe_storage_key(self):
         key = storage_key("币安人生USDT")

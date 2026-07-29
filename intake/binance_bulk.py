@@ -520,7 +520,25 @@ def _download_jobs_locked(
             except Exception as exc:
                 row = {"key": job.key, "status": "error", "error": repr(exc)}
             row["updated_at"] = pd.Timestamp.now(tz="UTC").isoformat()
-            previous["jobs"][job.key] = row
+            old = previous["jobs"].get(job.key)
+            old_is_verified = (
+                old
+                and old.get("status") in {"downloaded", "verified_existing"}
+                and Path(old.get("path", "")).is_file()
+                and old.get("sha256")
+                and _sha256(Path(old["path"])) == old["sha256"]
+            )
+            if old_is_verified and row["status"] in {"error", "missing"}:
+                # Manifest state is monotonic: a transient retry cannot erase
+                # a previously checksum-verified month.
+                previous["jobs"][job.key] = {
+                    **old,
+                    "last_retry_status": row["status"],
+                    "last_retry_error": row.get("error"),
+                    "last_retry_at": row["updated_at"],
+                }
+            else:
+                previous["jobs"][job.key] = row
             results.append(row)
             if len(results) % 25 == 0:
                 previous["updated_at"] = pd.Timestamp.now(tz="UTC").isoformat()
@@ -616,21 +634,24 @@ def _kline_frame(job: Job) -> pd.DataFrame:
 
 def _atomic_csv(path: Path, frame: pd.DataFrame, maximum_bytes: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    content = frame.to_csv(index=False).encode()
+    old_size = path.stat().st_size if path.exists() else 0
+    current_total = sum(
+        item.stat().st_size for item in ROOT.rglob("*") if item.is_file()
+    )
+    if current_total - old_size + len(content) > maximum_bytes:
+        raise RuntimeError("configured bulk size limit reached during merge")
+    if shutil.disk_usage(WORKSPACE).free - len(content) < 5 * 1024**3:
+        raise RuntimeError("disk safety stop during merge")
     with tempfile.NamedTemporaryFile(
-        mode="w", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp",
+        mode="wb", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp",
         delete=False,
     ) as handle:
         temporary = Path(handle.name)
-        frame.to_csv(handle, index=False)
+        handle.write(content)
+        handle.flush()
+        os.fsync(handle.fileno())
     try:
-        old_size = path.stat().st_size if path.exists() else 0
-        total_with_temp = sum(
-            item.stat().st_size for item in ROOT.rglob("*") if item.is_file()
-        )
-        if total_with_temp - old_size > maximum_bytes:
-            raise RuntimeError("configured bulk size limit reached during merge")
-        if shutil.disk_usage(WORKSPACE).free < 5 * 1024**3:
-            raise RuntimeError("disk safety stop during merge")
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
@@ -675,7 +696,7 @@ def _verified_jobs_for_groups(
     return verified, errors
 
 
-def merge_jobs(
+def _merge_jobs_locked(
     jobs: list[Job],
     manifest_path: Path = MANIFEST_PATH,
     max_gb: float = 20,
@@ -740,9 +761,17 @@ def merge_jobs(
             for error in errors
         ),
     }
-    with _file_lock(ROOT / "merge_manifest.json"):
-        _atomic_json(ROOT / "merge_manifest.json", report)
+    _atomic_json(ROOT / "merge_manifest.json", report)
     return report
+
+
+def merge_jobs(
+    jobs: list[Job],
+    manifest_path: Path = MANIFEST_PATH,
+    max_gb: float = 20,
+) -> dict:
+    with _file_lock(ROOT / "merge_operation"):
+        return _merge_jobs_locked(jobs, manifest_path, max_gb)
 
 
 def _default_end() -> str:
