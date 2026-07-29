@@ -78,7 +78,9 @@ def download_prices(
         raise ValueError(f"Unknown Swedish zone: {zone}")
     path = CACHE / f"swedish_spot_{zone.lower()}.csv"
     if path.exists() and not refresh:
-        return pd.read_csv(path, parse_dates=["time_start", "time_end"])
+        return normalize_intervals(
+            pd.read_csv(path, parse_dates=["time_start", "time_end"])
+        )
 
     first = pd.Timestamp(start).date()
     last = pd.Timestamp(end).date()
@@ -106,7 +108,27 @@ def download_prices(
     frame = frame.drop_duplicates(["time_start", "zone"]).sort_values("time_start")
     path.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(path, index=False)
-    return frame
+    return normalize_intervals(frame)
+
+
+def normalize_intervals(prices: pd.DataFrame) -> pd.DataFrame:
+    """Repair source DST end-times using the next unique UTC start.
+
+    The source occasionally labels the first repeated autumn hour as a two-hour
+    interval while also emitting the second hour separately. Clipping each end
+    to the next start produces a gap-free physical timeline without duplicate
+    charging capacity.
+    """
+    frame = normalize_intervals(prices)
+    frame = frame.sort_values("time_start").drop_duplicates(
+        ["zone", "time_start"], keep="last"
+    )
+    next_start = frame.groupby("zone")["time_start"].shift(-1)
+    frame["time_end"] = pd.concat(
+        [frame["time_end"], next_start.rename("next_start")], axis=1
+    ).min(axis=1)
+    frame = frame[frame["time_end"] > frame["time_start"]]
+    return frame.reset_index(drop=True)
 
 
 def all_in_price(spot: pd.Series, tariff: Tariff) -> pd.Series:
@@ -147,14 +169,55 @@ def allocate_energy(
     return allocation
 
 
+def allocate_contiguous_cheapest(
+    intervals: pd.DataFrame,
+    grid_energy_kwh: float,
+    charging_kw: float,
+) -> pd.Series:
+    """Best possible single contiguous charging block (strong benchmark)."""
+    best = None
+    best_cost = float("inf")
+    for start_position in range(len(intervals)):
+        candidate = intervals.iloc[start_position:]
+        try:
+            allocation = allocate_energy(
+                candidate, grid_energy_kwh, charging_kw, optimize=False
+            )
+        except ValueError:
+            continue
+        used = allocation[allocation > 0]
+        if used.empty:
+            continue
+        # Candidate rows are time-sorted and therefore physically contiguous.
+        cost = float((used * candidate.loc[used.index, "all_in_price"]).sum())
+        if cost < best_cost:
+            best_cost = cost
+            best = allocation.reindex(intervals.index, fill_value=0.0)
+    if best is None:
+        raise ValueError("No contiguous charging block can serve the energy")
+    return best
+
+
+def _complete_window(window: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp) -> bool:
+    ordered = window.sort_values("time_start")
+    if ordered.empty:
+        return False
+    if ordered["time_start"].iloc[0] != start or ordered["time_end"].iloc[-1] != end:
+        return False
+    return bool(
+        (
+            ordered["time_start"].iloc[1:].reset_index(drop=True)
+            == ordered["time_end"].iloc[:-1].reset_index(drop=True)
+        ).all()
+    )
+
+
 def evaluate(
     prices: pd.DataFrame,
     tariff: Tariff = Tariff(),
     ev: EVConfig = EVConfig(),
 ) -> dict:
-    frame = prices.copy()
-    frame["time_start"] = pd.to_datetime(frame["time_start"], utc=True)
-    frame["time_end"] = pd.to_datetime(frame["time_end"], utc=True)
+    frame = normalize_intervals(prices)
     frame = frame.sort_values("time_start").reset_index(drop=True)
     frame["all_in_price"] = all_in_price(frame["sek_per_kwh"], tariff)
     local = frame["time_start"].dt.tz_convert("Europe/Stockholm")
@@ -177,7 +240,7 @@ def evaluate(
             (frame["time_start"] >= connect)
             & (frame["time_end"] <= departure)
         ].copy()
-        if window.empty:
+        if not _complete_window(window, connect, departure):
             current += timedelta(days=1)
             continue
         try:
@@ -187,17 +250,38 @@ def evaluate(
             optimized = allocate_energy(
                 window, grid_energy, ev.charging_kw, optimize=True
             )
+            contiguous = allocate_contiguous_cheapest(
+                window, grid_energy, ev.charging_kw
+            )
+            timer_start = pd.Timestamp(
+                f"{departure_day} 00:00", tz="Europe/Stockholm"
+            ).tz_convert("UTC")
+            timer_window = window[window["time_start"] >= timer_start]
         except ValueError:
             current += timedelta(days=1)
             continue
-        baseline_cost = float((immediate * window["all_in_price"]).sum())
+        immediate_cost = float((immediate * window["all_in_price"]).sum())
+        try:
+            timer = allocate_energy(
+                timer_window, grid_energy, ev.charging_kw, optimize=False
+            ).reindex(window.index, fill_value=0.0)
+            timer_cost = float((timer * window["all_in_price"]).sum())
+        except ValueError:
+            # A safety-aware fixed timer must fall back to immediate charging
+            # when midnight leaves too little time.
+            timer_cost = immediate_cost
+        contiguous_cost = float((contiguous * window["all_in_price"]).sum())
+        benchmark_cost = min(immediate_cost, timer_cost, contiguous_cost)
         optimized_cost = float((optimized * window["all_in_price"]).sum())
         rows.append(
             {
                 "session_date": current,
-                "baseline_sek": baseline_cost,
+                "immediate_sek": immediate_cost,
+                "timer_sek": timer_cost,
+                "contiguous_sek": contiguous_cost,
+                "benchmark_sek": benchmark_cost,
                 "optimized_sek": optimized_cost,
-                "saved_sek": baseline_cost - optimized_cost,
+                "saved_sek": benchmark_cost - optimized_cost,
                 "energy_kwh": grid_energy,
                 "service_shortfall_kwh": 0.0,
             }
@@ -209,25 +293,28 @@ def evaluate(
         raise ValueError("No complete charging sessions in price data")
     sessions["month"] = pd.to_datetime(sessions["session_date"]).dt.to_period("M")
     monthly = sessions.groupby("month").agg(
-        baseline_sek=("baseline_sek", "sum"),
+        immediate_sek=("immediate_sek", "sum"),
+        timer_sek=("timer_sek", "sum"),
+        contiguous_sek=("contiguous_sek", "sum"),
+        benchmark_sek=("benchmark_sek", "sum"),
         optimized_sek=("optimized_sek", "sum"),
         saved_sek=("saved_sek", "sum"),
         sessions=("session_date", "count"),
         service_shortfall_kwh=("service_shortfall_kwh", "sum"),
     )
     monthly["savings_pct"] = (
-        monthly["saved_sek"] / monthly["baseline_sek"] * 100
+        monthly["saved_sek"] / monthly["benchmark_sek"] * 100
     )
     monthly["expected_sessions"] = monthly.index.days_in_month
     complete = monthly[monthly["sessions"] >= monthly["expected_sessions"]]
     annual = sessions.assign(
         year=pd.to_datetime(sessions["session_date"]).dt.year
     ).groupby("year").agg(
-        baseline_sek=("baseline_sek", "sum"),
+        benchmark_sek=("benchmark_sek", "sum"),
         optimized_sek=("optimized_sek", "sum"),
         saved_sek=("saved_sek", "sum"),
     )
-    annual["savings_pct"] = annual["saved_sek"] / annual["baseline_sek"] * 100
+    annual["savings_pct"] = annual["saved_sek"] / annual["benchmark_sek"] * 100
     result = {
         "strategy": "swedish_day_ahead_flexible_load",
         "measurement": "cost_saving_not_investment_return",
@@ -236,11 +323,18 @@ def evaluate(
         "ev": asdict(ev),
         "sessions": int(len(sessions)),
         "total": {
-            "baseline_sek": round(float(sessions["baseline_sek"].sum()), 2),
+            "immediate_sek": round(float(sessions["immediate_sek"].sum()), 2),
+            "timer_sek": round(float(sessions["timer_sek"].sum()), 2),
+            "contiguous_sek": round(float(sessions["contiguous_sek"].sum()), 2),
+            "benchmark_sek": round(float(sessions["benchmark_sek"].sum()), 2),
             "optimized_sek": round(float(sessions["optimized_sek"].sum()), 2),
             "saved_sek": round(float(sessions["saved_sek"].sum()), 2),
             "savings_pct": round(
-                float(sessions["saved_sek"].sum() / sessions["baseline_sek"].sum() * 100),
+                float(
+                    sessions["saved_sek"].sum()
+                    / sessions["benchmark_sek"].sum()
+                    * 100
+                ),
                 2,
             ),
         },
@@ -284,6 +378,7 @@ def evaluate(
         },
         "limitations": [
             "Savings apply only to the modeled flexible EV load, not the whole household bill.",
+            "Savings are incremental to the best of immediate, midnight-timer, and cheapest contiguous-block benchmarks.",
             "Daily 15 kWh charging is a representative scenario, not the user's measured demand.",
             "Tariff values are configurable assumptions, not the user's dated supplier invoices.",
             "Historical files are timetable-causal but not immutable point-in-time snapshots.",
@@ -346,7 +441,7 @@ def schedule_for_session(
     frame = frame[
         (frame["time_start"] >= connect) & (frame["time_end"] <= departure)
     ].copy()
-    if frame.empty or frame["time_end"].max() < departure:
+    if not _complete_window(frame, connect, departure):
         raise ValueError("Incomplete day-ahead prices for the charging window")
     raw_snapshot = frame[
         ["zone", "sek_per_kwh", "time_start", "time_end"]

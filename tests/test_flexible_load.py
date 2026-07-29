@@ -8,6 +8,7 @@ from energy.flexible_load import (
     Tariff,
     allocate_energy,
     evaluate,
+    normalize_intervals,
     schedule_for_session,
 )
 
@@ -32,8 +33,8 @@ class FlexibleLoadTests(unittest.TestCase):
             "2024-01-01 00:00", "2024-02-02 00:00", freq="1h", tz="UTC"
         )
         local_hours = intervals.tz_convert("Europe/Stockholm").hour
-        # Evening is expensive, night is cheap.
-        spot = np.where((local_hours >= 18) & (local_hours < 22), 2.0, 0.2)
+        # Alternating prices create value beyond a simple contiguous block.
+        spot = np.where(local_hours % 2 == 0, 0.1, 1.0)
         prices = pd.DataFrame(
             {
                 "zone": "SE3",
@@ -104,6 +105,30 @@ class FlexibleLoadTests(unittest.TestCase):
         self.assertEqual(result["mode"], "paper_only_no_device_commands")
         self.assertEqual(len(result["price_snapshot_sha256"]), 64)
         self.assertAlmostEqual(scheduled, 2.0)
+
+    def test_dst_overlap_is_clipped_to_physical_timeline(self):
+        prices = pd.DataFrame(
+            {
+                "zone": ["SE3", "SE3"],
+                "sek_per_kwh": [0.3, 0.2],
+                "time_start": pd.to_datetime(
+                    ["2024-10-27T00:00:00Z", "2024-10-27T01:00:00Z"]
+                ),
+                "time_end": pd.to_datetime(
+                    ["2024-10-27T02:00:00Z", "2024-10-27T02:00:00Z"]
+                ),
+            }
+        )
+        normalized = normalize_intervals(prices)
+        duration = (
+            normalized["time_end"] - normalized["time_start"]
+        ).dt.total_seconds().sum() / 3600
+
+        self.assertEqual(duration, 2.0)
+        self.assertEqual(
+            normalized["time_end"].iloc[0],
+            normalized["time_start"].iloc[1],
+        )
 
 
 if __name__ == "__main__":

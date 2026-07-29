@@ -296,10 +296,18 @@ def simulate(
             if old is not None and np.sign(old[0]) == np.sign(signed_weight):
                 continue
             weight = abs(signed_weight)
-            binance_units = weight / bp.at[timestamp, coin]
-            okx_units = weight / op.at[timestamp, coin]
+            reference_price = (
+                bp.at[timestamp, coin] + op.at[timestamp, coin]
+            ) / 2
+            binance_units = weight / reference_price
+            okx_units = binance_units
             positions[coin] = (signed_weight, binance_units, okx_units)
-            cost = cost_multiplier * weight * PAIR_ONE_WAY
+            cost = cost_multiplier * (
+                BINANCE_ONE_WAY * binance_units * bp.at[timestamp, coin]
+                + HYPERLIQUID_ONE_WAY
+                * okx_units
+                * op.at[timestamp, coin]
+            )
             symbol_step.at[timestamp, coin] -= cost
             trading_cost += cost
             turnover += weight

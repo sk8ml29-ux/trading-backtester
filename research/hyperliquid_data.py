@@ -17,6 +17,18 @@ BASKET = [
 ]
 
 
+def _interval_ms(interval: str) -> int:
+    unit = interval[-1].lower()
+    value = int(interval[:-1])
+    if unit == "h":
+        return value * 3_600_000
+    if unit == "m":
+        return value * 60_000
+    if unit == "d":
+        return value * 86_400_000
+    raise ValueError(f"Unsupported Hyperliquid candle interval: {interval}")
+
+
 def _post(payload: dict, retries: int = 5):
     body = json.dumps(payload).encode()
     for attempt in range(retries):
@@ -90,17 +102,27 @@ def fetch_candles(
         return pd.read_csv(path, parse_dates=["time"], index_col="time")
     start_ms = int(pd.Timestamp(start, tz="UTC").timestamp() * 1000)
     end_ms = int(pd.Timestamp(end, tz="UTC").timestamp() * 1000)
-    rows = _post(
-        {
-            "type": "candleSnapshot",
-            "req": {
-                "coin": coin,
-                "interval": interval,
-                "startTime": start_ms,
-                "endTime": end_ms,
-            },
-        }
-    )
+    rows = []
+    interval_ms = _interval_ms(interval)
+    cursor = start_ms
+    # The endpoint caps responses at 5,000 candles. Request chunks smaller
+    # than that so longer future windows cannot truncate silently.
+    while cursor <= end_ms:
+        chunk_end = min(end_ms, cursor + interval_ms * 4_000 - 1)
+        page = _post(
+            {
+                "type": "candleSnapshot",
+                "req": {
+                    "coin": coin,
+                    "interval": interval,
+                    "startTime": cursor,
+                    "endTime": chunk_end,
+                },
+            }
+        )
+        rows.extend(page)
+        cursor = chunk_end + 1
+        time.sleep(0.04)
     if not rows:
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
     frame = pd.DataFrame(rows)
