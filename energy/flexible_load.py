@@ -324,15 +324,67 @@ def current_schedule(
     return output
 
 
+def schedule_for_session(
+    prices: pd.DataFrame,
+    session_date: str,
+    tariff: Tariff = Tariff(),
+    ev: EVConfig = EVConfig(),
+) -> dict:
+    """Create a paper-only charging schedule for one local session date."""
+    day = pd.Timestamp(session_date).date()
+    connect = pd.Timestamp(
+        f"{day} {ev.connect_hour:02d}:00", tz="Europe/Stockholm"
+    ).tz_convert("UTC")
+    departure = pd.Timestamp(
+        f"{day + timedelta(days=1)} {ev.departure_hour:02d}:00",
+        tz="Europe/Stockholm",
+    ).tz_convert("UTC")
+    frame = prices.copy()
+    frame["time_start"] = pd.to_datetime(frame["time_start"], utc=True)
+    frame["time_end"] = pd.to_datetime(frame["time_end"], utc=True)
+    frame = frame[
+        (frame["time_start"] >= connect) & (frame["time_end"] <= departure)
+    ].copy()
+    if frame.empty or frame["time_end"].max() < departure:
+        raise ValueError("Incomplete day-ahead prices for the charging window")
+    raw_snapshot = frame[
+        ["zone", "sek_per_kwh", "time_start", "time_end"]
+    ].to_json(date_format="iso", orient="records")
+    schedule = current_schedule(frame, tariff, ev)
+    return {
+        "mode": "paper_only_no_device_commands",
+        "zone": str(frame["zone"].iloc[0]),
+        "session_date": str(day),
+        "connect": connect.isoformat(),
+        "departure": departure.isoformat(),
+        "required_battery_energy_kwh": ev.battery_energy_kwh,
+        "required_grid_energy_kwh": round(
+            ev.battery_energy_kwh / ev.efficiency, 3
+        ),
+        "price_snapshot_sha256": hashlib.sha256(
+            raw_snapshot.encode()
+        ).hexdigest(),
+        "schedule": schedule,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--zone", default="SE3", choices=ZONES)
     parser.add_argument("--start", default="2022-11-01")
     parser.add_argument("--end", default="2026-07-28")
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--schedule-date")
+    parser.add_argument("--schedule-out")
     parser.add_argument("--out")
     args = parser.parse_args()
     prices = download_prices(args.zone, args.start, args.end, args.refresh)
+    if args.schedule_date:
+        result = schedule_for_session(prices, args.schedule_date)
+        print(json.dumps(result, indent=2))
+        if args.schedule_out:
+            Path(args.schedule_out).write_text(json.dumps(result, indent=2) + "\n")
+        return
     result = evaluate(prices)
     print(json.dumps(result, indent=2))
     if args.out:
