@@ -2,6 +2,21 @@
 
 Python backtester and **paper-trading bot** for three strategies (Trading Rush / Rayner / Turtle synthesis).
 
+## Read-only Data Intake Bot
+
+```bash
+python -m intake.bot init
+python -m intake.bot collect --source prediction --prediction-limit 20
+python -m intake.bot collect --source markets --coins BTC,ETH
+python -m intake.bot collect --source energy --zones SE3
+python -m intake.bot validate
+python -m intake.bot status
+```
+
+Private exports are stored under the git-ignored
+`data/cache/private_intake/`. The bot cannot place orders, withdraw funds,
+sign wallets, or control hardware. See `GUIDE_DATA_INTAKE_BOT.md`.
+
 ## Settlement Memory Reserve Carry (research)
 
 The research suite also contains SMRC, a delta-neutral long-spot/short-perpetual
