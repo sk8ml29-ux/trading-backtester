@@ -41,6 +41,13 @@ analys måste respektera luckorna.
 
 `intraday` kräver explicit `--confirm-large-download`.
 
+Aktuell plan efter färdig core:
+
+- `swing`: 56 862 totaljobb, 19 049 återstår, grovt 6,62 GB totalt.
+- `intraday`: 75 816 totaljobb, 38 003 återstår, grovt 22,51 GB totalt.
+
+Storlekarna är konservativa schabloner; core blev betydligt mindre i praktiken.
+
 ## 1. Bygg symbolkatalog
 
 ```bash
