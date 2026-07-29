@@ -119,7 +119,9 @@ def normalize_intervals(prices: pd.DataFrame) -> pd.DataFrame:
     to the next start produces a gap-free physical timeline without duplicate
     charging capacity.
     """
-    frame = normalize_intervals(prices)
+    frame = prices.copy()
+    frame["time_start"] = pd.to_datetime(frame["time_start"], utc=True)
+    frame["time_end"] = pd.to_datetime(frame["time_end"], utc=True)
     frame = frame.sort_values("time_start").drop_duplicates(
         ["zone", "time_start"], keep="last"
     )
