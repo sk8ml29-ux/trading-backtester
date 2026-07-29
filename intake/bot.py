@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import tempfile
 import time
 import urllib.parse
@@ -157,10 +158,23 @@ def _storage_safety(root: Path) -> str:
         relative = resolved.relative_to(workspace)
     except ValueError:
         return "outside_repository"
-    safe_root = Path("data") / "cache"
+    safe_root = Path("data") / "cache" / "private_intake"
     if relative != safe_root and safe_root not in relative.parents:
         raise ValueError(
-            "Private intake root inside the repository must be under data/cache/"
+            "Private intake root inside the repository must be under "
+            "data/cache/private_intake/"
+        )
+    tracked = subprocess.run(
+        ["git", "ls-files", "--", str(relative)],
+        cwd=WORKSPACE,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    if tracked:
+        raise ValueError(
+            "Private intake root contains files already tracked by Git: "
+            + ", ".join(tracked[:5])
         )
     return "git_ignored_data_cache"
 

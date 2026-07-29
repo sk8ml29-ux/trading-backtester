@@ -123,6 +123,11 @@ class IntakeBotTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             initialize(unsafe)
 
+    def test_data_cache_root_itself_is_rejected(self):
+        unsafe = IntakePaths(WORKSPACE / "data" / "cache")
+        with self.assertRaises(ValueError):
+            initialize(unsafe)
+
     def test_pii_is_warning_not_silently_ignored(self):
         initialize(self.paths)
         path = self.root / "energy" / "invoice.txt"

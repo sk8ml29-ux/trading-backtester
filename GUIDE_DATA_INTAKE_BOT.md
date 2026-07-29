@@ -29,8 +29,10 @@ data/cache/private_intake/
 
 Hela `data/cache/` är git-ignorerad.
 
-En egen `--root` inne i repot accepteras endast under `data/cache/`. En katalog
-helt utanför repot accepteras också. Andra sökvägar stoppas.
+En egen `--root` inne i repot accepteras endast under
+`data/cache/private_intake/`, och botten kontrollerar Git-index så att inga filer
+där redan är spårade. En katalog helt utanför repot accepteras också. Andra
+sökvägar stoppas.
 
 ## 2. Fyll i affärsgränser
 
