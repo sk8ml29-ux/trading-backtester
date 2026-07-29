@@ -218,7 +218,8 @@ def evaluate(
     monthly["savings_pct"] = (
         monthly["saved_sek"] / monthly["baseline_sek"] * 100
     )
-    complete = monthly[monthly["sessions"] >= 27]
+    monthly["expected_sessions"] = monthly.index.days_in_month
+    complete = monthly[monthly["sessions"] >= monthly["expected_sessions"]]
     annual = sessions.assign(
         year=pd.to_datetime(sessions["session_date"]).dt.year
     ).groupby("year").agg(

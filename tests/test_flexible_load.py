@@ -60,6 +60,7 @@ class FlexibleLoadTests(unittest.TestCase):
         self.assertTrue(result["verdict"]["all_service_constraints_met"])
         self.assertTrue(result["verdict"]["every_complete_month_positive"])
         self.assertGreater(result["monthly_summary"]["median_savings_pct"], 6)
+        self.assertEqual(result["complete_months"], 1)
 
     def test_capacity_shortfall_is_rejected(self):
         start = pd.date_range("2024-01-01", periods=2, freq="1h", tz="UTC")
