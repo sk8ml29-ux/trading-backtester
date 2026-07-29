@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -33,6 +34,15 @@ class IntakeBotTests(unittest.TestCase):
         self.assertTrue(constraints["paper_only"])
         self.assertTrue((self.root / "trading").is_dir())
         self.assertTrue((self.root / "public" / "prediction").is_dir())
+
+    def test_concurrent_init_keeps_valid_constraints(self):
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            list(executor.map(lambda _: initialize(self.paths), range(20)))
+        constraints = json.loads(
+            (self.root / "user_constraints.json").read_text()
+        )
+
+        self.assertTrue(constraints["paper_only"])
 
     def test_validation_hashes_csv_and_writes_manifest(self):
         initialize(self.paths)

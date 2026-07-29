@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import re
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -111,9 +112,20 @@ class IntakePaths:
 
 def _atomic_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, default=str) + "\n")
-    os.replace(temporary, path)
+    content = json.dumps(payload, indent=2, default=str) + "\n"
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as handle:
+        handle.write(content)
+        temporary = Path(handle.name)
+    try:
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _sha256(path: Path) -> str:
