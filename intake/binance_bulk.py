@@ -347,7 +347,16 @@ def _official_checksum(job: Job) -> str:
 
 
 def download_job(job: Job, budget: DiskBudget) -> dict:
-    checksum = _official_checksum(job)
+    try:
+        checksum = _official_checksum(job)
+    except urllib.error.HTTPError as exc:
+        if exc.code in (403, 404):
+            return {
+                "key": job.key,
+                "status": "missing",
+                "http_status": exc.code,
+            }
+        raise
     if job.path.exists() and _sha256(job.path) == checksum:
         return {
             "key": job.key, "status": "verified_existing",

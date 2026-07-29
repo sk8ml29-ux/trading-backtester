@@ -35,6 +35,16 @@ from research.binance_vision import fetch_funding as fetch_binance_funding
 from research.binance_vision import fetch_klines as fetch_binance_klines
 from research.hyperliquid_data import fetch_candles as fetch_hyperliquid_candles
 from research.hyperliquid_data import fetch_funding as fetch_hyperliquid_funding
+from intake.binance_bulk import (
+    CATALOG_PATH as BULK_CATALOG_PATH,
+    TIER_DATASETS as BULK_TIERS,
+    build_catalog as build_bulk_catalog,
+    download_jobs as download_bulk_jobs,
+    estimate_plan as estimate_bulk_plan,
+    load_catalog as load_bulk_catalog,
+    merge_jobs as merge_bulk_jobs,
+    plan_jobs as plan_bulk_jobs,
+)
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 DEFAULT_ROOT = WORKSPACE / "data" / "cache" / "private_intake"
@@ -541,6 +551,63 @@ def collect_markets(
     return result
 
 
+def collect_binance_bulk(
+    paths: IntakePaths,
+    tier: str,
+    start: str,
+    end: str,
+    symbols: list[str] | None,
+    max_symbols: int | None,
+    workers: int,
+    max_gb: float,
+    refresh_catalog: bool,
+    plan_only: bool,
+    confirm_large_download: bool,
+) -> dict:
+    start_month = start[:7]
+    end_month = end[:7]
+    if refresh_catalog or not BULK_CATALOG_PATH.exists():
+        catalog = build_bulk_catalog(workers=max(4, workers))
+    else:
+        catalog = load_bulk_catalog()
+    jobs = plan_bulk_jobs(
+        catalog,
+        tier,
+        start_month,
+        end_month,
+        symbols=symbols,
+        max_symbols=max_symbols,
+    )
+    plan = estimate_bulk_plan(jobs)
+    if plan_only:
+        result = {
+            "source": "binance-bulk",
+            "mode": "plan_only",
+            "tier": tier,
+            "catalog_symbols": catalog["symbols_with_history"],
+            "plan": plan,
+        }
+    else:
+        if tier == "intraday" and not confirm_large_download:
+            raise ValueError(
+                "intraday bulk requires --confirm-large-download"
+            )
+        downloaded = download_bulk_jobs(jobs, max_gb=max_gb, workers=workers)
+        merged = merge_bulk_jobs(jobs)
+        result = {
+            "source": "binance-bulk",
+            "mode": "download_and_merge",
+            "tier": tier,
+            "catalog_symbols": catalog["symbols_with_history"],
+            "plan": plan,
+            "download": downloaded,
+            "merge_outputs": len(merged["outputs"]),
+            "merge_errors": merged["errors"],
+        }
+    _audit(paths, "collect", result)
+    return result
+
+
 def env_status() -> dict:
     names = (
         "POLYGON_API_KEY",
@@ -585,14 +652,23 @@ def main() -> None:
 
     collect_parser = subparsers.add_parser("collect")
     collect_parser.add_argument(
-        "--source", choices=("markets", "energy", "prediction", "all"), required=True
+        "--source",
+        choices=("markets", "energy", "prediction", "binance-bulk", "all"),
+        required=True,
     )
-    collect_parser.add_argument("--coins", default="BTC,ETH")
+    collect_parser.add_argument("--coins")
     collect_parser.add_argument("--zones", default="SE3")
     collect_parser.add_argument("--start", default="2024-04-01")
     collect_parser.add_argument("--end", default=str(date.today()))
     collect_parser.add_argument("--refresh", action="store_true")
     collect_parser.add_argument("--prediction-limit", type=int, default=20)
+    collect_parser.add_argument("--bulk-tier", choices=BULK_TIERS, default="core")
+    collect_parser.add_argument("--max-symbols", type=int)
+    collect_parser.add_argument("--workers", type=int, default=6)
+    collect_parser.add_argument("--max-gb", type=float, default=20)
+    collect_parser.add_argument("--refresh-catalog", action="store_true")
+    collect_parser.add_argument("--plan-only", action="store_true")
+    collect_parser.add_argument("--confirm-large-download", action="store_true")
     collect_parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     paths = IntakePaths(args.root)
@@ -611,20 +687,47 @@ def main() -> None:
             else (args.source,)
         )
         if args.dry_run:
-            result = {
-                "dry_run": True,
-                "sources": requested,
-                "coins": args.coins.split(","),
-                "zones": args.zones.split(","),
-                "start": args.start,
-                "end": args.end,
-            }
+            if args.source == "binance-bulk":
+                result = collect_binance_bulk(
+                    paths,
+                    args.bulk_tier,
+                    args.start,
+                    args.end,
+                    [
+                        coin.strip().upper()
+                        if coin.strip().upper().endswith("USDT")
+                        else coin.strip().upper() + "USDT"
+                        for coin in args.coins.split(",")
+                    ]
+                    if args.coins
+                    else None,
+                    args.max_symbols,
+                    args.workers,
+                    args.max_gb,
+                    args.refresh_catalog,
+                    plan_only=True,
+                    confirm_large_download=args.confirm_large_download,
+                )
+                result["dry_run"] = True
+            else:
+                result = {
+                    "dry_run": True,
+                    "sources": requested,
+                    "coins": args.coins.split(",") if args.coins else ["BTC", "ETH"],
+                    "zones": args.zones.split(","),
+                    "start": args.start,
+                    "end": args.end,
+                }
         else:
             collected = []
             if "markets" in requested:
                 collected.append(
                     collect_markets(
-                        paths, args.coins.split(","), args.start, args.end, args.refresh
+                        paths,
+                        args.coins.split(",") if args.coins else ["BTC", "ETH"],
+                        args.start,
+                        args.end,
+                        args.refresh,
                     )
                 )
             if "energy" in requested:
@@ -640,6 +743,29 @@ def main() -> None:
             if "prediction" in requested:
                 collected.append(
                     collect_prediction(paths, args.prediction_limit)
+                )
+            if "binance-bulk" in requested:
+                collected.append(
+                    collect_binance_bulk(
+                        paths,
+                        args.bulk_tier,
+                        args.start,
+                        args.end,
+                        [
+                            coin.strip().upper()
+                            if coin.strip().upper().endswith("USDT")
+                            else coin.strip().upper() + "USDT"
+                            for coin in args.coins.split(",")
+                        ]
+                        if args.coins
+                        else None,
+                        args.max_symbols,
+                        args.workers,
+                        args.max_gb,
+                        args.refresh_catalog,
+                        args.plan_only,
+                        args.confirm_large_download,
+                    )
                 )
             result = {"collected": collected, "validation": validate(paths)["summary"]}
     print(json.dumps(result, indent=2, default=str))

@@ -8,6 +8,7 @@ from unittest.mock import patch
 from intake.bot import (
     IntakePaths,
     WORKSPACE,
+    collect_binance_bulk,
     collect_prediction,
     initialize,
     inspect_file,
@@ -173,6 +174,63 @@ class IntakeBotTests(unittest.TestCase):
         self.assertFalse(capabilities["withdrawals"])
         self.assertFalse(capabilities["wallet_signing"])
         self.assertFalse(capabilities["hardware_control"])
+
+    @patch("intake.bot.estimate_bulk_plan")
+    @patch("intake.bot.plan_bulk_jobs")
+    @patch("intake.bot.load_bulk_catalog")
+    @patch("intake.bot.BULK_CATALOG_PATH")
+    def test_bulk_plan_defaults_to_full_catalog(
+        self, catalog_path, load_catalog, plan_jobs, estimate_plan
+    ):
+        initialize(self.paths)
+        catalog_path.exists.return_value = True
+        load_catalog.return_value = {"symbols_with_history": 791}
+        plan_jobs.return_value = ["job"]
+        estimate_plan.return_value = {"jobs": 1}
+        result = collect_binance_bulk(
+            self.paths,
+            tier="core",
+            start="2020-01",
+            end="2026-06",
+            symbols=None,
+            max_symbols=None,
+            workers=2,
+            max_gb=20,
+            refresh_catalog=False,
+            plan_only=True,
+            confirm_large_download=False,
+        )
+
+        self.assertEqual(result["mode"], "plan_only")
+        self.assertEqual(result["catalog_symbols"], 791)
+        self.assertIsNone(plan_jobs.call_args.kwargs["symbols"])
+
+    @patch("intake.bot.estimate_bulk_plan", return_value={"jobs": 1})
+    @patch("intake.bot.plan_bulk_jobs", return_value=["job"])
+    @patch(
+        "intake.bot.load_bulk_catalog",
+        return_value={"symbols_with_history": 791},
+    )
+    @patch("intake.bot.BULK_CATALOG_PATH")
+    def test_intraday_bulk_requires_explicit_confirmation(
+        self, catalog_path, *_mocks
+    ):
+        initialize(self.paths)
+        catalog_path.exists.return_value = True
+        with self.assertRaises(ValueError):
+            collect_binance_bulk(
+                self.paths,
+                tier="intraday",
+                start="2020-01",
+                end="2026-06",
+                symbols=None,
+                max_symbols=None,
+                workers=2,
+                max_gb=20,
+                refresh_catalog=False,
+                plan_only=False,
+                confirm_large_download=False,
+            )
 
 
 if __name__ == "__main__":
