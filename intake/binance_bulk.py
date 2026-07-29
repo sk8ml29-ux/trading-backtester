@@ -12,6 +12,8 @@ No authenticated or trading endpoint is used.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import io
 import json
@@ -44,7 +46,7 @@ DATA_BASE = "https://data.binance.vision/data"
 FUNDING_PREFIX = "data/futures/um/monthly/fundingRate/"
 SCHEMA_VERSION = 1
 
-SYMBOL_RE = re.compile(r"^[^/\\\x00]{2,80}$")
+SYMBOL_RE = re.compile(r"^[^/\\\x00-\x1f\x7f]{2,80}$")
 MONTH_RE = re.compile(r"-(\d{4}-\d{2})\.zip$")
 TIER_DATASETS = {
     "core": ("funding", "8h"),
@@ -74,6 +76,15 @@ class Job:
         if self.dataset == "funding":
             return f"funding/{self.symbol}/{self.month}"
         return f"perp/{self.interval}/{self.symbol}/{self.month}"
+
+
+@contextlib.contextmanager
+def _file_lock(path: Path):
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("w") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        yield
 
 
 def _atomic_json(path: Path, payload: object) -> None:
@@ -117,11 +128,36 @@ def _get(url: str, timeout: int = 40, retries: int = 4) -> bytes:
 
 
 def _list_xml(prefix: str, delimiter: str | None = None) -> ET.Element:
-    query = {"list-type": "2", "prefix": prefix}
-    if delimiter is not None:
-        query["delimiter"] = delimiter
-    url = S3_ENDPOINT + "?" + urllib.parse.urlencode(query)
-    return ET.fromstring(_get(url))
+    combined = ET.Element("CombinedList")
+    continuation = None
+    while True:
+        query = {"list-type": "2", "prefix": prefix}
+        if delimiter is not None:
+            query["delimiter"] = delimiter
+        if continuation:
+            query["continuation-token"] = continuation
+        url = S3_ENDPOINT + "?" + urllib.parse.urlencode(query)
+        page = ET.fromstring(_get(url))
+        for name in ("CommonPrefixes", "Contents"):
+            for element in _elements(page, name):
+                combined.append(element)
+        truncated = next(
+            (element.text for element in _elements(page, "IsTruncated")),
+            "false",
+        )
+        if str(truncated).lower() != "true":
+            break
+        continuation = next(
+            (
+                element.text
+                for element in _elements(page, "NextContinuationToken")
+                if element.text
+            ),
+            None,
+        )
+        if not continuation:
+            raise ValueError("S3 listing is truncated without continuation token")
+    return combined
 
 
 def _elements(root: ET.Element, local_name: str):
@@ -179,7 +215,13 @@ def build_catalog(
     max_symbols: int | None = None,
     output: Path = CATALOG_PATH,
 ) -> dict:
-    symbols = discover_symbols(quote_asset)
+    previous = (
+        json.loads(output.read_text())
+        if output.exists()
+        else {"symbols": {}}
+    )
+    discovered = discover_symbols(quote_asset)
+    symbols = sorted(set(discovered) | set(previous.get("symbols", {})))
     if max_symbols:
         symbols = symbols[:max_symbols]
     lifecycle = {}
@@ -207,11 +249,17 @@ def build_catalog(
                     }
             except Exception as exc:
                 errors[symbol] = repr(exc)
+                if symbol in previous.get("symbols", {}):
+                    lifecycle[symbol] = {
+                        **previous["symbols"][symbol],
+                        "catalog_refresh": "preserved_after_error",
+                    }
     catalog = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "quote_asset": quote_asset,
-        "symbols_discovered": len(symbols),
+        "symbols_discovered": len(discovered),
+        "symbols_attempted": len(symbols),
         "symbols_with_history": len(lifecycle),
         "historical_or_delisted": sum(
             row["status_inferred"] == "historical_or_delisted"
@@ -220,7 +268,20 @@ def build_catalog(
         "symbols": dict(sorted(lifecycle.items())),
         "errors": errors,
     }
-    _atomic_json(output, catalog)
+    with _file_lock(output):
+        # Re-read under lock and preserve any rows another completed refresh
+        # added while this network scan was running.
+        if output.exists():
+            latest = json.loads(output.read_text())
+            for symbol, row in latest.get("symbols", {}).items():
+                lifecycle.setdefault(symbol, row)
+            catalog["symbols"] = dict(sorted(lifecycle.items()))
+            catalog["symbols_with_history"] = len(lifecycle)
+            catalog["historical_or_delisted"] = sum(
+                row["status_inferred"] == "historical_or_delisted"
+                for row in lifecycle.values()
+            )
+        _atomic_json(output, catalog)
     return catalog
 
 
@@ -319,23 +380,32 @@ class DiskBudget:
         self.starting = sum(
             path.stat().st_size for path in root.rglob("*") if path.is_file()
         ) if root.exists() else 0
-        self.reserved = 0
+        self.active_reserved = 0
+        self.downloaded = 0
         self.lock = threading.Lock()
 
     def reserve(self, size: int) -> None:
+        if size <= 0:
+            raise RuntimeError("missing Content-Length; refusing unbounded download")
         with self.lock:
             free = shutil.disk_usage(self.root.parent if self.root.parent.exists() else WORKSPACE).free
-            if free - size < 5 * 1024**3:
+            if free - self.active_reserved - size < 5 * 1024**3:
                 raise RuntimeError("disk safety stop: less than 5 GB would remain")
-            if self.starting + self.reserved + size > self.maximum:
+            if (
+                self.starting
+                + self.downloaded
+                + self.active_reserved
+                + size
+                > self.maximum
+            ):
                 raise RuntimeError("configured bulk download size limit reached")
-            self.reserved += size
+            self.active_reserved += size
 
-    def release(self, size: int, keep: bool) -> None:
-        if keep:
-            return
+    def release(self, size: int, keep: bool, actual: int = 0) -> None:
         with self.lock:
-            self.reserved = max(0, self.reserved - size)
+            self.active_reserved = max(0, self.active_reserved - size)
+            if keep:
+                self.downloaded += actual
 
 
 def _official_checksum(job: Job) -> str:
@@ -346,17 +416,32 @@ def _official_checksum(job: Job) -> str:
     return checksum.lower()
 
 
+def _head_status(url: str) -> int:
+    request = urllib.request.Request(
+        url,
+        method="HEAD",
+        headers={"User-Agent": "binance-bulk-research/1.0"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=40) as response:
+            return int(response.status)
+    except urllib.error.HTTPError as exc:
+        return int(exc.code)
+
+
 def download_job(job: Job, budget: DiskBudget) -> dict:
     try:
         checksum = _official_checksum(job)
     except urllib.error.HTTPError as exc:
-        if exc.code in (403, 404):
+        if exc.code == 404 and _head_status(job.url) == 404:
             return {
                 "key": job.key,
                 "status": "missing",
                 "http_status": exc.code,
             }
-        raise
+        raise RuntimeError(
+            f"official checksum unavailable for existing/forbidden job {job.key}"
+        ) from exc
     if job.path.exists() and _sha256(job.path) == checksum:
         return {
             "key": job.key, "status": "verified_existing",
@@ -370,10 +455,12 @@ def download_job(job: Job, budget: DiskBudget) -> dict:
     job.path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     reserved = 0
+    reservation_active = False
     try:
         with urllib.request.urlopen(request, timeout=60) as response:
             reserved = int(response.headers.get("Content-Length", "0"))
             budget.reserve(reserved)
+            reservation_active = True
             with tempfile.NamedTemporaryFile(
                 dir=job.path.parent, prefix=f".{job.path.name}.", suffix=".tmp",
                 delete=False,
@@ -394,22 +481,25 @@ def download_job(job: Job, budget: DiskBudget) -> dict:
             raise ValueError(f"checksum mismatch for {job.key}")
         os.replace(temporary, job.path)
         temporary = None
-        budget.release(reserved, keep=True)
+        budget.release(reserved, keep=True, actual=written)
+        reservation_active = False
         return {
             "key": job.key, "status": "downloaded", "bytes": written,
             "sha256": checksum, "path": str(job.path),
         }
     except urllib.error.HTTPError as exc:
-        if exc.code in (403, 404):
-            return {"key": job.key, "status": "missing", "http_status": exc.code}
-        raise
+        raise RuntimeError(
+            f"archive unavailable after checksum verification for {job.key}: "
+            f"HTTP {exc.code}"
+        ) from exc
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
+        if reservation_active:
             budget.release(reserved, keep=False)
 
 
-def download_jobs(
+def _download_jobs_locked(
     jobs: list[Job],
     max_gb: float,
     workers: int = 6,
@@ -449,9 +539,38 @@ def download_jobs(
     }
 
 
+def download_jobs(
+    jobs: list[Job],
+    max_gb: float,
+    workers: int = 6,
+    manifest_path: Path = MANIFEST_PATH,
+) -> dict:
+    with _file_lock(manifest_path):
+        return _download_jobs_locked(jobs, max_gb, workers, manifest_path)
+
+
+def _safe_csv_member(archive: zipfile.ZipFile, job: Job) -> str:
+    members = [info for info in archive.infolist() if not info.is_dir()]
+    if len(members) != 1:
+        raise ValueError(f"{job.key} ZIP must contain exactly one file")
+    info = members[0]
+    member_path = Path(info.filename)
+    if (
+        member_path.is_absolute()
+        or ".." in member_path.parts
+        or member_path.suffix.lower() != ".csv"
+    ):
+        raise ValueError(f"unsafe ZIP member for {job.key}")
+    if info.file_size > 512 * 1024**2:
+        raise ValueError(f"decompressed member too large for {job.key}")
+    if info.compress_size and info.file_size / info.compress_size > 1_000:
+        raise ValueError(f"suspicious ZIP compression ratio for {job.key}")
+    return info.filename
+
+
 def _funding_frame(job: Job) -> pd.DataFrame:
     with zipfile.ZipFile(job.path) as archive:
-        name = archive.namelist()[0]
+        name = _safe_csv_member(archive, job)
         frame = pd.read_csv(archive.open(name))
         if "calc_time" not in frame.columns:
             frame = pd.read_csv(
@@ -462,7 +581,9 @@ def _funding_frame(job: Job) -> pd.DataFrame:
     numeric = numeric.where(numeric < 10**14, numeric // 1000)
     output = pd.DataFrame(
         {
-            "time": pd.to_datetime(numeric, unit="ms"),
+            # Conservative availability: a settlement-stamped rate is usable
+            # only after that timestamp, never at the exact boundary.
+            "time": pd.to_datetime(numeric + 1, unit="ms"),
             "funding_rate": pd.to_numeric(
                 frame.loc[numeric.index, "last_funding_rate"], errors="coerce"
             ),
@@ -473,7 +594,10 @@ def _funding_frame(job: Job) -> pd.DataFrame:
 
 def _kline_frame(job: Job) -> pd.DataFrame:
     with zipfile.ZipFile(job.path) as archive:
-        frame = pd.read_csv(archive.open(archive.namelist()[0]), header=None)
+        name = _safe_csv_member(archive, job)
+        frame = pd.read_csv(archive.open(name), header=None)
+    if frame.shape[1] < 7:
+        raise ValueError(f"kline schema has fewer than 7 columns for {job.key}")
     frame = frame.rename(
         columns={
             0: "open_time", 1: "open", 2: "high", 3: "low",
@@ -490,7 +614,7 @@ def _kline_frame(job: Job) -> pd.DataFrame:
     return output.dropna()
 
 
-def _atomic_csv(path: Path, frame: pd.DataFrame) -> None:
+def _atomic_csv(path: Path, frame: pd.DataFrame, maximum_bytes: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp",
@@ -499,23 +623,78 @@ def _atomic_csv(path: Path, frame: pd.DataFrame) -> None:
         temporary = Path(handle.name)
         frame.to_csv(handle, index=False)
     try:
+        old_size = path.stat().st_size if path.exists() else 0
+        total_with_temp = sum(
+            item.stat().st_size for item in ROOT.rglob("*") if item.is_file()
+        )
+        if total_with_temp - old_size > maximum_bytes:
+            raise RuntimeError("configured bulk size limit reached during merge")
+        if shutil.disk_usage(WORKSPACE).free < 5 * 1024**3:
+            raise RuntimeError("disk safety stop during merge")
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 
 
-def merge_jobs(jobs: list[Job]) -> dict:
-    groups = {}
-    for job in jobs:
-        if job.path.exists():
-            group = (
-                job.dataset,
-                job.interval,
-                job.symbol,
-            )
-            groups.setdefault(group, []).append(job)
-    outputs = []
+def _verified_jobs_for_groups(
+    requested: list[Job], manifest: dict
+) -> tuple[list[Job], list[dict]]:
+    groups = {
+        (job.dataset, job.interval, job.symbol)
+        for job in requested
+    }
+    verified = []
     errors = []
+    successful = {"downloaded", "verified_existing"}
+    for key, row in manifest.get("jobs", {}).items():
+        if row.get("status") not in successful:
+            continue
+        parts = key.split("/")
+        if len(parts) == 3 and parts[0] == "funding":
+            dataset, interval, symbol, month = "funding", None, parts[1], parts[2]
+        elif len(parts) == 4 and parts[0] == "perp":
+            dataset, interval, symbol, month = "perp", parts[1], parts[2], parts[3]
+        else:
+            continue
+        if (dataset, interval, symbol) not in groups:
+            continue
+        path = Path(row.get("path", ""))
+        expected = row.get("sha256")
+        if not path.is_file() or not expected or _sha256(path) != expected:
+            errors.append(
+                {"key": key, "error": "raw_file_missing_or_checksum_mismatch"}
+            )
+            continue
+        verified.append(
+            Job(dataset, symbol, month, interval, "", path)
+        )
+    verified_keys = {job.key for job in verified}
+    for job in requested:
+        if job.key not in verified_keys:
+            errors.append({"key": job.key, "error": "requested_job_not_verified"})
+    return verified, errors
+
+
+def merge_jobs(
+    jobs: list[Job],
+    manifest_path: Path = MANIFEST_PATH,
+    max_gb: float = 20,
+) -> dict:
+    if not manifest_path.exists():
+        return {
+            "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
+            "outputs": [],
+            "errors": [{"error": "download_manifest_missing"}],
+        }
+    manifest = json.loads(manifest_path.read_text())
+    verified_jobs, verification_errors = _verified_jobs_for_groups(jobs, manifest)
+    groups = {}
+    for job in verified_jobs:
+        group = (job.dataset, job.interval, job.symbol)
+        groups.setdefault(group, []).append(job)
+    outputs = []
+    errors = list(verification_errors)
+    maximum_bytes = int(max_gb * 1024**3)
     for (dataset, interval, symbol), group_jobs in sorted(groups.items()):
         try:
             frames = [
@@ -532,7 +711,7 @@ def merge_jobs(jobs: list[Job]) -> dict:
                 path = MERGED / "funding" / f"{key}.csv"
             else:
                 path = MERGED / "perp" / str(interval) / f"{key}.csv"
-            _atomic_csv(path, frame)
+            _atomic_csv(path, frame, maximum_bytes)
             outputs.append(
                 {
                     "symbol": symbol,
@@ -556,8 +735,13 @@ def merge_jobs(jobs: list[Job]) -> dict:
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "outputs": outputs,
         "errors": errors,
+        "complete_for_requested_jobs": not any(
+            error.get("error") == "requested_job_not_verified"
+            for error in errors
+        ),
     }
-    _atomic_json(ROOT / "merge_manifest.json", report)
+    with _file_lock(ROOT / "merge_manifest.json"):
+        _atomic_json(ROOT / "merge_manifest.json", report)
     return report
 
 
@@ -583,6 +767,8 @@ def main() -> None:
             command.add_argument("--workers", type=int, default=6)
             command.add_argument("--max-gb", type=float, default=20)
             command.add_argument("--confirm-large-download", action="store_true")
+        elif name == "merge":
+            command.add_argument("--max-gb", type=float, default=20)
     sub.add_parser("status")
     args = parser.parse_args()
 
@@ -625,7 +811,7 @@ def main() -> None:
                 "result": download_jobs(jobs, args.max_gb, args.workers),
             }
         else:
-            result = merge_jobs(jobs)
+            result = merge_jobs(jobs, max_gb=args.max_gb)
     print(json.dumps(result, indent=2, default=str))
 
 

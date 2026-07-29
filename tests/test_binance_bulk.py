@@ -24,7 +24,7 @@ from intake.binance_bulk import (
 )
 
 
-def xml_listing(prefixes=(), keys=()):
+def xml_listing(prefixes=(), keys=(), truncated=False, token=None):
     body = [
         '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
     ]
@@ -33,6 +33,9 @@ def xml_listing(prefixes=(), keys=()):
         for prefix in prefixes
     )
     body.extend(f"<Contents><Key>{key}</Key></Contents>" for key in keys)
+    body.append(f"<IsTruncated>{str(truncated).lower()}</IsTruncated>")
+    if token:
+        body.append(f"<NextContinuationToken>{token}</NextContinuationToken>")
     body.append("</ListBucketResult>")
     return "".join(body).encode()
 
@@ -86,6 +89,20 @@ class BinanceBulkTests(unittest.TestCase):
             months = funding_months("FTMUSDT")
 
         self.assertEqual(months, ["2021-01", "2024-06"])
+
+    def test_s3_discovery_follows_continuation_token(self):
+        first = xml_listing(
+            prefixes=["data/futures/um/monthly/fundingRate/BTCUSDT/"],
+            truncated=True,
+            token="next",
+        )
+        second = xml_listing(
+            prefixes=["data/futures/um/monthly/fundingRate/ETHUSDT/"]
+        )
+        with patch("intake.binance_bulk._get", side_effect=[first, second]):
+            symbols = discover_symbols()
+
+        self.assertEqual(symbols, ["BTCUSDT", "ETHUSDT"])
 
     def test_point_in_time_universe_uses_lifecycle(self):
         catalog = {
@@ -171,10 +188,27 @@ class BinanceBulkTests(unittest.TestCase):
                     kline_path,
                 ),
             ]
+            manifest_path = root / "download_manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "jobs": {
+                            job.key: {
+                                "status": "downloaded",
+                                "path": str(job.path),
+                                "sha256": hashlib.sha256(
+                                    job.path.read_bytes()
+                                ).hexdigest(),
+                            }
+                            for job in jobs
+                        }
+                    }
+                )
+            )
             with patch("intake.binance_bulk.MERGED", root / "merged"), patch(
                 "intake.binance_bulk.ROOT", root
             ):
-                result = merge_jobs(jobs)
+                result = merge_jobs(jobs, manifest_path=manifest_path, max_gb=1)
 
             self.assertEqual(result["errors"], [])
             kline_output = next(
@@ -184,6 +218,84 @@ class BinanceBulkTests(unittest.TestCase):
             self.assertEqual(
                 frame["time"].iloc[0],
                 pd.Timestamp("2024-01-01 08:00:00"),
+            )
+
+    def test_incremental_merge_preserves_previously_verified_months(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            jobs = []
+            for month, timestamp in (
+                ("2024-01", "1704067200000"),
+                ("2024-02", "1706745600000"),
+            ):
+                path = root / f"{month}.zip"
+                path.write_bytes(
+                    zip_bytes(
+                        "funding.csv",
+                        "calc_time,funding_interval_hours,last_funding_rate\n"
+                        f"{timestamp},8,0.0001\n",
+                    )
+                )
+                jobs.append(
+                    Job("funding", "BTCUSDT", month, None, "", path)
+                )
+            manifest_path = root / "download_manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "jobs": {
+                            job.key: {
+                                "status": "downloaded",
+                                "path": str(job.path),
+                                "sha256": hashlib.sha256(
+                                    job.path.read_bytes()
+                                ).hexdigest(),
+                            }
+                            for job in jobs
+                        }
+                    }
+                )
+            )
+            with patch("intake.binance_bulk.MERGED", root / "merged"), patch(
+                "intake.binance_bulk.ROOT", root
+            ):
+                merge_jobs(jobs, manifest_path=manifest_path, max_gb=1)
+                result = merge_jobs(
+                    [jobs[1]], manifest_path=manifest_path, max_gb=1
+                )
+
+            output = Path(result["outputs"][0]["path"])
+            self.assertEqual(len(pd.read_csv(output)), 2)
+
+    def test_merge_rejects_tampered_raw_zip(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "funding.zip"
+            path.write_bytes(zip_bytes("funding.csv", "a,b\n1,2\n"))
+            job = Job("funding", "BTCUSDT", "2024-01", None, "", path)
+            manifest = root / "manifest.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "jobs": {
+                            job.key: {
+                                "status": "downloaded",
+                                "path": str(path),
+                                "sha256": "0" * 64,
+                            }
+                        }
+                    }
+                )
+            )
+            with patch("intake.binance_bulk.ROOT", root):
+                result = merge_jobs([job], manifest_path=manifest, max_gb=1)
+
+            self.assertEqual(result["outputs"], [])
+            self.assertTrue(
+                any(
+                    row.get("error") == "raw_file_missing_or_checksum_mismatch"
+                    for row in result["errors"]
+                )
             )
 
     def test_unicode_symbol_uses_safe_storage_key(self):

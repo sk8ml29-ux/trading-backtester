@@ -593,7 +593,7 @@ def collect_binance_bulk(
                 "intraday bulk requires --confirm-large-download"
             )
         downloaded = download_bulk_jobs(jobs, max_gb=max_gb, workers=workers)
-        merged = merge_bulk_jobs(jobs)
+        merged = merge_bulk_jobs(jobs, max_gb=max_gb)
         result = {
             "source": "binance-bulk",
             "mode": "download_and_merge",
@@ -603,6 +603,12 @@ def collect_binance_bulk(
             "download": downloaded,
             "merge_outputs": len(merged["outputs"]),
             "merge_errors": merged["errors"],
+            "complete": bool(
+                not downloaded["errors"]
+                and downloaded["missing"] == 0
+                and not merged["errors"]
+                and merged.get("complete_for_requested_jobs")
+            ),
         }
     _audit(paths, "collect", result)
     return result
