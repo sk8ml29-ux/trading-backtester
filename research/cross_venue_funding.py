@@ -366,6 +366,14 @@ def evaluate(
     folds: int = 6,
 ) -> dict:
     step, symbol_step, diagnostics = simulate(features, params, cost_multiplier)
+    spread_panel = _panel(features, "spread").dropna()
+    # Deliberately impossible benchmark: at each settlement know the realized
+    # spread in advance, choose the best slots, pay no fees and suffer no venue-
+    # basis move. A target above this bound cannot be reached by this family at
+    # the configured leverage.
+    perfect_foresight = spread_panel.abs().apply(
+        lambda row: row.nlargest(params.slots).mean(), axis=1
+    ) * params.leverage
     index = step.index
     boundaries = [index[int(i * len(index) / folds)] for i in range(folds)]
     boundaries.append(index[-1] + pd.Timedelta(hours=8))
@@ -409,6 +417,9 @@ def evaluate(
         "symbols": sorted(features),
         "folds": fold_rows,
         "overall": overall,
+        "perfect_foresight_no_cost_funding_upper_bound": metrics(
+            perfect_foresight
+        ),
         "symbol_net_pnl": {
             coin: round(float(value), 6)
             for coin, value in symbol_step.sum().sort_values(ascending=False).items()
