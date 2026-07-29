@@ -1,0 +1,476 @@
+{
+  "strategy": "swedish_day_ahead_flexible_load",
+  "measurement": "cost_saving_not_investment_return",
+  "zone": "SE3",
+  "tariff": {
+    "markup_ex_vat_sek_kwh": 0.08,
+    "variable_grid_ex_vat_sek_kwh": 0.25,
+    "energy_tax_ex_vat_sek_kwh": 0.36,
+    "vat_multiplier": 1.25
+  },
+  "ev": {
+    "battery_energy_kwh": 15.0,
+    "charging_kw": 11.0,
+    "efficiency": 0.9,
+    "connect_hour": 18,
+    "departure_hour": 7
+  },
+  "sessions": 1365,
+  "total": {
+    "baseline_sek": 43718.61,
+    "optimized_sek": 30243.41,
+    "saved_sek": 13475.21,
+    "savings_pct": 30.82
+  },
+  "complete_months": 44,
+  "monthly": {
+    "2022-11": {
+      "baseline_sek": 1508.38,
+      "optimized_sek": 935.16,
+      "saved_sek": 573.22,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 38.0,
+      "expected_sessions": 30.0
+    },
+    "2022-12": {
+      "baseline_sek": 2558.1,
+      "optimized_sek": 1494.84,
+      "saved_sek": 1063.26,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 41.56,
+      "expected_sessions": 31.0
+    },
+    "2023-01": {
+      "baseline_sek": 1228.48,
+      "optimized_sek": 739.82,
+      "saved_sek": 488.66,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 39.78,
+      "expected_sessions": 31.0
+    },
+    "2023-02": {
+      "baseline_sek": 1030.09,
+      "optimized_sek": 669.07,
+      "saved_sek": 361.02,
+      "sessions": 28.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 35.05,
+      "expected_sessions": 28.0
+    },
+    "2023-03": {
+      "baseline_sek": 1147.65,
+      "optimized_sek": 766.67,
+      "saved_sek": 380.98,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 33.2,
+      "expected_sessions": 31.0
+    },
+    "2023-04": {
+      "baseline_sek": 921.95,
+      "optimized_sek": 743.95,
+      "saved_sek": 178.0,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 19.31,
+      "expected_sessions": 30.0
+    },
+    "2023-05": {
+      "baseline_sek": 824.79,
+      "optimized_sek": 549.97,
+      "saved_sek": 274.82,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 33.32,
+      "expected_sessions": 31.0
+    },
+    "2023-06": {
+      "baseline_sek": 842.56,
+      "optimized_sek": 665.66,
+      "saved_sek": 176.89,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 20.99,
+      "expected_sessions": 30.0
+    },
+    "2023-07": {
+      "baseline_sek": 759.06,
+      "optimized_sek": 623.69,
+      "saved_sek": 135.37,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 17.83,
+      "expected_sessions": 31.0
+    },
+    "2023-08": {
+      "baseline_sek": 863.6,
+      "optimized_sek": 542.24,
+      "saved_sek": 321.36,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 37.21,
+      "expected_sessions": 31.0
+    },
+    "2023-09": {
+      "baseline_sek": 694.34,
+      "optimized_sek": 459.87,
+      "saved_sek": 234.46,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 33.77,
+      "expected_sessions": 30.0
+    },
+    "2023-10": {
+      "baseline_sek": 772.45,
+      "optimized_sek": 502.96,
+      "saved_sek": 269.49,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 34.89,
+      "expected_sessions": 31.0
+    },
+    "2023-11": {
+      "baseline_sek": 1118.38,
+      "optimized_sek": 731.28,
+      "saved_sek": 387.1,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 34.61,
+      "expected_sessions": 30.0
+    },
+    "2023-12": {
+      "baseline_sek": 1050.5,
+      "optimized_sek": 765.56,
+      "saved_sek": 284.94,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 27.12,
+      "expected_sessions": 31.0
+    },
+    "2024-01": {
+      "baseline_sek": 1113.94,
+      "optimized_sek": 758.42,
+      "saved_sek": 355.52,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 31.92,
+      "expected_sessions": 31.0
+    },
+    "2024-02": {
+      "baseline_sek": 813.49,
+      "optimized_sek": 628.68,
+      "saved_sek": 184.81,
+      "sessions": 29.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 22.72,
+      "expected_sessions": 29.0
+    },
+    "2024-03": {
+      "baseline_sek": 971.7,
+      "optimized_sek": 751.51,
+      "saved_sek": 220.19,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 22.66,
+      "expected_sessions": 31.0
+    },
+    "2024-04": {
+      "baseline_sek": 895.44,
+      "optimized_sek": 670.98,
+      "saved_sek": 224.45,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 25.07,
+      "expected_sessions": 30.0
+    },
+    "2024-05": {
+      "baseline_sek": 706.8,
+      "optimized_sek": 516.4,
+      "saved_sek": 190.39,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 26.94,
+      "expected_sessions": 31.0
+    },
+    "2024-06": {
+      "baseline_sek": 667.0,
+      "optimized_sek": 541.35,
+      "saved_sek": 125.65,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 18.84,
+      "expected_sessions": 30.0
+    },
+    "2024-07": {
+      "baseline_sek": 613.49,
+      "optimized_sek": 539.42,
+      "saved_sek": 74.06,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 12.07,
+      "expected_sessions": 31.0
+    },
+    "2024-08": {
+      "baseline_sek": 531.48,
+      "optimized_sek": 475.51,
+      "saved_sek": 55.97,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 10.53,
+      "expected_sessions": 31.0
+    },
+    "2024-09": {
+      "baseline_sek": 616.13,
+      "optimized_sek": 465.58,
+      "saved_sek": 150.55,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 24.43,
+      "expected_sessions": 30.0
+    },
+    "2024-10": {
+      "baseline_sek": 674.05,
+      "optimized_sek": 493.39,
+      "saved_sek": 180.66,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 26.8,
+      "expected_sessions": 31.0
+    },
+    "2024-11": {
+      "baseline_sek": 1031.05,
+      "optimized_sek": 606.85,
+      "saved_sek": 424.2,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 41.14,
+      "expected_sessions": 30.0
+    },
+    "2024-12": {
+      "baseline_sek": 982.75,
+      "optimized_sek": 551.85,
+      "saved_sek": 430.89,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 43.85,
+      "expected_sessions": 31.0
+    },
+    "2025-01": {
+      "baseline_sek": 1017.88,
+      "optimized_sek": 598.68,
+      "saved_sek": 419.2,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 41.18,
+      "expected_sessions": 31.0
+    },
+    "2025-02": {
+      "baseline_sek": 1016.47,
+      "optimized_sek": 651.3,
+      "saved_sek": 365.17,
+      "sessions": 28.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 35.93,
+      "expected_sessions": 28.0
+    },
+    "2025-03": {
+      "baseline_sek": 1058.22,
+      "optimized_sek": 612.63,
+      "saved_sek": 445.59,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 42.11,
+      "expected_sessions": 31.0
+    },
+    "2025-04": {
+      "baseline_sek": 775.96,
+      "optimized_sek": 603.99,
+      "saved_sek": 171.97,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 22.16,
+      "expected_sessions": 30.0
+    },
+    "2025-05": {
+      "baseline_sek": 846.15,
+      "optimized_sek": 679.49,
+      "saved_sek": 166.65,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 19.7,
+      "expected_sessions": 31.0
+    },
+    "2025-06": {
+      "baseline_sek": 653.3,
+      "optimized_sek": 540.72,
+      "saved_sek": 112.58,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 17.23,
+      "expected_sessions": 30.0
+    },
+    "2025-07": {
+      "baseline_sek": 829.58,
+      "optimized_sek": 567.92,
+      "saved_sek": 261.67,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 31.54,
+      "expected_sessions": 31.0
+    },
+    "2025-08": {
+      "baseline_sek": 917.89,
+      "optimized_sek": 694.93,
+      "saved_sek": 222.96,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 24.29,
+      "expected_sessions": 31.0
+    },
+    "2025-09": {
+      "baseline_sek": 1131.01,
+      "optimized_sek": 587.53,
+      "saved_sek": 543.48,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 48.05,
+      "expected_sessions": 30.0
+    },
+    "2025-10": {
+      "baseline_sek": 1142.16,
+      "optimized_sek": 613.69,
+      "saved_sek": 528.47,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 46.27,
+      "expected_sessions": 31.0
+    },
+    "2025-11": {
+      "baseline_sek": 1021.82,
+      "optimized_sek": 663.02,
+      "saved_sek": 358.8,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 35.11,
+      "expected_sessions": 30.0
+    },
+    "2025-12": {
+      "baseline_sek": 881.04,
+      "optimized_sek": 615.12,
+      "saved_sek": 265.92,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 30.18,
+      "expected_sessions": 31.0
+    },
+    "2026-01": {
+      "baseline_sek": 1317.11,
+      "optimized_sek": 944.26,
+      "saved_sek": 372.86,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 28.31,
+      "expected_sessions": 31.0
+    },
+    "2026-02": {
+      "baseline_sek": 1192.09,
+      "optimized_sek": 867.87,
+      "saved_sek": 324.23,
+      "sessions": 28.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 27.2,
+      "expected_sessions": 28.0
+    },
+    "2026-03": {
+      "baseline_sek": 1066.32,
+      "optimized_sek": 714.69,
+      "saved_sek": 351.62,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 32.98,
+      "expected_sessions": 31.0
+    },
+    "2026-04": {
+      "baseline_sek": 943.55,
+      "optimized_sek": 706.12,
+      "saved_sek": 237.43,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 25.16,
+      "expected_sessions": 30.0
+    },
+    "2026-05": {
+      "baseline_sek": 1112.86,
+      "optimized_sek": 918.57,
+      "saved_sek": 194.3,
+      "sessions": 31.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 17.46,
+      "expected_sessions": 31.0
+    },
+    "2026-06": {
+      "baseline_sek": 1075.14,
+      "optimized_sek": 806.77,
+      "saved_sek": 268.37,
+      "sessions": 30.0,
+      "service_shortfall_kwh": 0.0,
+      "savings_pct": 24.96,
+      "expected_sessions": 30.0
+    }
+  },
+  "monthly_summary": {
+    "median_savings_pct": 29.25,
+    "mean_savings_pct": 29.62,
+    "min_savings_pct": 10.53,
+    "months_ge_6pct": 44,
+    "share_months_ge_6pct": 100.0
+  },
+  "annual": {
+    "2022": {
+      "baseline_sek": 4066.49,
+      "optimized_sek": 2430.01,
+      "saved_sek": 1636.48,
+      "savings_pct": 40.24
+    },
+    "2023": {
+      "baseline_sek": 11253.85,
+      "optimized_sek": 7760.73,
+      "saved_sek": 3493.12,
+      "savings_pct": 31.04
+    },
+    "2024": {
+      "baseline_sek": 9617.31,
+      "optimized_sek": 6999.96,
+      "saved_sek": 2617.35,
+      "savings_pct": 27.22
+    },
+    "2025": {
+      "baseline_sek": 11291.47,
+      "optimized_sek": 7429.02,
+      "saved_sek": 3862.44,
+      "savings_pct": 34.21
+    },
+    "2026": {
+      "baseline_sek": 7489.5,
+      "optimized_sek": 5623.69,
+      "saved_sek": 1865.81,
+      "savings_pct": 24.91
+    }
+  },
+  "verdict": {
+    "all_service_constraints_met": true,
+    "median_month_saving_ge_6pct": true,
+    "at_least_75pct_months_ge_6pct": true,
+    "every_complete_month_positive": true,
+    "research_gate_pass": true
+  },
+  "limitations": [
+    "Savings apply only to the modeled flexible EV load, not the whole household bill.",
+    "Daily 15 kWh charging is a representative scenario, not the user's measured demand.",
+    "Tariff values are configurable assumptions, not the user's dated supplier invoices.",
+    "Historical files are timetable-causal but not immutable point-in-time snapshots."
+  ]
+}

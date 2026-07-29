@@ -1,0 +1,54 @@
+{
+  "mode": "paper_only_no_device_commands",
+  "zone": "SE3",
+  "session_date": "2026-07-27",
+  "connect": "2026-07-27T16:00:00+00:00",
+  "departure": "2026-07-28T05:00:00+00:00",
+  "required_battery_energy_kwh": 15.0,
+  "required_grid_energy_kwh": 16.667,
+  "price_snapshot_sha256": "68ccc3172dfd07868bfaa366ab1d306ae4c579608f97e4d4a9b2d8b499e5781c",
+  "schedule": [
+    {
+      "valid_from": "2026-07-28T01:30:00+00:00",
+      "valid_to": "2026-07-28T01:45:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9584
+    },
+    {
+      "valid_from": "2026-07-28T01:45:00+00:00",
+      "valid_to": "2026-07-28T02:00:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9584
+    },
+    {
+      "valid_from": "2026-07-28T02:00:00+00:00",
+      "valid_to": "2026-07-28T02:15:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9584
+    },
+    {
+      "valid_from": "2026-07-28T02:15:00+00:00",
+      "valid_to": "2026-07-28T02:30:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9584
+    },
+    {
+      "valid_from": "2026-07-28T02:30:00+00:00",
+      "valid_to": "2026-07-28T02:45:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9584
+    },
+    {
+      "valid_from": "2026-07-28T03:00:00+00:00",
+      "valid_to": "2026-07-28T03:15:00+00:00",
+      "ev_kw": 11.0,
+      "all_in_sek_kwh": 0.9522
+    },
+    {
+      "valid_from": "2026-07-28T03:15:00+00:00",
+      "valid_to": "2026-07-28T03:30:00+00:00",
+      "ev_kw": 0.667,
+      "all_in_sek_kwh": 0.9679
+    }
+  ]
+}

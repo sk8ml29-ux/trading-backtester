@@ -25,6 +25,28 @@ python -m research.smrc_paper --update
 See `RAPPORT_SMRC.md` for results, limitations, legality and the production
 gate. Historical profitability is not a live-return guarantee.
 
+## Swedish flexible-load savings bot
+
+The `energy/` module schedules an EV's fixed energy requirement into the
+cheapest day-ahead intervals without V2G, export, or device commands. This is a
+cost-saving system—not investment return.
+
+```bash
+# Evaluate all historical SE3 prices already downloaded/cached
+python -m energy.flexible_load --zone SE3 --out research_energy_se3.json
+
+# Generate a paper-only schedule for one local charging date
+python -m energy.flexible_load --zone SE3 \
+  --schedule-date 2026-07-27 \
+  --schedule-out research_energy_schedule_sample.json
+
+# Reproduce fixed stress scenarios across SE1–SE4
+python -m energy.sensitivity --out research_energy_sensitivity.json
+```
+
+See `RAPPORT_HIGH_RETURN.md` for the cross-venue rejection, energy results and
+the customer-specific data required before connecting real hardware.
+
 | Strategy | ID | Market regime |
 |----------|-----|---------------|
 | MACD Pullback | `macd_pullback` | Uptrend (default) |
