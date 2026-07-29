@@ -10,13 +10,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 6460.01,
-        "median_savings_pct": 17.8,
-        "mean_savings_pct": 17.99,
-        "min_savings_pct": 5.78,
-        "months_ge_6pct": 43,
-        "share_months_ge_6pct": 97.73,
-        "research_gate_pass": true
+        "total_saved_sek": 154.45,
+        "median_savings_pct": 0.26,
+        "mean_savings_pct": 0.51,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "slow_15kwh_3_7kw_18": {
         "ev": {
@@ -26,13 +26,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 4712.15,
-        "median_savings_pct": 13.75,
-        "mean_savings_pct": 13.7,
-        "min_savings_pct": 4.73,
-        "months_ge_6pct": 42,
-        "share_months_ge_6pct": 95.45,
-        "research_gate_pass": true
+        "total_saved_sek": 131.88,
+        "median_savings_pct": 0.38,
+        "mean_savings_pct": 0.44,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "late_15kwh_7_4kw_21": {
         "ev": {
@@ -42,13 +42,13 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 3285.91,
-        "median_savings_pct": 9.89,
-        "mean_savings_pct": 10.06,
-        "min_savings_pct": 4.02,
-        "months_ge_6pct": 37,
-        "share_months_ge_6pct": 84.09,
-        "research_gate_pass": true
+        "total_saved_sek": 134.92,
+        "median_savings_pct": 0.31,
+        "mean_savings_pct": 0.45,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "heavy_30kwh_7_4kw_18": {
         "ev": {
@@ -58,13 +58,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 9424.31,
-        "median_savings_pct": 13.75,
-        "mean_savings_pct": 13.7,
-        "min_savings_pct": 4.73,
-        "months_ge_6pct": 42,
-        "share_months_ge_6pct": 95.45,
-        "research_gate_pass": true
+        "total_saved_sek": 263.75,
+        "median_savings_pct": 0.38,
+        "mean_savings_pct": 0.44,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "constraint_stress_30kwh_3_7kw_21": {
         "ev": {
@@ -74,9 +74,9 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 505.89,
-        "median_savings_pct": 0.77,
-        "mean_savings_pct": 0.85,
+        "total_saved_sek": 396.93,
+        "median_savings_pct": 0.63,
+        "mean_savings_pct": 0.68,
         "min_savings_pct": 0.19,
         "months_ge_6pct": 0,
         "share_months_ge_6pct": 0.0,
@@ -92,13 +92,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 6286.57,
-        "median_savings_pct": 17.1,
-        "mean_savings_pct": 17.46,
-        "min_savings_pct": 5.27,
-        "months_ge_6pct": 43,
-        "share_months_ge_6pct": 97.73,
-        "research_gate_pass": true
+        "total_saved_sek": 151.02,
+        "median_savings_pct": 0.29,
+        "mean_savings_pct": 0.5,
+        "min_savings_pct": 0.04,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "slow_15kwh_3_7kw_18": {
         "ev": {
@@ -108,13 +108,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 4607.18,
-        "median_savings_pct": 13.27,
-        "mean_savings_pct": 13.36,
-        "min_savings_pct": 4.81,
-        "months_ge_6pct": 42,
-        "share_months_ge_6pct": 95.45,
-        "research_gate_pass": true
+        "total_saved_sek": 135.65,
+        "median_savings_pct": 0.43,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "late_15kwh_7_4kw_21": {
         "ev": {
@@ -124,13 +124,13 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 3238.56,
-        "median_savings_pct": 9.38,
-        "mean_savings_pct": 9.91,
-        "min_savings_pct": 3.68,
-        "months_ge_6pct": 39,
-        "share_months_ge_6pct": 88.64,
-        "research_gate_pass": true
+        "total_saved_sek": 139.14,
+        "median_savings_pct": 0.39,
+        "mean_savings_pct": 0.47,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "heavy_30kwh_7_4kw_18": {
         "ev": {
@@ -140,13 +140,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 9214.36,
-        "median_savings_pct": 13.27,
-        "mean_savings_pct": 13.36,
-        "min_savings_pct": 4.81,
-        "months_ge_6pct": 42,
-        "share_months_ge_6pct": 95.45,
-        "research_gate_pass": true
+        "total_saved_sek": 271.31,
+        "median_savings_pct": 0.43,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "constraint_stress_30kwh_3_7kw_21": {
         "ev": {
@@ -156,10 +156,10 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 515.31,
-        "median_savings_pct": 0.78,
-        "mean_savings_pct": 0.87,
-        "min_savings_pct": 0.3,
+        "total_saved_sek": 404.81,
+        "median_savings_pct": 0.64,
+        "mean_savings_pct": 0.69,
+        "min_savings_pct": 0.26,
         "months_ge_6pct": 0,
         "share_months_ge_6pct": 0.0,
         "research_gate_pass": false
@@ -174,13 +174,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 13475.21,
-        "median_savings_pct": 29.25,
-        "mean_savings_pct": 29.62,
-        "min_savings_pct": 10.53,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 163.67,
+        "median_savings_pct": 0.32,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.04,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "slow_15kwh_3_7kw_18": {
         "ev": {
@@ -190,13 +190,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 10098.15,
-        "median_savings_pct": 24.26,
-        "mean_savings_pct": 23.95,
-        "min_savings_pct": 8.38,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 162.41,
+        "median_savings_pct": 0.42,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "late_15kwh_7_4kw_21": {
         "ev": {
@@ -206,13 +206,13 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 6326.89,
-        "median_savings_pct": 17.45,
-        "mean_savings_pct": 16.53,
-        "min_savings_pct": 6.04,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 138.84,
+        "median_savings_pct": 0.34,
+        "mean_savings_pct": 0.42,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "heavy_30kwh_7_4kw_18": {
         "ev": {
@@ -222,13 +222,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 20196.3,
-        "median_savings_pct": 24.26,
-        "mean_savings_pct": 23.95,
-        "min_savings_pct": 8.38,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 324.82,
+        "median_savings_pct": 0.42,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "constraint_stress_30kwh_3_7kw_21": {
         "ev": {
@@ -238,10 +238,10 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 874.38,
-        "median_savings_pct": 1.32,
-        "mean_savings_pct": 1.32,
-        "min_savings_pct": 0.43,
+        "total_saved_sek": 654.18,
+        "median_savings_pct": 1.03,
+        "mean_savings_pct": 1.05,
+        "min_savings_pct": 0.12,
         "months_ge_6pct": 0,
         "share_months_ge_6pct": 0.0,
         "research_gate_pass": false
@@ -256,13 +256,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 17384.93,
-        "median_savings_pct": 34.43,
-        "mean_savings_pct": 34.01,
-        "min_savings_pct": 14.23,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 262.39,
+        "median_savings_pct": 0.5,
+        "mean_savings_pct": 0.69,
+        "min_savings_pct": 0.07,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "slow_15kwh_3_7kw_18": {
         "ev": {
@@ -272,13 +272,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 14018.25,
-        "median_savings_pct": 27.95,
-        "mean_savings_pct": 28.92,
-        "min_savings_pct": 16.77,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 299.0,
+        "median_savings_pct": 0.6,
+        "mean_savings_pct": 0.8,
+        "min_savings_pct": 0.21,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "late_15kwh_7_4kw_21": {
         "ev": {
@@ -288,13 +288,13 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 9371.52,
-        "median_savings_pct": 20.47,
-        "mean_savings_pct": 21.1,
-        "min_savings_pct": 9.01,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 235.65,
+        "median_savings_pct": 0.5,
+        "mean_savings_pct": 0.68,
+        "min_savings_pct": 0.14,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "heavy_30kwh_7_4kw_18": {
         "ev": {
@@ -304,13 +304,13 @@
           "connect_hour": 18,
           "departure_hour": 7
         },
-        "total_saved_sek": 28036.5,
-        "median_savings_pct": 27.95,
-        "mean_savings_pct": 28.92,
-        "min_savings_pct": 16.77,
-        "months_ge_6pct": 44,
-        "share_months_ge_6pct": 100.0,
-        "research_gate_pass": true
+        "total_saved_sek": 598.0,
+        "median_savings_pct": 0.6,
+        "mean_savings_pct": 0.8,
+        "min_savings_pct": 0.21,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
       },
       "constraint_stress_30kwh_3_7kw_21": {
         "ev": {
@@ -320,10 +320,10 @@
           "connect_hour": 21,
           "departure_hour": 7
         },
-        "total_saved_sek": 1401.86,
-        "median_savings_pct": 1.48,
-        "mean_savings_pct": 1.9,
-        "min_savings_pct": 0.62,
+        "total_saved_sek": 1090.75,
+        "median_savings_pct": 1.33,
+        "mean_savings_pct": 1.58,
+        "min_savings_pct": 0.11,
         "months_ge_6pct": 0,
         "share_months_ge_6pct": 0.0,
         "research_gate_pass": false

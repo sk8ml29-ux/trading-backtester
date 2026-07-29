@@ -25,7 +25,7 @@ python -m research.smrc_paper --update
 See `RAPPORT_SMRC.md` for results, limitations, legality and the production
 gate. Historical profitability is not a live-return guarantee.
 
-## Swedish flexible-load savings bot
+## Swedish flexible-load savings research bot
 
 The `energy/` module schedules an EV's fixed energy requirement into the
 cheapest day-ahead intervals without V2G, export, or device commands. This is a
@@ -45,7 +45,8 @@ python -m energy.sensitivity --out research_energy_sensitivity.json
 ```
 
 See `RAPPORT_HIGH_RETURN.md` for the cross-venue rejection, energy results and
-the customer-specific data required before connecting real hardware.
+the customer-specific data required before connecting real hardware. The
+advanced scheduler failed to add 6% versus a strong timer benchmark.
 
 | Strategy | ID | Market regime |
 |----------|-----|---------------|
