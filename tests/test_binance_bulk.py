@@ -1,6 +1,7 @@
 import hashlib
 import io
 import json
+import contextlib
 import tempfile
 import unittest
 import urllib.error
@@ -425,6 +426,23 @@ class BinanceBulkTests(unittest.TestCase):
                     )
 
             self.assertFalse(output.exists())
+
+    def test_download_and_merge_use_same_operation_lock(self):
+        seen = []
+
+        @contextlib.contextmanager
+        def fake_lock(path):
+            seen.append(path)
+            yield
+
+        with patch("intake.binance_bulk._file_lock", side_effect=fake_lock), patch(
+            "intake.binance_bulk._download_jobs_locked", return_value={}
+        ), patch("intake.binance_bulk._merge_jobs_locked", return_value={}):
+            download_jobs([], max_gb=1)
+            merge_jobs([])
+
+        self.assertEqual(seen[0], seen[1])
+        self.assertEqual(seen[0].name, "bulk_operation")
 
     def test_unicode_symbol_uses_safe_storage_key(self):
         key = storage_key("币安人生USDT")

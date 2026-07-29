@@ -563,7 +563,9 @@ def download_jobs(
     workers: int = 6,
     manifest_path: Path = MANIFEST_PATH,
 ) -> dict:
-    with _file_lock(manifest_path):
+    # Download and merge share one operation lock so their independent disk
+    # budgets cannot race each other.
+    with _file_lock(ROOT / "bulk_operation"):
         return _download_jobs_locked(jobs, max_gb, workers, manifest_path)
 
 
@@ -770,7 +772,7 @@ def merge_jobs(
     manifest_path: Path = MANIFEST_PATH,
     max_gb: float = 20,
 ) -> dict:
-    with _file_lock(ROOT / "merge_operation"):
+    with _file_lock(ROOT / "bulk_operation"):
         return _merge_jobs_locked(jobs, manifest_path, max_gb)
 
 
