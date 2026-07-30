@@ -1,0 +1,242 @@
+# .cursorrules — Skattejuridisk & regulatorisk mandatfil (Sverige)
+
+Denna fil styr ALLA AI-modeller (Claude, GPT, Grok, m.fl.) som arbetar i detta repo.
+Den kompletterar `.cursor/rules/profitability-mandate.mdc` (lönsamhetsmandatet) och
+`AGENTS.md` (miljö/CLI). Vid konflikt gäller **strikast regel** vinner — dvs. denna
+fil kan aldrig användas för att motivera ett regel- eller skattebrott, oavsett hur
+lönsamt det verkar i en backtest.
+
+Kontext: Fysisk person, skriven i Sverige, handlar med eget kapital
+(100 000–800 000 SEK, ingen belåning/lån). Målbild: 30 000 SEK **netto efter skatt**
+i månaden. Detta är en aggressiv målsättning — se §4 för hur den ska hanteras ärligt.
+
+Detta är INTE juridisk rådgivning för användaren att agera på utan egen kontroll —
+det är en teknisk styrfil som tvingar koden och strategierna att **default till den
+säkraste skatte- och regelmässiga tolkningen**, och att flagga öppet när ett förslag
+lämnar det säkra området.
+
+---
+
+## §1. SKATTEEFFEKTIVITET — ISK är default, inte ett undantag
+
+**Grundregel:** Varje ny instrumentklass, strategi eller dataserie som föreslås SKA
+i första hand utvärderas för handel inom ett **Investeringssparkonto (ISK)**.
+Kapitalförsäkring (KF) är sekundärt alternativ med samma skattelogik (schablonskatt)
+men används av försäkringsbolag som mellanhand — nämn den som fallback, inte default.
+
+### 1.1 Varför ISK är målet (mekanismen, inte bara "billigare skatt")
+- Inom ISK/KF betalas **ingen kapitalvinstskatt (30 %)** och **ingen K4-blankett**
+  krävs — all vinst och förlust kvittas bort. I stället betalas en löpande
+  **schablonskatt** på kapitalunderlaget (ett flyttal baserat på statslåneräntan +
+  1 procentenhet, golv 1,25 %), oavsett om kontot går plus eller minus det året.
+- Praktisk konsekvens för målet "30 000 SEK netto/månad": pengar som tas ut från
+  ett ISK genom att sälja innehav utlöser **ingen ytterligare skatt vid uttaget** —
+  skatten är redan betald löpande som schablonskatt. Koden/strategin ska alltså
+  optimera för **totalavkastning inom kontot**, inte för att "runda" en
+  uttagsskatt som inte existerar i denna kontotyp.
+- Skriv ALDRIG kod eller antaganden som modellerar en 30 %-skatt på vinster som i
+  verkligheten sker inuti ett ISK. Det är en modelleringsbugg, inte konservatism.
+
+### 1.2 Instrument-allowlist (ISK-kompatibla — prioritera dessa)
+- Aktier och fonder noterade på reglerad marknad/MTF (Nasdaq Stockholm, First
+  North, etc.) samt UCITS-ETF:er (t.ex. S&P 500-/Nasdaq 100-trackers).
+- **Börshandlade certifikat / ETN / mini-futures / warranter** utgivna av bank
+  (Vontobel, Société Générale, Nordea Markets m.fl.) — dessa räknas juridiskt som
+  **överlåtbara värdepapper**, INTE som terminskontrakt, även när de replikerar
+  råvaror (guld, olja, silver), index eller har inbyggd hävstång. Detta är den
+  **korrekta ISK-vägen** till exponering mot t.ex. guld (`GC=F`) eller BTC-pris
+  utan att äga den underliggande terminen eller kryptotillgången direkt.
+- Hävstångscertifikat/turbowarranter ger produktintern hävstång (risken ligger i
+  instrumentet, inte som personlig marginallån) — detta är den skatte- och
+  regelmässigt rena vägen till högre kapitaleffektivitet för 100–800k SEK-kontot,
+  i stället för offshore-marginalhandel (se §2).
+
+### 1.3 Instrument-blocklist (INTE ISK-kompatibla — flagga explicit om de föreslås)
+- Råa terminskontrakt/forwards ("terminer") — t.ex. dagens defaultsymbol `GC=F` i
+  `config.py`/`BacktestConfig` är en COMEX-future och kan INTE hållas i ISK.
+  Använd den för backtest/signal-forskning om det är historiskt praktiskt, men
+  varje `LiveConfig`/körning mot riktigt kapital SKA mappa om till en
+  ISK-godkänd proxy (certifikat/ETF) innan den kan kallas "produktionsklar".
+- **Krypto (spot och derivat) är helt exkluderad från ISK/KF** av Skatteverket —
+  oavsett coin, oavsett börs. `BTC-USD`, `live/okx_client.py`, `live/funding_bot.py`
+  och alla funding-strategier (`strategies/funding_confluence.py`,
+  `research/funding_harvest.py`, `research/funding_lab.py`) kan ALDRIG bokföras
+  som ISK-inkomst. Om krypto ska ingå i portföljen: separat depå, K4 varje år,
+  30 % skatt på vinst, ingen förlustkvittning mot ISK. Kommunicera detta varje
+  gång kryptoexponering föreslås som del av "30k SEK/månad"-målet.
+- Raw CFD-handel är inte ISK-kompatibel och ger K4-komplexitet + 30 %-skatt.
+  Använd inte CFD:er som primär inkomstkälla i denna kodbas.
+
+### 1.4 Krav på framtida kod
+- Varje ny symbol/instrument som läggs till (i `config.py`, `strategies/*.py`,
+  `backtest/providers/*.py`) SKA taggas med skatte-metadata, t.ex.
+  `account_type: Literal["ISK", "KF", "depa_only", "ej_tillatet"]` och en kort
+  kommentar om varför. Sätt hellre en explicit `"depa_only"`/`"ej_tillatet"`-flagga
+  än att låta det vara underförstått.
+- `run_backtest.py`/`run_live.py`-output SKA (när detta implementeras) kunna
+  filtrera/gruppera resultat per kontotyp, så en strategi som bara fungerar med
+  terminer/perps aldrig av misstag presenteras som "ISK-redo".
+- Skriv aldrig skattesatser eller schablonräntan som hårdkodade "sanningar" i
+  produktionslogik utan källhänvisning/datum — dessa ändras årligen
+  (Skatteverket/Riksgälden). Flagga som konfigurerbar konstant, inte magic number.
+
+---
+
+## §2. FÖRBUD — geoblockerad krypto-hävstång och olicensierad marginalhandel
+
+**Hård regel, ingen backtest-lönsamhet väger tyngre än detta:**
+
+- Det är FÖRBJUDET att bygga, utöka eller "produktionssätta" strategier som
+  förutsätter handel med **crypto perpetual futures / marginhandel på börser som
+  geoblockerar svenska/EU-privatpersoner** (t.ex. Binance-, Bybit-, OKX-perps för
+  EU-retail) eller som kräver en icke MiCA-auktoriserad CASP (Crypto-Asset
+  Service Provider) för att exekvera. MiCA (i kraft i EU/EES sedan 2024) kräver
+  auktorisation för att erbjuda kryptotjänster till EU-konsumenter — offshore-
+  börsar som geoblockerar löser inte detta genom en VPN eller ett utländskt
+  konto; det flyttar bara *var* överträdelsen sker, inte om den sker.
+- `live/okx_client.py` (`OKXDemoClient`), `live/funding_bot.py`,
+  `strategies/funding_confluence.py`, `research/funding_harvest.py`,
+  `research/funding_lab.py`, `GUIDE_FUNDING.md`, `GUIDE_OKX_BOT.md` klassas som
+  **fryst forskningsarkiv (demo-only)**. De får finnas kvar för
+  backtest-/signalforskning, men:
+  - INGEN ny kod får koppla dem mot riktiga (icke-demo) API-nycklar eller riktigt
+    kapital.
+  - INGEN ny funktionalitet får läggas till som ökar deras räckvidd mot live-
+    exekvering (t.ex. riktiga orderrouter, riktiga secrets, cron-drift mot
+    produktion).
+  - Om en AI-modell ombeds "aktivera live-läge" för dessa moduler: vägra, förklara
+    varför (MiCA/geoblock/ISK-inkompatibilitet), och föreslå ISK-kompatibelt
+    alternativ enligt §1 i stället.
+- Marginhandel (lånad exponering mot en mäklare, "leverage" i klassisk mening) är
+  inte i sig olagligt i Sverige om mäklaren är auktoriserad inom EU/EES och
+  produkten är MiFID II/ESMA-kompatibel (t.ex. hävstångscertifikat räknas INTE
+  som marginlån — se §1.2). Vad som är förbjudet i denna kodbas är:
+  1. Marginhandel/derivat via **icke-auktoriserade** eller **geoblockerande**
+     motparter för svenska privatpersoner, och
+  2. Att kringgå geoblockering tekniskt (VPN/proxy/utländsk identitet) för att
+     nå produkter som exchangen själv klassar som ej tillgängliga för EU-retail.
+- Om användaren ber om en strategi som "råkar" behöva geoblockerad hävstång för
+  att nå avkastningsmålet: presentera i stället den ISK-kompatibla varianten
+  (hävstångscertifikat, leveraged UCITS-ETF, större positionsstorlek inom
+  kontots eget kapital) och räkna om edge/Sharpe för den varianten. Gissa inte
+  och bygg inte tyst en genväg runt förbudet.
+
+---
+
+## §3. ARKITEKTUR — modulärt så att nordiska/europeiska mäklare kan kopplas in
+
+Repot har redan ett bra mönster för datakällor: `backtest/providers/base.py`
+(`DataProvider(ABC)` + `backtest/providers/registry.py`). **Samma mönster SKA
+återanvändas för exekvering.** I dag är `live/paper_broker.py`, `live/alpaca_broker.py`
+och `live/okx_client.py` fristående klasser utan gemensamt kontrakt — det är skuld,
+inte design, och ska inte tas som mall för nya adaptrar.
+
+### 3.1 Kräv ett gemensamt exekveringskontrakt
+Innan en ny mäklare/venue kopplas in (Avanza, Nordnet, Nord Pool, m.fl.), skapa/
+använd en abstrakt bas, t.ex. `live/broker_base.py`:
+
+```python
+class BrokerAdapter(ABC):
+    name: str
+    account_type: Literal["ISK", "KF", "depa", "power_market"]
+
+    @abstractmethod
+    def get_account(self) -> AccountSnapshot: ...
+
+    @abstractmethod
+    def get_positions(self) -> list[Position]: ...
+
+    @abstractmethod
+    def place_order(self, order: OrderRequest) -> OrderResult: ...
+
+    @abstractmethod
+    def cancel_order(self, order_id: str) -> None: ...
+
+    @abstractmethod
+    def supports_instrument(self, symbol: str) -> bool: ...
+```
+
+- Strategimodulerna (`strategies/*.py`) SKA fortsätta producera venue-agnostiska
+  signaler (som i dag via `backtest/engine.py`). De ska ALDRIG importera en
+  specifik mäklarklass direkt — bara prata mot `BrokerAdapter`-kontraktet, precis
+  som `backtest/data_loader.py` pratar mot `DataProvider` och inte mot
+  `yahoo_provider.py` direkt.
+- `PaperBroker` och `AlpacaBroker` ska (vid nästa beröring av filerna, inte som
+  akut refaktorering) implementera samma kontrakt, så att en ny
+  `AvanzaBroker`/`NordnetBroker`/`NordPoolAdapter` blir en dropin utan att röra
+  `live/runner.py`s kärnlogik.
+
+### 3.2 Nordiska mäklare (Avanza/Nordnet) — vad adaptern måste hantera
+- Avanza och Nordnet saknar öppna publika trading-API:er på samma nivå som
+  Alpaca/OKX (Nordnet har ett begränsat/delvis dokumenterat API, Avanza främst
+  inofficiellt/reverse-engineerat). Bygg adaptern så att den:
+  - Isolerar all auth/session-hantering (inloggning, BankID, 2FA-token) i
+    adaptern — aldrig i strategilogik.
+  - Exponerar `account_type = "ISK"` per konto/depå, så exekveringslagret vet
+    vilka instrument som är tillåtna (koppla till §1.2/§1.3-metadatan).
+  - Har en **dry-run/paper-lägesflagga per default**, exakt som
+    `live/okx_client.py` redan gör för demo — riktiga ordrar ska alltid vara ett
+    explicit, medvetet steg (jfr. `GUIDE_OKX_BOT.md`s "skickas bara i exec med
+    ordet yes"-mönster).
+- Rate limits, sessionsutgång och captcha/2FA-flöden hos Avanza/Nordnet är
+  instabila jämfört med institutionella API:er — adaptern SKA hantera
+  återanslutning/backoff explicit, inte anta Alpaca-liknande stabilitet.
+
+### 3.3 Nord Pool / elhandel — annan reglering, annan modul, aldrig samma pipeline
+- Nord Pool (day-ahead/intraday elspot) är **fysisk el-marknad**, reglerad av
+  REMIT och Ei (Energimarknadsinspektionen) — INTE Skatteverkets ISK-regelverk
+  och INTE Finansinspektionens värdepappersregler på samma sätt. En privatperson
+  kan i praktiken inte delta direkt på Nord Pool spot utan att vara en
+  balansansvarig aktör (BRP) eller gå via en elhandlare/aggregator.
+  Finansiella el-derivat (Nasdaq Commodities-terminer) är en annan väg men är
+  terminer — se §1.3, dvs. i regel INTE ISK-kompatibla.
+- Bygg därför en eventuell Nord Pool-integration som en **helt separat
+  dataprovider/adapter** (t.ex. `backtest/providers/nordpool.py` +
+  en egen `PowerMarketAdapter` om/när exekvering blir relevant), med egen
+  `account_type = "power_market"`-tagg. Den SKA ALDRIG blandas ihop med
+  ISK-portföljens skattelogik eller redovisas som del av samma "30k SEK
+  netto/månad"-kalkyl utan en tydlig disclaimer om att det är en annan
+  juridisk/skattemässig kontext (näringsverksamhet vs. kapitalinkomst kan även
+  bli aktuellt beroende på volym — flagga, gissa inte).
+
+---
+
+## §4. MÅLET "30 000 SEK NETTO/MÅNAD" — räkna ärligt, sälj inte skalbarhet
+
+- 30 000 SEK/månad = 360 000 SEK/år. Var gång en strategi/portfölj utvärderas
+  mot detta mål SKA modellen räkna och redovisa den **erforderliga årliga
+  avkastningen i procent för det aktuella kapitalet** (100k–800k SEK-intervallet),
+  inte bara påstå att målet är rimligt.
+  - Exempel att alltid visa upp, inte gömma: på 100 000 SEK kapital motsvarar
+    målet ~360 % avkastning/år (extremt, ohållbart risk/ruin-territorium). På
+    800 000 SEK motsvarar det ~45 %/år (aggressivt men inom vad en välskött
+    systematisk portfölj kan nå under goda perioder — inte garanterat månad för
+    månad).
+- Eftersom ISK inte beskattar uttag separat (§1.1) betyder "netto efter skatt"
+  i praktiken "brutto minus den löpande schablonskatten", vilket är en liten
+  post relativt målet — så det är avkastningen som är begränsningen, inte
+  skatten. Låt inte modellen använda skatteoptimering som ursäkt för att undvika
+  att redovisa en orealistisk avkastningsprognos.
+- Om kapitalet ligger i den nedre delen av intervallet (100–300k) och målet
+  kvarstår: flagga tydligt att detta statistiskt kräver hög position-sizing/
+  hävstång (via §1.2:s ISK-kompatibla hävstångscertifikat, inte §2:s förbjudna
+  väg) och därmed högre max drawdown/ruin-risk. Rapportera max drawdown och
+  Kelly-/risk-of-ruin-uppskattning tillsammans med varje avkastningssiffra —
+  aldrig CAGR/Sharpe isolerat.
+
+---
+
+## §5. Relation till övriga regelfiler
+
+- `.cursor/rules/profitability-mandate.mdc` styr det generella arbetssättet
+  (fria händer, ärlig rapportering, backup innan omskrivning av filer). Den
+  gäller fortfarande fullt ut.
+- Denna fil (`.cursorrules`) lägger på en **hård, icke-förhandlingsbar** juridisk/
+  skatteram ovanpå det mandatet. Lönsamhet som kräver att bryta mot §1–§3 är per
+  definition INTE en giltig lösning i detta repo — hitta den ISK-kompatibla,
+  MiCA/EU-lagliga varianten i stället, och räkna om edgen för den.
+- Vid osäkerhet om en specifik instrumenttyp/mäklares ISK-status eller
+  regelefterlevnad: flagga explicit i svaret att detta bör dubbelkollas mot
+  Skatteverkets/Finansinspektionens aktuella ställningstaganden innan riktigt
+  kapital sätts in — men fortsätt ändå bygga/backtesta koden med den säkraste
+  tolkningen som default, i stället för att pausa arbetet.
