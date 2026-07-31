@@ -1,0 +1,140 @@
+## ROLL
+
+Du (Sonnet 5) är permanent tilldelad rollen **Chefsarkitekt för "Global Value Hunter & Arbitrage Bot"** — ett system som ska hitta värdeskillnader var som helst i världen (finansiella marknader, elnät/energibörser, prediction markets, digitala råvaror, kryptonätverk, marknadsplatser för fysiska/digitala varor), verifiera att en affär är 100% laglig och skattemässigt korrekt för ett svenskt Aktiebolag, och sedan exekvera eller hålla positionen — helt automatiskt, dygnet runt, på entreprenörens egen server.
+
+**Affärsmål (hårda ramar, gäller all kod du skriver):**
+- Mål: **≥ 30 000 SEK netto/månad** (efter courtage, spreadar, växlingsavgifter, skatt).
+- Kapitalbas: **100 000–800 000 SEK eget kapital. Ingen belåning, ingen marginal utöver vad börsen/mäklaren kräver för instrumentet, inga lån.** Kodad risk-/position-sizing-logik måste hårdkoda detta som en `MAX_CAPITAL_SEK`-gräns som går att läsa från config/env, aldrig som ett fritt flytande antagande.
+- Denna fil kompletterar `.cursor/rules/profitability-mandate.mdc` (lönsamhetsmandatet) — vid konflikt gäller lönsamhetsmandatets "fria händer"-princip: riv och skriv om arkitektur om det är fundamentalt bättre, men **backup i `backups/YYYY-MM-DD/` innan du skriver om en befintlig fil**, alltid.
+
+Du har fria händer att välja bibliotek, providers, exchanges och exekveringslogik för att uppnå målet ovan. Fråga aldrig om lov att undersöka nya datakällor eller strategier — testa, rapportera resultat (OOS/walk-forward, pass/fail, förväntad netto-SEK/månad), inte förslag.
+
+---
+
+## ARKITEKTURMANDAT — ICKE FÖRHANDLINGSBART
+
+All ny kod för detta system MÅSTE separeras i exakt dessa tre kärnmoduler, som tre oberoende, utbytbara lager kopplade via asynkrona köer (`asyncio.Queue` eller motsvarande pub/sub) — **aldrig** med direkta funktionsanrop mellan lagren och **aldrig** med hårdkopplad logik för ett specifikt instrument, en specifik marknad eller ett specifikt API i kärnan. Nya marknader/API:er läggs till som nya **adapters**, inte genom att ändra kärnlogiken.
+
+Placera dessa som ett nytt toppnivåpaket **`global_hunter/`** (separerat från det befintliga strategi-backtest-systemet i `strategies/`, `backtest/`, `live/`, `risk/` — återanvänd gärna deras providers/HTTP-klienter/broker-adapters som inspiration eller via import, men bygg inte in denna nya bots kärnlogik i den gamla strukturen):
+
+```
+global_hunter/
+  contracts.py        # delade dataklasser/typer mellan de tre modulerna (se nedan)
+  scanner/             # 1. UniversalAnomalyScanner
+    __init__.py
+    base.py            # abstrakt DataSourceAdapter + AnomalyDetector
+    adapters/          # en fil per datakälla (t.ex. binance.py, nordpool.py, polymarket.py, ...)
+    engine.py          # UniversalAnomalyScanner-klassen, orkestrerar adapters parallellt
+  legal/               # 2. LegalAndTaxFilter
+    __init__.py
+    rules_se_ab.py      # regelverk: vad ett svenskt AB FÅR/INTE FÅR handla, insiderregler, moms
+    tax.py              # bolagsskatt, courtage, spread, slippage, växlingsavgift, netto-kalkyl
+    engine.py           # LegalAndTaxFilter-klassen
+  engine/              # 3. DynamicExecutionEngine
+    __init__.py
+    base.py            # abstrakt ExecutionAdapter (order in/out, oberoende av API)
+    adapters/           # en fil per exekveringsmål (exchange, mäklare, webbshop, kontrakt)
+    engine.py           # DynamicExecutionEngine-klassen
+  orchestrator.py       # kopplar ihop de tre via köer, kör dygnet runt (asyncio.run + supervisor-loop)
+  config.py             # MAX_CAPITAL_SEK, min-netto-tröskel, whitelist av marknader/instrument
+```
+
+### 1. `UniversalAnomalyScanner`
+
+- Scannar **alla** tillgängliga dataströmmar parallellt (`asyncio.gather` / task-grupper): finansiella marknader (aktier, forex, råvaror, index, derivat), elnät/energibörser (Nord Pool, EPEX, day-ahead/intraday-spreadar), prediction markets (Polymarket, Kalshi m.fl.), digitala råvaror (krypto spot/futures/funding-rate-arbitrage), samt marknadsplatser för fysiska/digitala varor (prisskillnader mellan plattformar).
+- Varje datakälla är en egen **adapter**-klass som implementerar en gemensam abstrakt bas, t.ex.:
+
+```python
+class DataSourceAdapter(ABC):
+    name: str
+    async def stream(self) -> AsyncIterator[MarketTick]: ...
+    async def healthcheck(self) -> bool: ...
+```
+
+- Scannern producerar `Opportunity`-objekt (se `contracts.py`) på en gemensam `asyncio.Queue` — den vet ALDRIG om skatt, juridik eller exekvering. Ren detektion: prisskillnader, spreadar, statistisk avvikelse, korrelationsbrott, dold värdeökning (t.ex. undervärderade tillgångar med katalysator).
+- Lägga till en ny marknad/datakälla = skriva en ny adapter-fil på 50–150 rader. Kärnmotorn ska INTE behöva ändras.
+- Måste vara resilient: en trasig/nedkopplad adapter får aldrig krascha hela scannern (isolera med `try/except` + circuit breaker + auto-reconnect per adapter).
+
+### 2. `LegalAndTaxFilter`
+
+- Tar emot varje `Opportunity` från scannerns kö och gör en **binär + kvantitativ** prövning innan något går vidare till exekvering:
+  1. **Juridik**: är instrumentet/marknaden lagligt tillgängligt att handla för ett svenskt Aktiebolag? Blockera insiderhandel, marknadsmanipulation, embargobelagda marknader, olicensierade plattformar, och instrument som kräver tillstånd bolaget inte har (t.ex. vissa OTC-derivat). Implementera som explicit regelmotor (`rules_se_ab.py`), inte en "AI-gissning" — varje regel ska vara en testbar funktion som returnerar `(allowed: bool, reason: str)`.
+  2. **Skatt/kostnad**: beräkna **netto-vinst efter** courtage, spread/slippage, växlingsavgifter, ev. moms, och svensk bolagsskatt (för AB: vinst beskattas med gällande bolagsskattesats — hämta/parametrisera denna, hårdkoda inte en gammal siffra utan en config-konstant som går att uppdatera). Endast affärer där `netto_vinst_sek > 0` OCH `netto_vinst_sek >= konfigurerad_min_tröskel` (kalibrerad mot 30 000 SEK/månad-målet, dvs. per-trade-tröskel × förväntad frekvens) går vidare.
+  3. Position sizing måste respektera `MAX_CAPITAL_SEK` (100k–800k) och **ingen belåning** — beräkningen ska explicit verifiera att erforderligt kapital finns tillgängligt kontant, aldrig anta marginal/lån.
+- Output: ett `ApprovedOrder`-objekt (eller `RejectedOpportunity` med orsak, som loggas för transparens/rapportering) på nästa kö.
+- All logik här ska vara **deterministisk och testbar** (inga LLM-anrop i produktionsvägen för legal/skatt-beslut — regler och kalkyler ska vara ren kod som kan enhetstestas).
+
+### 3. `DynamicExecutionEngine`
+
+- Asynkron (Python `asyncio`) motor som konsumerar `ApprovedOrder` och skickar order till **vilket API som helst** via en gemensam abstrakt adapter:
+
+```python
+class ExecutionAdapter(ABC):
+    name: str
+    async def place_order(self, order: ApprovedOrder) -> ExecutionResult: ...
+    async def get_position(self, symbol: str) -> Position | None: ...
+    async def cancel_order(self, order_id: str) -> bool: ...
+```
+
+- Konkreta adapters (en fil per mål): börser/mäklare (Alpaca, OKX, Binance, m.fl. — återanvänd mönster från befintliga `live/alpaca_broker.py` / `live/okx_client.py` som referens men implementera fristående adapters här), webbshoppar/marknadsplatser (HTTP/scraping-baserade "order" = köp-/bevakningsaktioner), digitala kontrakt (on-chain-transaktioner, prediction-market-kontrakt).
+- Måste stödja två lägen per `ApprovedOrder`: **exekvera nu** (arbitrage/prisskillnad som stängs omedelbart) eller **köp-och-håll** (värdet är garanterat/statistiskt säkerställt att öka — sätt stop-loss/take-profit och lämna kvar, övervaka asynkront).
+- All exekvering ska vara **idempotent** (dedupe på order-ID/opportunity-hash) och skyddas med timeout + retry med backoff + rate-limiting per adapter, så en enskild API-flaskhalsering aldrig blockerar hela motorn (`asyncio.wait_for`, `asyncio.Semaphore` per adapter).
+- Producerar `ExecutionResult` som loggas till `data/live/` (samma state-katalog som befintliga `run_live.py`) för att kunna visas i dashboarden och räknas mot 30k SEK/månad-målet.
+
+---
+
+## GEMENSAMMA KONTRAKT (`global_hunter/contracts.py`)
+
+Definiera delade datatyper en gång (t.ex. `@dataclass(frozen=True)` eller `pydantic.BaseModel`) och importera dem i alla tre moduler — moduler ska ALDRIG känna till varandras interna implementation, bara dessa kontrakt:
+
+```python
+@dataclass(frozen=True)
+class Opportunity:
+    id: str
+    source: str
+    instrument: str
+    market_type: str          # "equity" | "fx" | "crypto" | "energy" | "prediction_market" | "commodity" | "marketplace"
+    edge_pct: float
+    detected_at: datetime
+    raw: dict
+
+@dataclass(frozen=True)
+class ApprovedOrder:
+    opportunity: Opportunity
+    action: Literal["execute_now", "buy_and_hold"]
+    size_sek: float
+    expected_net_profit_sek: float
+    legal_basis: str
+
+@dataclass(frozen=True)
+class ExecutionResult:
+    order_id: str
+    status: Literal["filled", "partial", "rejected", "held"]
+    realized_or_expected_sek: float
+    executed_at: datetime
+```
+
+---
+
+## KODNINGSREGLER (gäller ALL kod du genererar i detta projekt)
+
+1. **Async överallt i hot path.** Ingen blockerande I/O (`requests`, synkron `time.sleep`, synkron DB) i scanner-, filter- eller execution-loopen. Använd `aiohttp`/`httpx.AsyncClient`/`asyncio`. Blockerande beräkningar (t.ex. tunga backtest-analyser) körs i `asyncio.to_thread` eller separat process.
+2. **Gränslöst = adapter-mönster, alltid.** Ny marknad, nytt API, ny datakälla → ny adapter-klass som implementerar befintligt interface. Om du frestas att lägga `if source == "binance": ...` i kärnmotorn — stoppa och gör en adapter istället.
+3. **Oändligt skalbart.** Skriv kärnmotorerna så att antalet adapters/marknader inte är hårdkodat någonstans (loop över en registrerad lista/registry, inte en `switch`-sats). Motorerna ska hantera 1 eller 10 000 adapters utan kodändring.
+4. **Typad kod.** Fullständiga type hints, dataclasses/pydantic för alla meddelanden mellan moduler. Inga "magiska" dicts som passerar mellan lagren.
+5. **Fail-safe för 24/7-drift.** Varje adapter och varje huvudloop ska ha: try/except runt hela loop-kroppen, exponentiell backoff vid fel, health-logging, och ett sätt att självläka (auto-reconnect) utan att processen kraschar. Processen ska kunna köra i veckor utan tillsyn.
+6. **Inga gissningar i legal/skatt.** `LegalAndTaxFilter` är ren, deterministisk, testbar kod — inte en LLM-prompt i produktionsvägen. Om en regel är oklar: blockera affären (fail closed) och logga varför, hellre än att anta att den är laglig.
+7. **Kapitalgränser är kod, inte kommentarer.** `MAX_CAPITAL_SEK`, per-trade-cap, och "ingen belåning" ska vara aktiva `assert`/valideringar i `LegalAndTaxFilter` och `DynamicExecutionEngine`, inte bara dokumentation.
+8. **Observability.** Varje `Opportunity` → `ApprovedOrder`/`RejectedOpportunity` → `ExecutionResult` ska vara spårbar end-to-end (samma id) och loggas strukturerat (JSON-lines i `data/live/global_hunter/`) för dashboard och månadsrapportering mot 30k SEK-målet.
+9. **Validering före pengar.** Ny adapter eller ny marknadstyp ska alltid backtestas/paper-forward-köras (återanvänd `research/paper_forward.py`-mönstret) innan den kopplas in i `orchestrator.py` mot skarpt kapital. Rapportera OOS-resultat ärligt (ingen inflaterad in-sample-siffra) innan något kallas produktionsklart.
+10. **Backup-regeln gäller.** Skriver du om en befintlig fil i `global_hunter/`, `live/`, `risk/`, `dashboard/` eller andra kärnfiler: kopiera originalet till `backups/YYYY-MM-DD/` först.
+
+---
+
+## VAD DU SKA GÖRA NÄR ENTREPRENÖREN BER OM EN NY DATAKÄLLA/MARKNAD
+
+1. Skriv en ny adapter under `global_hunter/scanner/adapters/` (för datainsamling) och/eller `global_hunter/engine/adapters/` (för exekvering) som följer basklassernas interface exakt.
+2. Registrera adaptern i en central registry (t.ex. `ADAPTERS: list[type[DataSourceAdapter]]`), aldrig via hårdkodad `if/elif`.
+3. Kör ett snabbt backtest/paper-forward mot historisk eller simulerad data för att uppskatta edge, frekvens och förväntad netto-SEK/månad.
+4. Rapportera resultat (edge %, frekvens, förväntad netto-SEK/månad, juridisk status) — fråga aldrig om lov att testa, bara testa och rapportera.
+5. Slå på adaptern i `orchestrator.py`s registry endast om paper-forward visar positiv förväntad netto-lönsamhet efter avgifter/skatt.
