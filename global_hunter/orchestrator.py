@@ -1,12 +1,12 @@
-"""GlobalValueHunter: wires UniversalAnomalyScanner -> LegalAndTaxFilter ->
-ExecutionGovernor -> DynamicExecutionEngine through plain asyncio.Queue
-objects, and tracks realized/expected SEK against the entrepreneur's
-monthly target so progress is visible from the dashboard-style JSON-lines
-log.
+"""GlobalValueHunter: wires UniversalAnomalyScanner (+ optional
+MicroAgentSwarm) -> LegalAndTaxFilter -> ExecutionGovernor ->
+DynamicExecutionEngine through plain asyncio.Queue objects, and tracks
+realized/expected SEK against the entrepreneur's monthly target so progress
+is visible from the dashboard-style JSON-lines log.
 
 This file is intentionally thin: it contains ZERO market-specific logic and
-ZERO capital-allocation logic (that's ExecutionGovernor's job) -- it just
-plumbs one stage into the next.
+ZERO capital-allocation logic (that's ExecutionGovernor's and
+CapitalAllocator's job) -- it just plumbs one stage into the next.
 """
 
 from __future__ import annotations
@@ -21,7 +21,8 @@ from global_hunter.config import CapitalLedger, TARGET_NET_SEK_PER_MONTH
 from global_hunter.contracts import ApprovedOrder, ExecutionResult, Opportunity, RejectedOpportunity
 from global_hunter.engine.engine import DynamicExecutionEngine
 from global_hunter.governor.engine import ExecutionGovernor
-from global_hunter.legal.engine import LegalAndTaxFilter
+from global_hunter.legal.engine import CapitalAllocatorProtocol, LegalAndTaxFilter
+from global_hunter.micro.swarm import MicroAgentSwarm
 from global_hunter.scanner.engine import UniversalAnomalyScanner
 
 logger = logging.getLogger("global_hunter.orchestrator")
@@ -37,6 +38,8 @@ class GlobalValueHunter:
         governor: ExecutionGovernor,
         execution_engine: DynamicExecutionEngine,
         ledger: CapitalLedger,
+        micro_swarm: MicroAgentSwarm | None = None,
+        capital_allocator: CapitalAllocatorProtocol | None = None,
         decision_log_path: Path = DECISION_LOG_PATH,
     ) -> None:
         self.scanner = scanner
@@ -44,22 +47,29 @@ class GlobalValueHunter:
         self.governor = governor
         self.execution_engine = execution_engine
         self.ledger = ledger
+        self.micro_swarm = micro_swarm
+        self.capital_allocator = capital_allocator
         self.decision_log_path = decision_log_path
         self.orders_queue: "asyncio.Queue[ApprovedOrder]" = asyncio.Queue()
         self.results_queue: "asyncio.Queue[ExecutionResult]" = asyncio.Queue()
         self.month_to_date_net_sek: float = 0.0
 
     async def run_forever(self) -> None:
-        await asyncio.gather(
+        tasks = [
             self.scanner.run(),
             self._filter_loop(),
             self.execution_engine.run_forever(self.orders_queue, self.results_queue),
             self._reporting_loop(),
-        )
+        ]
+        if self.micro_swarm is not None:
+            tasks.append(self.micro_swarm.run())
+        await asyncio.gather(*tasks)
 
     async def run_once(self) -> list["ApprovedOrder | RejectedOpportunity"]:
         """Single scan -> filter -> governor pass, no execution. Dry-run/testing."""
         opportunities = await self.scanner.scan_once()
+        if self.micro_swarm is not None:
+            opportunities = opportunities + await self.micro_swarm.scan_once()
         decisions: list["ApprovedOrder | RejectedOpportunity"] = []
         for opp in opportunities:
             decision = await self.legal_filter.evaluate(opp, self.ledger.available_sek)
@@ -103,6 +113,8 @@ class GlobalValueHunter:
             result: ExecutionResult = await self.results_queue.get()
             self.governor.on_execution_result(result)
             if result.status in ("filled", "closed"):
+                if self.capital_allocator is not None and result.source:
+                    self.capital_allocator.report_result(result.source, result.realized_or_expected_sek)
                 self.month_to_date_net_sek += result.realized_or_expected_sek
                 pct_of_target = self.month_to_date_net_sek / TARGET_NET_SEK_PER_MONTH * 100.0
                 logger.info(
@@ -132,6 +144,7 @@ class GlobalValueHunter:
             fh.write(json.dumps(payload) + "\n")
 
     async def aclose(self) -> None:
-        await asyncio.gather(
-            self.scanner.aclose(), self.execution_engine.aclose(), return_exceptions=True
-        )
+        tasks = [self.scanner.aclose(), self.execution_engine.aclose()]
+        if self.micro_swarm is not None:
+            tasks.append(self.micro_swarm.aclose())
+        await asyncio.gather(*tasks, return_exceptions=True)

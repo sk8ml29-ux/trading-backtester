@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Protocol
 
 from global_hunter.config import MAX_POSITION_PCT_OF_CAPITAL
 from global_hunter.contracts import ApprovedOrder, Opportunity, RejectedOpportunity
@@ -14,6 +15,17 @@ from global_hunter.legal import rules_se_ab
 from global_hunter.legal.tax import CostAssumptions, SwedishABTaxCalculator
 
 logger = logging.getLogger("global_hunter.legal")
+
+
+class CapitalAllocatorProtocol(Protocol):
+    """Structural type for global_hunter.micro.allocator.CapitalAllocator --
+    kept as a Protocol (not a direct import) so `legal/` and `orchestrator`
+    never have to hard-depend on `micro/`; any object with these two methods
+    can plug in here.
+    """
+
+    def get_multiplier(self, module_name: str) -> float: ...
+    def report_result(self, module_name: str, realized_sek: float) -> None: ...
 
 
 @dataclass
@@ -30,9 +42,11 @@ class LegalAndTaxFilter:
         self,
         config: LegalConfig | None = None,
         tax_calculator: SwedishABTaxCalculator | None = None,
+        capital_allocator: CapitalAllocatorProtocol | None = None,
     ) -> None:
         self.config = config or LegalConfig()
         self.tax_calculator = tax_calculator or SwedishABTaxCalculator()
+        self.capital_allocator = capital_allocator
 
     async def evaluate(
         self, opportunity: Opportunity, available_capital_sek: float
@@ -42,6 +56,11 @@ class LegalAndTaxFilter:
             return self._reject(opportunity, reason)
 
         size_sek = self._position_size(available_capital_sek)
+        if self.capital_allocator is not None:
+            multiplier = self.capital_allocator.get_multiplier(opportunity.source)
+            size_sek *= multiplier
+            if multiplier <= 0.0:
+                return self._reject(opportunity, "capital_allocator_throttled_to_zero")
         if size_sek <= 0:
             return self._reject(opportunity, "no_capital_available")
 

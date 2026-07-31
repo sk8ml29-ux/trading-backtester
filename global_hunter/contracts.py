@@ -74,3 +74,4 @@ class ExecutionResult:
     executed_at: datetime
     adapter: str
     raw: dict[str, Any] = field(default_factory=dict)
+    source: str = ""  # Opportunity.source, denormalized here so CapitalAllocator can score per-module PnL without a lookup

@@ -40,6 +40,7 @@ class PaperExecutionAdapter(ExecutionAdapter):
             executed_at=datetime.now(timezone.utc),
             adapter=self.name,
             raw={"size_sek": order.size_sek},
+            source=order.opportunity.source,
         )
         if status == "held":
             self._positions[order.opportunity.instrument] = {
@@ -47,6 +48,7 @@ class PaperExecutionAdapter(ExecutionAdapter):
                 "size_sek": order.size_sek,
                 "opened_at": result.executed_at.isoformat(),
                 "expected_net_profit_sek": order.expected_net_profit_sek,
+                "source": order.opportunity.source,
             }
         await asyncio.to_thread(self._append_log, "open", order, result)
         return result
@@ -66,6 +68,7 @@ class PaperExecutionAdapter(ExecutionAdapter):
             executed_at=datetime.now(timezone.utc),
             adapter=self.name,
             raw={"size_sek": position["size_sek"], "closed_early": True},
+            source=position.get("source", ""),
         )
         await asyncio.to_thread(self._append_log, "close", None, result)
         return result

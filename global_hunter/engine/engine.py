@@ -42,6 +42,7 @@ class DynamicExecutionEngine:
             return ExecutionResult(
                 order_id=f"dup-{opp_id}", opportunity_id=opp_id, status="rejected",
                 realized_or_expected_sek=0.0, executed_at=datetime.now(timezone.utc), adapter="none",
+                source=order.opportunity.source,
             )
         self._seen_opportunity_ids.add(opp_id)
 
@@ -73,6 +74,7 @@ class DynamicExecutionEngine:
             order_id=f"close-noop-{order.opportunity.id}", opportunity_id=order.opportunity.id,
             status="closed", realized_or_expected_sek=0.0,
             executed_at=datetime.now(timezone.utc), adapter=adapter.name,
+            source=order.opportunity.source,
         )
 
     async def run_forever(

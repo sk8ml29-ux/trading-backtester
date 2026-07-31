@@ -61,6 +61,7 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
                     "opportunity_id": order.opportunity.id, "inst_id": inst_id,
                     "side": side, "size_units": size_units,
                     "expected_net_profit_sek": order.expected_net_profit_sek,
+                    "source": order.opportunity.source,
                 }
             return ExecutionResult(
                 order_id=fill.get("ordId", f"okx-demo-{order.opportunity.id}"),
@@ -70,6 +71,7 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
                 executed_at=datetime.now(timezone.utc),
                 adapter=self.name,
                 raw=fill,
+                source=order.opportunity.source,
             )
         except Exception as exc:  # noqa: BLE001 - OKXError or network failure -> reject, never crash the engine
             return ExecutionResult(
@@ -80,6 +82,7 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
                 executed_at=datetime.now(timezone.utc),
                 adapter=self.name,
                 raw={"error": str(exc)},
+                source=order.opportunity.source,
             )
 
     async def get_position(self, instrument: str) -> dict | None:
@@ -107,6 +110,7 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
                 executed_at=datetime.now(timezone.utc),
                 adapter=self.name,
                 raw=fill,
+                source=held.get("source", ""),
             )
         except Exception:  # noqa: BLE001
             self._held[instrument] = held  # restore -- we failed to actually close it

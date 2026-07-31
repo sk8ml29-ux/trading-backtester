@@ -27,6 +27,11 @@ KNOWN_VENUES: frozenset[str] = frozenset(
         "polymarket_outcome_sum", "opportunistic_market_scraper.polymarket_outcome_sum",
         "global_market_neutral_arbitrage", "predictive_value_accumulation",
         "alpha_event_scanner",
+        "micro_stablecoin_peg_arbitrage", "micro_triangular_crypto_arbitrage",
+        "micro_dual_listing_arbitrage", "micro_miner_bullion_ratio_reversion",
+        "micro_funding_rate_seasonality", "micro_sports_betting_surebet",
+        "micro_volatility_risk_premium", "micro_giftcard_marketplace_arbitrage",
+        "micro_carbon_allowance_roll_yield", "micro_post_earnings_drift",
     }
 )
 
@@ -52,6 +57,7 @@ class RuleContext:
     """
 
     allow_prediction_markets: bool = False  # requires Spelinspektionen sign-off -- see note below
+    allow_sports_betting: bool = False       # same license authority (Spelinspektionen), separate product category
     extra_allowed_sources: frozenset[str] = field(default_factory=frozenset)
 
 
@@ -100,6 +106,19 @@ def rule_prediction_market_license(opportunity: Opportunity, ctx: RuleContext) -
     return False, "prediction_market_requires_explicit_legal_opt_in"
 
 
+def rule_sports_betting_license(opportunity: Opportunity, ctx: RuleContext) -> tuple[bool, str]:
+    """Sports-odds "surebet" arbitrage is a wagering product under Swedish
+    gambling law (Spellagen 2018:1138), just like prediction markets, but a
+    SEPARATE license category from Spelinspektionen -- gated by its own flag
+    so enabling one does not silently enable the other. Default: BLOCKED.
+    """
+    if opportunity.raw.get("product_type") != "sports_betting":
+        return True, "not_sports_betting"
+    if ctx.allow_sports_betting:
+        return True, "sports_betting_explicitly_enabled"
+    return False, "sports_betting_requires_explicit_legal_opt_in"
+
+
 def rule_settlement_currency_supported(opportunity: Opportunity, ctx: RuleContext) -> tuple[bool, str]:
     """Placeholder for currency/settlement-rail checks (e.g. an AB needs a
     bank/exchange account that can actually receive the settlement currency).
@@ -115,6 +134,7 @@ ALL_RULES = (
     rule_no_sanctioned_venue,
     rule_no_flagged_insider_info,
     rule_prediction_market_license,
+    rule_sports_betting_license,
     rule_settlement_currency_supported,
 )
 

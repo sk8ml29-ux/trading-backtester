@@ -9,9 +9,11 @@ Examples:
 Defaults to the PaperExecutionAdapter -- no real orders, no API keys needed,
 matching the rest of this repo's "paper only" convention (see AGENTS.md).
 
-Full pipeline: UniversalAnomalyScanner (GlobalMarketNeutralArbitrage +
+Full pipeline: [UniversalAnomalyScanner (GlobalMarketNeutralArbitrage +
 PredictiveValueAccumulation + OpportunisticMarketScraper + GlobalIngestionEngine
-+ AlphaEventScanner) -> LegalAndTaxFilter -> ExecutionGovernor -> DynamicExecutionEngine.
++ AlphaEventScanner) + MicroAgentSwarm (10 independent micro-strategies,
+each isolated via IsolatedExecutionWrapper)] -> LegalAndTaxFilter
+(capital-allocator-aware sizing) -> ExecutionGovernor -> DynamicExecutionEngine.
 """
 
 from __future__ import annotations
@@ -29,6 +31,9 @@ from global_hunter.events.engine import AlphaEventScanner
 from global_hunter.governor.engine import ExecutionGovernor
 from global_hunter.ingestion.engine import GlobalIngestionEngine
 from global_hunter.legal.engine import LegalAndTaxFilter
+from global_hunter.micro.allocator import CapitalAllocator
+from global_hunter.micro.registry import default_micro_agents
+from global_hunter.micro.swarm import MicroAgentSwarm
 from global_hunter.orchestrator import GlobalValueHunter
 from global_hunter.scanner.arbitrage import GlobalMarketNeutralArbitrage
 from global_hunter.scanner.engine import UniversalAnomalyScanner
@@ -46,13 +51,18 @@ def build_hunter(capital_sek: float) -> GlobalValueHunter:
             AlphaEventScanner(),
         ]
     )
-    legal_filter = LegalAndTaxFilter()
+    allocator = CapitalAllocator()
+    micro_swarm = MicroAgentSwarm(agents=default_micro_agents(), allocator=allocator, queue=scanner.queue)
+    legal_filter = LegalAndTaxFilter(capital_allocator=allocator)
     ledger = CapitalLedger(total_capital_sek=capital_sek)
     execution_engine = DynamicExecutionEngine(
         adapters={"paper": PaperExecutionAdapter()}, default_adapter="paper",
     )
     governor = ExecutionGovernor(ledger=ledger, execution_engine=execution_engine)
-    return GlobalValueHunter(scanner, legal_filter, governor, execution_engine, ledger)
+    return GlobalValueHunter(
+        scanner, legal_filter, governor, execution_engine, ledger,
+        micro_swarm=micro_swarm, capital_allocator=allocator,
+    )
 
 
 async def main_async(args: argparse.Namespace) -> int:
