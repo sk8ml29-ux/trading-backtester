@@ -1,9 +1,12 @@
 """GlobalValueHunter: wires UniversalAnomalyScanner -> LegalAndTaxFilter ->
-DynamicExecutionEngine through plain asyncio.Queue objects, and tracks
-realized/expected SEK against the entrepreneur's monthly target so progress
-is visible from the dashboard-style JSON-lines log.
+ExecutionGovernor -> DynamicExecutionEngine through plain asyncio.Queue
+objects, and tracks realized/expected SEK against the entrepreneur's
+monthly target so progress is visible from the dashboard-style JSON-lines
+log.
 
-This file is intentionally thin: it contains ZERO market-specific logic.
+This file is intentionally thin: it contains ZERO market-specific logic and
+ZERO capital-allocation logic (that's ExecutionGovernor's job) -- it just
+plumbs one stage into the next.
 """
 
 from __future__ import annotations
@@ -17,6 +20,7 @@ from pathlib import Path
 from global_hunter.config import CapitalLedger, TARGET_NET_SEK_PER_MONTH
 from global_hunter.contracts import ApprovedOrder, ExecutionResult, Opportunity, RejectedOpportunity
 from global_hunter.engine.engine import DynamicExecutionEngine
+from global_hunter.governor.engine import ExecutionGovernor
 from global_hunter.legal.engine import LegalAndTaxFilter
 from global_hunter.scanner.engine import UniversalAnomalyScanner
 
@@ -30,12 +34,14 @@ class GlobalValueHunter:
         self,
         scanner: UniversalAnomalyScanner,
         legal_filter: LegalAndTaxFilter,
+        governor: ExecutionGovernor,
         execution_engine: DynamicExecutionEngine,
         ledger: CapitalLedger,
         decision_log_path: Path = DECISION_LOG_PATH,
     ) -> None:
         self.scanner = scanner
         self.legal_filter = legal_filter
+        self.governor = governor
         self.execution_engine = execution_engine
         self.ledger = ledger
         self.decision_log_path = decision_log_path
@@ -52,11 +58,18 @@ class GlobalValueHunter:
         )
 
     async def run_once(self) -> list["ApprovedOrder | RejectedOpportunity"]:
-        """Single scan -> filter pass, no execution. Use for dry-run/testing."""
+        """Single scan -> filter -> governor pass, no execution. Dry-run/testing."""
         opportunities = await self.scanner.scan_once()
-        decisions = []
+        decisions: list["ApprovedOrder | RejectedOpportunity"] = []
         for opp in opportunities:
             decision = await self.legal_filter.evaluate(opp, self.ledger.available_sek)
+            if isinstance(decision, ApprovedOrder):
+                admitted = await self.governor.admit(decision)
+                if admitted is None:
+                    decision = RejectedOpportunity(
+                        opportunity=opp, reason="governor_deferred_insufficient_capital",
+                        rejected_at=datetime.now(timezone.utc),
+                    )
             self._log_decision(decision)
             decisions.append(decision)
         return decisions
@@ -66,19 +79,29 @@ class GlobalValueHunter:
             opportunity: Opportunity = await self.scanner.queue.get()
             try:
                 decision = await self.legal_filter.evaluate(opportunity, self.ledger.available_sek)
-                self._log_decision(decision)
                 if isinstance(decision, ApprovedOrder):
-                    await self.orders_queue.put(decision)
+                    admitted = await self.governor.admit(decision)
+                    if admitted is not None:
+                        self._log_decision(admitted)
+                        await self.orders_queue.put(admitted)
+                    else:
+                        self._log_decision(RejectedOpportunity(
+                            opportunity=opportunity, reason="governor_deferred_insufficient_capital",
+                            rejected_at=datetime.now(timezone.utc),
+                        ))
+                else:
+                    self._log_decision(decision)
             except asyncio.CancelledError:
                 raise
             except Exception:  # noqa: BLE001 - one bad opportunity must never kill the filter loop
-                logger.exception("Filter failed for opportunity %s", opportunity.id)
+                logger.exception("Filter/governor failed for opportunity %s", opportunity.id)
             finally:
                 self.scanner.queue.task_done()
 
     async def _reporting_loop(self) -> None:
         while True:
             result: ExecutionResult = await self.results_queue.get()
+            self.governor.on_execution_result(result)
             if result.status in ("filled", "closed"):
                 self.month_to_date_net_sek += result.realized_or_expected_sek
                 pct_of_target = self.month_to_date_net_sek / TARGET_NET_SEK_PER_MONTH * 100.0

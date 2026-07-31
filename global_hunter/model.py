@@ -14,6 +14,13 @@ Where, per module i:
     f_i = trades (or position-cycles) per month
     w_i = empirical win rate / capture probability [0, 1]
 
+This models the four Opportunity-producing edge sources (GlobalMarketNeutralArbitrage,
+PredictiveValueAccumulation, OpportunisticMarketScraper, AlphaEventScanner).
+GlobalIngestionEngine feeds more trades into the arbitrage/scraper buckets
+via config rather than being a bucket of its own; ExecutionGovernor changes
+capital efficiency, not the per-trade formula -- see illustrative_scenario()
+below for the full reasoning.
+
 This is a LINEAR, NON-COMPOUNDING approximation -- deliberately conservative
 and simple to reason about. It ignores compounding within the month and
 ignores correlation between modules (in reality a crash can hit several
@@ -100,21 +107,35 @@ def required_avg_monthly_return_pct(
 
 
 def illustrative_scenario(total_capital_sek: float = 400_000.0) -> ProjectionResult:
-    """The three requested modules, sized so their capital sums to
+    """Four capital-consuming edge sources, sized so their capital sums to
     `total_capital_sek` (no leverage -- every krona is accounted for once).
-    Parameters are STARTING HYPOTHESES pulled from the entrepreneur's data
-    archive characteristics (cross-venue crypto spreads, funding-rate
-    differentials, commodity mean-reversion, prediction-market outcome-sum
-    slippage) -- replace every number with your own backtested statistic
-    before trusting this.
+    Parameters are STARTING HYPOTHESES -- replace every number with your own
+    backtested statistic before trusting this.
+
+    GlobalIngestionEngine is NOT a separate bucket here: its config-driven
+    feeds (Steam marketplace zscore watch, extra Binance/OKX pairs, future
+    auction/logistics templates) are additional INSTANCES of the same
+    arbitrage/threshold/zscore edge types already modeled under
+    GlobalMarketNeutralArbitrage and OpportunisticMarketScraper -- so its
+    contribution shows up as more trades/month and more diversification
+    within those two buckets, not a new formula.
+
+    ExecutionGovernor is NOT modeled as a separate edge source either: it
+    changes CAPITAL UTILIZATION (how quickly idle/slow-holding capital gets
+    redeployed into faster opportunities), which this linear, static-
+    allocation model can't represent without a full event-driven
+    simulation. Directionally it can only ever push net_sek UP relative to
+    this model (idle capital earning nothing while "stuck" in a slow hold
+    is the thing it eliminates) -- treat these projections as a
+    conservative floor, not a ceiling.
     """
-    weights = {"arbitrage": 0.375, "accumulation": 0.45, "scraper": 0.175}
+    weights = {"arbitrage": 0.30, "accumulation": 0.35, "scraper": 0.15, "event": 0.20}
     modules = [
         ModuleAssumption(
             name="GlobalMarketNeutralArbitrage",
             capital_sek=total_capital_sek * weights["arbitrage"],
             net_edge_pct_per_trade=0.10,   # net of ~0.15% round-trip cost buffer
-            trades_per_month=60,           # ~2/day across BTC/ETH/SOL spot + funding pairs
+            trades_per_month=60,           # ~2/day across BTC/ETH/SOL/XRP spot + funding pairs (incl. GlobalIngestionEngine config-only pairs)
             win_rate=0.97,
         ),
         ModuleAssumption(
@@ -130,6 +151,13 @@ def illustrative_scenario(total_capital_sek: float = 400_000.0) -> ProjectionRes
             net_edge_pct_per_trade=1.5,    # Polymarket outcome-set / mispriced-listing edge, net of fee buffer
             trades_per_month=8,
             win_rate=0.85,
+        ),
+        ModuleAssumption(
+            name="AlphaEventScanner",
+            capital_sek=total_capital_sek * weights["event"],
+            net_edge_pct_per_trade=6.0,    # heuristic, UNCALIBRATED (see events/engine.py docstring) -- validate before trusting
+            trades_per_month=1.0,          # macro/weather/political events are rare by nature
+            win_rate=0.55,                 # deliberately the weakest win-rate in the book: least-proven module
         ),
     ]
     return project_monthly_net_sek(modules, fixed_costs_sek=500.0)

@@ -16,8 +16,9 @@ from dataclasses import dataclass, field
 
 from global_hunter.contracts import MarketType, Opportunity
 
-#: Venues this system is coded to talk to today. Extend as you add adapters;
-#: an unknown venue is blocked by default (fail closed), not silently allowed.
+#: Venues/modules this system is coded to talk to today. Extend as you add
+#: adapters; an unknown venue is blocked by default (fail closed), not
+#: silently allowed.
 KNOWN_VENUES: frozenset[str] = frozenset(
     {
         "binance_spot", "binance_perp_funding",
@@ -25,8 +26,16 @@ KNOWN_VENUES: frozenset[str] = frozenset(
         "yahoo_tradfi",
         "polymarket_outcome_sum", "opportunistic_market_scraper.polymarket_outcome_sum",
         "global_market_neutral_arbitrage", "predictive_value_accumulation",
+        "alpha_event_scanner",
     }
 )
+
+#: GlobalIngestionEngine's source is dynamic per config file
+#: ("global_ingestion_engine:<feed_name>") since new feeds are added via
+#: YAML, not code -- so it's allowed by PREFIX rather than exact match. This
+#: is deliberately narrow (only this one prefix) so a typo'd/unrelated
+#: source string still fails closed via KNOWN_VENUES above.
+KNOWN_SOURCE_PREFIXES: tuple[str, ...] = ("global_ingestion_engine:",)
 
 #: Jurisdictions/venues that are categorically off-limits for a Swedish AB
 #: (sanctions / embargo risk). Populate with real screening data before going
@@ -49,6 +58,8 @@ class RuleContext:
 def rule_known_source(opportunity: Opportunity, ctx: RuleContext) -> tuple[bool, str]:
     if opportunity.source in KNOWN_VENUES or opportunity.source in ctx.extra_allowed_sources:
         return True, "source_registered"
+    if any(opportunity.source.startswith(prefix) for prefix in KNOWN_SOURCE_PREFIXES):
+        return True, "source_prefix_registered"
     return False, f"unknown_source:{opportunity.source}"
 
 

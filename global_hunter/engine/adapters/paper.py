@@ -43,23 +43,41 @@ class PaperExecutionAdapter(ExecutionAdapter):
         )
         if status == "held":
             self._positions[order.opportunity.instrument] = {
+                "opportunity_id": order.opportunity.id,
                 "size_sek": order.size_sek,
                 "opened_at": result.executed_at.isoformat(),
                 "expected_net_profit_sek": order.expected_net_profit_sek,
             }
-        await asyncio.to_thread(self._append_log, order, result)
+        await asyncio.to_thread(self._append_log, "open", order, result)
         return result
 
     async def get_position(self, instrument: str) -> dict | None:
         return self._positions.get(instrument)
 
+    async def close_position(self, instrument: str) -> ExecutionResult | None:
+        position = self._positions.pop(instrument, None)
+        if position is None:
+            return None
+        result = ExecutionResult(
+            order_id=f"paper-close-{instrument}-{int(datetime.now(timezone.utc).timestamp() * 1000)}",
+            opportunity_id=position["opportunity_id"],
+            status="closed",
+            realized_or_expected_sek=position["expected_net_profit_sek"],
+            executed_at=datetime.now(timezone.utc),
+            adapter=self.name,
+            raw={"size_sek": position["size_sek"], "closed_early": True},
+        )
+        await asyncio.to_thread(self._append_log, "close", None, result)
+        return result
+
     async def cancel_order(self, order_id: str) -> bool:
         return True
 
-    def _append_log(self, order: ApprovedOrder, result: ExecutionResult) -> None:
+    def _append_log(self, event: str, order: "ApprovedOrder | None", result: ExecutionResult) -> None:
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         record = {
-            "order": _to_jsonable(order),
+            "event": event,
+            "order": _to_jsonable(order) if order is not None else None,
             "result": _to_jsonable(result),
         }
         with open(self.log_path, "a", encoding="utf-8") as fh:

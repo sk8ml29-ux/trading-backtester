@@ -1,0 +1,27 @@
+# LIVE, TESTED template. Public, no-key Steam Community Market price API --
+# a genuine "speltillgångar/digital marketplace" source (CS2 skin market).
+#
+# Rule: zscore_window. No manual fair-value guess needed -- the engine
+# tracks this item's own rolling price history and flags when the CURRENT
+# price is a statistical outlier vs its recent mean (a sudden discount =
+# potential flip; a sudden spike = potential sell signal for a held item).
+#
+# Verified response shape (2026-07-31):
+#   {"success":true,"lowest_price":"$42.39","volume":"80","median_price":"$44.88"}
+name: steam_ak47_redline_ft
+market_type: marketplace
+poll_interval_s: 180          # Steam's undocumented rate limit is tight -- stay well under it
+confidence: 0.55               # marketplace price noise is high; keep this conservative until backtested
+action: execute_now            # a flip opportunity closes fast, not a multi-week hold
+endpoints:
+  - id: steam_price
+    url: "https://steamcommunity.com/market/priceoverview/?appid=730&currency=1&market_hash_name=AK-47%20%7C%20Redline%20(Field-Tested)"
+    value_path: "lowest_price"   # e.g. "$42.39" -- default numeric regex strips the "$"
+rule:
+  kind: zscore_window
+  window_size: 40               # ~40 polls of history before this rule starts firing
+  zscore_threshold: 2.5
+notes: >
+  Extend to any other market_hash_name / appid by copying this file and
+  changing the URL query string -- zero Python changes needed. This is the
+  reference "add a marketplace in under 5 minutes" example.

@@ -1,0 +1,32 @@
+# LIVE, TESTED template. Proves the "add a new coin/exchange pair via
+# config only, no Python" promise for GlobalMarketNeutralArbitrage-style
+# cross-venue spreads -- XRP is NOT in scanner/arbitrage.py's default_pairs(),
+# yet this file alone is enough to scan it.
+#
+# Verified endpoints (2026-07-31):
+#   https://data-api.binance.vision/api/v3/ticker/price?symbol=XRPUSDT -> {"symbol":"XRPUSDT","price":"1.08500000"}
+#   https://www.okx.com/api/v5/market/ticker?instId=XRP-USDT           -> {"code":"0","data":[{"last":"1.0852",...}]}
+name: xrp_binance_okx_spot
+market_type: crypto
+poll_interval_s: 15
+confidence: 0.97
+action: execute_now
+endpoints:
+  - id: binance
+    url: "https://data-api.binance.vision/api/v3/ticker/price"
+    params: {symbol: "XRPUSDT"}
+    value_path: "price"
+    instrument_static: "XRP"
+  - id: okx
+    url: "https://www.okx.com/api/v5/market/ticker"
+    params: {instId: "XRP-USDT"}
+    value_path: "data.0.last"
+rule:
+  kind: cross_feed_spread
+  endpoint_a: binance
+  endpoint_b: okx
+  min_edge_pct: 0.06
+  cost_buffer_pct: 0.15
+notes: >
+  Copy + rename for any other Binance/OKX-listed pair: change the two
+  `symbol`/`instId` params and `instrument_static`. Nothing else changes.

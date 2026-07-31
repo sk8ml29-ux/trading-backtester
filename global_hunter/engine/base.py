@@ -20,6 +20,14 @@ class ExecutionAdapter(abc.ABC):
     async def get_position(self, instrument: str) -> dict | None:
         return None
 
+    async def close_position(self, instrument: str) -> ExecutionResult | None:
+        """Unwind a currently-held position (used by ExecutionGovernor when
+        preempting a slower BUY_AND_HOLD commitment for a faster one).
+        Return None if this adapter has no such position / doesn't support
+        an explicit close.
+        """
+        return None
+
     async def cancel_order(self, order_id: str) -> bool:
         return False
 

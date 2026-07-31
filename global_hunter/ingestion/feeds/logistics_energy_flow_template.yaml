@@ -1,0 +1,30 @@
+# PLACEHOLDER TEMPLATE -- not live-tested, URL is a stand-in.
+# (Filename ends in "_template" so load_feed_configs() skips it by default.)
+#
+# Use case: international logistics/energy FLOW data as a leading indicator
+# -- e.g. EU gas storage fill levels (GIE AGSI+ API, free but requires a
+# registered API key: https://agsi.gie.eu/), freight/container rate
+# indices, or LNG tanker AIS-derived flow estimates. A sudden divergence
+# from the seasonal norm is a supply/demand signal for correlated
+# commodities/energy contracts -- feed this into
+# global_hunter/events/topics.py as a confirming ContextSignal, or use the
+# zscore_window rule here directly to emit an Opportunity on its own.
+name: example_eu_gas_storage_flow
+market_type: energy
+poll_interval_s: 3600   # daily-ish data; no need to poll faster
+confidence: 0.6
+action: buy_and_hold
+horizon_days: 21
+endpoints:
+  - id: storage_fill_pct
+    url: "https://agsi.gie.eu/api/example-fill-your-own-key"
+    value_path: "data.0.gasInStorage"
+rule:
+  kind: zscore_window
+  window_size: 60
+  zscore_threshold: 2.0
+notes: >
+  Register a free AGSI+ API key (or swap in any other logistics/energy
+  flow API), fill in `url`/`value_path`, map the resulting Opportunity's
+  instrument to a tradable correlated contract downstream, then remove
+  "_template" from the filename.

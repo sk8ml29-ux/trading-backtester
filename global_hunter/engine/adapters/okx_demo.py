@@ -9,10 +9,13 @@ explicit go-ahead (API keys are a business decision, never inferred).
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 
 from global_hunter.contracts import ApprovedOrder, ExecutionResult
 from global_hunter.engine.base import ExecutionAdapter
+
+logger = logging.getLogger("global_hunter.engine.adapters.okx_demo")
 
 
 class OKXDemoExecutionAdapter(ExecutionAdapter):
@@ -31,10 +34,17 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
         self.inst_map = inst_map
         self.usd_sek_rate = usd_sek_rate
         self.td_mode = td_mode
+        # Tracks BUY_AND_HOLD fills so close_position() knows the opposite
+        # side + size to unwind (ExecutionGovernor preemption path).
+        self._held: dict[str, dict] = {}
 
     async def place_order(self, order: ApprovedOrder) -> ExecutionResult:
         inst_id = self.inst_map[order.opportunity.instrument]
-        side = "buy" if order.opportunity.raw.get("buy_venue") == "okx_spot" else "sell"
+        side = "buy" if order.opportunity.raw.get("direction", "long") != "short" else "sell"
+        if order.opportunity.raw.get("buy_venue") == "okx_spot":
+            side = "buy"
+        elif order.opportunity.raw.get("sell_venue") == "okx_spot":
+            side = "sell"
 
         try:
             ticker = await asyncio.to_thread(self._client.ticker, inst_id)
@@ -45,10 +55,17 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
                 self._client.place_order, inst_id, side, str(size_units), self.td_mode, "market"
             )
             fill = data[0] if data else {}
+            status = "filled" if order.action.value == "execute_now" else "held"
+            if status == "held":
+                self._held[order.opportunity.instrument] = {
+                    "opportunity_id": order.opportunity.id, "inst_id": inst_id,
+                    "side": side, "size_units": size_units,
+                    "expected_net_profit_sek": order.expected_net_profit_sek,
+                }
             return ExecutionResult(
                 order_id=fill.get("ordId", f"okx-demo-{order.opportunity.id}"),
                 opportunity_id=order.opportunity.id,
-                status="filled",
+                status=status,
                 realized_or_expected_sek=order.expected_net_profit_sek,
                 executed_at=datetime.now(timezone.utc),
                 adapter=self.name,
@@ -71,6 +88,30 @@ class OKXDemoExecutionAdapter(ExecutionAdapter):
             if pos.get("instId") == self.inst_map.get(instrument):
                 return pos
         return None
+
+    async def close_position(self, instrument: str) -> ExecutionResult | None:
+        held = self._held.pop(instrument, None)
+        if held is None:
+            return None
+        opposite_side = "sell" if held["side"] == "buy" else "buy"
+        try:
+            data = await asyncio.to_thread(
+                self._client.place_order, held["inst_id"], opposite_side, str(held["size_units"]), self.td_mode, "market"
+            )
+            fill = data[0] if data else {}
+            return ExecutionResult(
+                order_id=fill.get("ordId", f"okx-demo-close-{held['opportunity_id']}"),
+                opportunity_id=held["opportunity_id"],
+                status="closed",
+                realized_or_expected_sek=held["expected_net_profit_sek"],
+                executed_at=datetime.now(timezone.utc),
+                adapter=self.name,
+                raw=fill,
+            )
+        except Exception:  # noqa: BLE001
+            self._held[instrument] = held  # restore -- we failed to actually close it
+            logger.exception("Failed to close OKX demo position for %s", instrument)
+            raise
 
     async def cancel_order(self, order_id: str) -> bool:
         return False  # OKXDemoClient does not expose cancel yet; extend when needed
