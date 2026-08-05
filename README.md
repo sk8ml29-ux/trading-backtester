@@ -2,6 +2,71 @@
 
 Python backtester and **paper-trading bot** for three strategies (Trading Rush / Rayner / Turtle synthesis).
 
+## Read-only Data Intake Bot
+
+```bash
+python -m intake.bot init
+python -m intake.bot collect --source prediction --prediction-limit 20
+python -m intake.bot collect --source markets --coins BTC,ETH
+python -m intake.bot collect --source energy --zones SE3
+python -m intake.bot collect --source binance-bulk \
+  --bulk-tier core --start 2020-01 --end 2026-06 --plan-only
+python -m intake.bot validate
+python -m intake.bot status
+```
+
+Private exports are stored under the git-ignored
+`data/cache/private_intake/`. The bot cannot place orders, withdraw funds,
+sign wallets, or control hardware. See `GUIDE_DATA_INTAKE_BOT.md`.
+For the 791-symbol historical Binance archive, see
+`GUIDE_BINANCE_BULK_DATA.md`.
+
+## Settlement Memory Reserve Carry (research)
+
+The research suite also contains SMRC, a delta-neutral long-spot/short-perpetual
+carry strategy. It estimates the remaining lifetime of a positive funding
+streak and opens only when expected carry plus conservative basis convergence
+exceeds the complete two-leg trading reserve.
+
+```bash
+# Download public funding, spot and perpetual history
+python -m research.binance_vision --start 2021-01-01 --end 2026-06-30 --interval 8h
+
+# Reproduce post-training historical evaluation and doubled-cost stress
+python -m research.settlement_memory_carry --out research_smrc_oos.json
+python -m research.settlement_memory_carry --cost-multiplier 2 --out research_smrc_cost2x.json
+
+# Start/update the zero-risk OKX paper tracker (never places orders)
+python -m research.smrc_paper --init --capital 100000
+python -m research.smrc_paper --update
+```
+
+See `RAPPORT_SMRC.md` for results, limitations, legality and the production
+gate. Historical profitability is not a live-return guarantee.
+
+## Swedish flexible-load savings research bot
+
+The `energy/` module schedules an EV's fixed energy requirement into the
+cheapest day-ahead intervals without V2G, export, or device commands. This is a
+cost-saving system—not investment return.
+
+```bash
+# Evaluate all historical SE3 prices already downloaded/cached
+python -m energy.flexible_load --zone SE3 --out research_energy_se3.json
+
+# Generate a paper-only schedule for one local charging date
+python -m energy.flexible_load --zone SE3 \
+  --schedule-date 2026-07-27 \
+  --schedule-out research_energy_schedule_sample.json
+
+# Reproduce fixed stress scenarios across SE1–SE4
+python -m energy.sensitivity --out research_energy_sensitivity.json
+```
+
+See `RAPPORT_HIGH_RETURN.md` for the cross-venue rejection, energy results and
+the customer-specific data required before connecting real hardware. The
+advanced scheduler failed to add 6% versus a strong timer benchmark.
+
 | Strategy | ID | Market regime |
 |----------|-----|---------------|
 | MACD Pullback | `macd_pullback` | Uptrend (default) |

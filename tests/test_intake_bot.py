@@ -1,0 +1,237 @@
+import json
+import tempfile
+import unittest
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from unittest.mock import patch
+
+from intake.bot import (
+    IntakePaths,
+    WORKSPACE,
+    collect_binance_bulk,
+    collect_prediction,
+    initialize,
+    inspect_file,
+    status,
+    validate,
+)
+
+
+class IntakeBotTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name) / "private_intake"
+        self.paths = IntakePaths(self.root)
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def fill_constraints(self):
+        path = self.root / "user_constraints.json"
+        constraints = json.loads(path.read_text())
+        constraints.update(
+            {
+                "capital_sek": 100_000,
+                "maximum_drawdown_pct": 10,
+                "maximum_leverage": 2,
+            }
+        )
+        path.write_text(json.dumps(constraints))
+
+    def test_init_creates_private_structure_and_paper_constraints(self):
+        result = initialize(self.paths)
+        constraints = json.loads(
+            (self.root / "user_constraints.json").read_text()
+        )
+
+        self.assertEqual(result["storage_safety"], "outside_repository")
+        self.assertTrue(constraints["paper_only"])
+        self.assertTrue((self.root / "trading").is_dir())
+        self.assertTrue((self.root / "public" / "prediction").is_dir())
+
+    def test_concurrent_init_keeps_valid_constraints(self):
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            list(executor.map(lambda _: initialize(self.paths), range(20)))
+        constraints = json.loads(
+            (self.root / "user_constraints.json").read_text()
+        )
+
+        self.assertTrue(constraints["paper_only"])
+
+    def test_validation_hashes_csv_and_writes_manifest(self):
+        initialize(self.paths)
+        self.fill_constraints()
+        csv_path = self.root / "trading" / "trades_test.csv"
+        csv_path.write_text("timestamp,symbol,price\n2026-01-01T00:00:00Z,BTC,1\n")
+        report = validate(self.paths)
+
+        row = next(item for item in report["files"] if item["path"].endswith(".csv"))
+        self.assertEqual(row["status"], "ok")
+        self.assertEqual(row["metadata"]["rows"], 1)
+        self.assertEqual(len(row["sha256"]), 64)
+        self.assertTrue((self.paths.manifest_dir / "latest.json").exists())
+        self.assertTrue(report["safe_to_analyze"])
+
+    def test_unfilled_business_constraints_block_analysis(self):
+        initialize(self.paths)
+        report = validate(self.paths)
+
+        self.assertFalse(report["safe_to_analyze"])
+        self.assertIn(
+            "unfilled_constraint:capital_sek",
+            report["summary"]["constraint_errors"],
+        )
+
+    def test_likely_secret_blocks_analysis(self):
+        initialize(self.paths)
+        bad = self.root / "trading" / "bad.txt"
+        bad.write_text("api_secret=abcdefghijklmnop123456")
+        report = validate(self.paths)
+
+        self.assertFalse(report["safe_to_analyze"])
+        row = next(item for item in report["files"] if item["path"] == "trading/bad.txt")
+        self.assertIn("likely_secret:secret_assignment", row["errors"])
+
+    def test_secret_after_two_megabytes_is_still_detected(self):
+        initialize(self.paths)
+        bad = self.root / "trading" / "large.txt"
+        bad.write_text("x" * 2_100_000 + "\nghp_abcdefghijklmnop1234567890")
+        row = inspect_file(bad, self.root)
+
+        self.assertIn("likely_secret:common_api_token", row["errors"])
+
+    def test_pdf_requires_hash_bound_manual_review(self):
+        initialize(self.paths)
+        pdf = self.root / "legal" / "terms.pdf"
+        pdf.write_bytes(b"%PDF-1.4 test")
+        unreviewed = inspect_file(pdf, self.root)
+        sidecar = pdf.with_suffix(".pdf.reviewed.json")
+        sidecar.write_text(
+            json.dumps(
+                {
+                    "manual_secret_pii_review": True,
+                    "sha256": unreviewed["sha256"],
+                }
+            )
+        )
+        reviewed = inspect_file(pdf, self.root)
+
+        self.assertIn("pdf_requires_manual_review_sidecar", unreviewed["errors"])
+        self.assertEqual(reviewed["errors"], [])
+
+    def test_repository_root_outside_ignored_cache_is_rejected(self):
+        unsafe = IntakePaths(WORKSPACE / "private-data-unsafe")
+        with self.assertRaises(ValueError):
+            initialize(unsafe)
+
+    def test_data_cache_root_itself_is_rejected(self):
+        unsafe = IntakePaths(WORKSPACE / "data" / "cache")
+        with self.assertRaises(ValueError):
+            initialize(unsafe)
+
+    def test_pii_is_warning_not_silently_ignored(self):
+        initialize(self.paths)
+        path = self.root / "energy" / "invoice.txt"
+        path.write_text("customer@example.com")
+        row = inspect_file(path, self.root)
+
+        self.assertEqual(row["status"], "warning")
+        self.assertIn("possible_pii:email", row["warnings"])
+
+    @patch("intake.bot._get_json")
+    def test_prediction_collection_is_public_snapshot_only(self, get_json):
+        get_json.side_effect = [
+            [
+                {
+                    "id": "1",
+                    "slug": "test",
+                    "question": "Test?",
+                    "conditionId": "0x1",
+                    "clobTokenIds": '["yes","no"]',
+                    "outcomes": '["Yes","No"]',
+                }
+            ],
+            {"asks": [{"price": "0.45", "size": "10"}], "bids": []},
+            {"asks": [{"price": "0.50", "size": "10"}], "bids": []},
+        ]
+        initialize(self.paths)
+        result = collect_prediction(self.paths, limit=1)
+        snapshot = json.loads(Path(result["files"][0]).read_text())
+
+        self.assertTrue(snapshot["read_only"])
+        self.assertEqual(
+            snapshot["markets"][0]["complete_set_ask_before_fees"], 0.95
+        )
+        self.assertEqual(
+            snapshot["markets"][0]["executable_complete_set_size"], 10.0
+        )
+
+    def test_status_explicitly_disables_mutating_capabilities(self):
+        initialize(self.paths)
+        capabilities = status(self.paths)["capabilities"]
+
+        self.assertFalse(capabilities["financial_orders"])
+        self.assertFalse(capabilities["withdrawals"])
+        self.assertFalse(capabilities["wallet_signing"])
+        self.assertFalse(capabilities["hardware_control"])
+
+    @patch("intake.bot.estimate_bulk_plan")
+    @patch("intake.bot.plan_bulk_jobs")
+    @patch("intake.bot.load_bulk_catalog")
+    @patch("intake.bot.BULK_CATALOG_PATH")
+    def test_bulk_plan_defaults_to_full_catalog(
+        self, catalog_path, load_catalog, plan_jobs, estimate_plan
+    ):
+        initialize(self.paths)
+        catalog_path.exists.return_value = True
+        load_catalog.return_value = {"symbols_with_history": 791}
+        plan_jobs.return_value = ["job"]
+        estimate_plan.return_value = {"jobs": 1}
+        result = collect_binance_bulk(
+            self.paths,
+            tier="core",
+            start="2020-01",
+            end="2026-06",
+            symbols=None,
+            max_symbols=None,
+            workers=2,
+            max_gb=20,
+            refresh_catalog=False,
+            plan_only=True,
+            confirm_large_download=False,
+        )
+
+        self.assertEqual(result["mode"], "plan_only")
+        self.assertEqual(result["catalog_symbols"], 791)
+        self.assertIsNone(plan_jobs.call_args.kwargs["symbols"])
+
+    @patch("intake.bot.estimate_bulk_plan", return_value={"jobs": 1})
+    @patch("intake.bot.plan_bulk_jobs", return_value=["job"])
+    @patch(
+        "intake.bot.load_bulk_catalog",
+        return_value={"symbols_with_history": 791},
+    )
+    @patch("intake.bot.BULK_CATALOG_PATH")
+    def test_intraday_bulk_requires_explicit_confirmation(
+        self, catalog_path, *_mocks
+    ):
+        initialize(self.paths)
+        catalog_path.exists.return_value = True
+        with self.assertRaises(ValueError):
+            collect_binance_bulk(
+                self.paths,
+                tier="intraday",
+                start="2020-01",
+                end="2026-06",
+                symbols=None,
+                max_symbols=None,
+                workers=2,
+                max_gb=20,
+                refresh_catalog=False,
+                plan_only=False,
+                confirm_large_download=False,
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

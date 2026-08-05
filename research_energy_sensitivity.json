@@ -1,0 +1,333 @@
+{
+  "measurement": "flexible_ev_cost_saving_not_investment_return",
+  "scenarios": {
+    "SE1": {
+      "default_15kwh_11kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 11,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 154.45,
+        "median_savings_pct": 0.26,
+        "mean_savings_pct": 0.51,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "slow_15kwh_3_7kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 131.88,
+        "median_savings_pct": 0.38,
+        "mean_savings_pct": 0.44,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "late_15kwh_7_4kw_21": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 134.92,
+        "median_savings_pct": 0.31,
+        "mean_savings_pct": 0.45,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "heavy_30kwh_7_4kw_18": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 263.75,
+        "median_savings_pct": 0.38,
+        "mean_savings_pct": 0.44,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "constraint_stress_30kwh_3_7kw_21": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 396.93,
+        "median_savings_pct": 0.63,
+        "mean_savings_pct": 0.68,
+        "min_savings_pct": 0.19,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      }
+    },
+    "SE2": {
+      "default_15kwh_11kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 11,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 151.02,
+        "median_savings_pct": 0.29,
+        "mean_savings_pct": 0.5,
+        "min_savings_pct": 0.04,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "slow_15kwh_3_7kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 135.65,
+        "median_savings_pct": 0.43,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "late_15kwh_7_4kw_21": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 139.14,
+        "median_savings_pct": 0.39,
+        "mean_savings_pct": 0.47,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "heavy_30kwh_7_4kw_18": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 271.31,
+        "median_savings_pct": 0.43,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "constraint_stress_30kwh_3_7kw_21": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 404.81,
+        "median_savings_pct": 0.64,
+        "mean_savings_pct": 0.69,
+        "min_savings_pct": 0.26,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      }
+    },
+    "SE3": {
+      "default_15kwh_11kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 11,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 163.67,
+        "median_savings_pct": 0.32,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.04,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "slow_15kwh_3_7kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 162.41,
+        "median_savings_pct": 0.42,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "late_15kwh_7_4kw_21": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 138.84,
+        "median_savings_pct": 0.34,
+        "mean_savings_pct": 0.42,
+        "min_savings_pct": 0.05,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "heavy_30kwh_7_4kw_18": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 324.82,
+        "median_savings_pct": 0.42,
+        "mean_savings_pct": 0.46,
+        "min_savings_pct": 0.06,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "constraint_stress_30kwh_3_7kw_21": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 654.18,
+        "median_savings_pct": 1.03,
+        "mean_savings_pct": 1.05,
+        "min_savings_pct": 0.12,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      }
+    },
+    "SE4": {
+      "default_15kwh_11kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 11,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 262.39,
+        "median_savings_pct": 0.5,
+        "mean_savings_pct": 0.69,
+        "min_savings_pct": 0.07,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "slow_15kwh_3_7kw_18": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 299.0,
+        "median_savings_pct": 0.6,
+        "mean_savings_pct": 0.8,
+        "min_savings_pct": 0.21,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "late_15kwh_7_4kw_21": {
+        "ev": {
+          "battery_energy_kwh": 15,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 235.65,
+        "median_savings_pct": 0.5,
+        "mean_savings_pct": 0.68,
+        "min_savings_pct": 0.14,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "heavy_30kwh_7_4kw_18": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 7.4,
+          "efficiency": 0.9,
+          "connect_hour": 18,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 598.0,
+        "median_savings_pct": 0.6,
+        "mean_savings_pct": 0.8,
+        "min_savings_pct": 0.21,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      },
+      "constraint_stress_30kwh_3_7kw_21": {
+        "ev": {
+          "battery_energy_kwh": 30,
+          "charging_kw": 3.7,
+          "efficiency": 0.9,
+          "connect_hour": 21,
+          "departure_hour": 7
+        },
+        "total_saved_sek": 1090.75,
+        "median_savings_pct": 1.33,
+        "mean_savings_pct": 1.58,
+        "min_savings_pct": 0.11,
+        "months_ge_6pct": 0,
+        "share_months_ge_6pct": 0.0,
+        "research_gate_pass": false
+      }
+    }
+  }
+}

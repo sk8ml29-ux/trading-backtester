@@ -21,14 +21,25 @@ import pandas as pd
 CACHE = Path(__file__).resolve().parent.parent / "data" / "cache"
 _UA = {"User-Agent": "Mozilla/5.0"}
 _CTX = ssl.create_default_context()
-_CTX.check_hostname = False
-_CTX.verify_mode = ssl.CERT_NONE
 
 BASE = "https://www.okx.com"
 
 # Liquid USDT perps with long OKX history.
 BASKET = ["BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "LINK", "LTC",
           "BNB", "AVAX", "DOT", "TRX", "ETC", "BCH", "FIL"]
+
+
+def _bar_duration(bar: str) -> pd.Timedelta:
+    value = bar.lower().removesuffix("utc")
+    unit = value[-1]
+    amount = int(value[:-1])
+    if unit == "h":
+        return pd.Timedelta(hours=amount)
+    if unit == "m":
+        return pd.Timedelta(minutes=amount)
+    if unit == "d":
+        return pd.Timedelta(days=amount)
+    raise ValueError(f"Unsupported OKX bar: {bar}")
 
 
 def _get(url: str, tries: int = 5):
@@ -102,7 +113,11 @@ def fetch_candles(coin: str, kind: str, bar: str, start_ms: int,
     if not rows:
         return pd.DataFrame(columns=["open", "high", "low", "close", "volume"])
     df = pd.DataFrame(rows)
-    df["time"] = pd.to_datetime(df[0].astype("int64"), unit="ms")
+    # OKX candle timestamps are bar-open times. Index at first availability
+    # after close; using open time exposes the whole future candle to a signal.
+    df["time"] = (
+        pd.to_datetime(df[0].astype("int64"), unit="ms") + _bar_duration(bar)
+    )
     for i, c in enumerate(["open", "high", "low", "close"], start=1):
         df[c] = pd.to_numeric(df[i], errors="coerce")
     df["volume"] = pd.to_numeric(df[5], errors="coerce")
@@ -139,8 +154,11 @@ if __name__ == "__main__":
     ap.add_argument("--start", default="2023-01-01")
     ap.add_argument("--coins", default=",".join(BASKET))
     ap.add_argument("--refresh", action="store_true")
+    ap.add_argument("--no-spot", action="store_true")
     args = ap.parse_args()
     coins = args.coins.split(",")
     print(f"Downloading OKX data for {len(coins)} coins, bar={args.bar}, start={args.start}")
-    download_basket(coins, args.bar, args.start, with_spot=True, refresh=args.refresh)
+    download_basket(
+        coins, args.bar, args.start, with_spot=not args.no_spot, refresh=args.refresh
+    )
     print("done")
