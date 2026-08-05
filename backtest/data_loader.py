@@ -18,6 +18,18 @@ SYMBOL_ALIASES = {
     "GOLD": "GC=F",
 }
 
+# On refresh, re-pull a short overlap so the last few bars can revise, instead of
+# re-downloading the entire history from ``start`` (critical for Binance 15m).
+_REFRESH_OVERLAP = {
+    "1m": pd.Timedelta(hours=6),
+    "5m": pd.Timedelta(days=1),
+    "15m": pd.Timedelta(days=2),
+    "30m": pd.Timedelta(days=3),
+    "1h": pd.Timedelta(days=5),
+    "4h": pd.Timedelta(days=14),
+    "1d": pd.Timedelta(days=30),
+}
+
 
 def cache_path(symbol: str, timeframe: str, provider_name: str | None = None) -> Path:
     safe = symbol.replace("=", "").replace("-", "_").lower()
@@ -59,6 +71,11 @@ def fetch_ohlcv(
         if path.exists():
             path.unlink()
 
+    if use_cache and path.exists() and refresh:
+        updated = _incremental_refresh(prov, path, symbol, timeframe, start, end)
+        if updated is not None:
+            return updated
+
     print(f"Downloading {symbol} ({timeframe}) from {prov.name}...")
     df = prov.fetch(symbol, timeframe, start=start, end=end)
 
@@ -69,6 +86,47 @@ def fetch_ohlcv(
     _save_csv(df, path)
     print(f"Cached {len(df)} bars [{prov.name}] -> {path}")
     return _filter_dates(df, start, end)
+
+
+def _incremental_refresh(
+    prov,
+    path: Path,
+    symbol: str,
+    timeframe: str,
+    start: str,
+    end: str | None,
+) -> pd.DataFrame | None:
+    """Append only recent bars onto an existing cache. Returns None to force full fetch."""
+    try:
+        cached = _load_csv(str(path))
+    except Exception as exc:  # noqa: BLE001
+        print(f"Cache unreadable ({path}): {exc} — full re-download")
+        return None
+    if cached.empty:
+        return None
+
+    overlap = _REFRESH_OVERLAP.get(timeframe, pd.Timedelta(days=3))
+    refresh_from = (cached.index.max() - overlap).strftime("%Y-%m-%d")
+    print(
+        f"Refreshing {symbol} ({timeframe}) from {refresh_from} via {prov.name} "
+        f"(incremental, cache has {len(cached)} bars)..."
+    )
+    try:
+        fresh = prov.fetch(symbol, timeframe, start=refresh_from, end=end)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Incremental refresh failed ({type(exc).__name__}: {exc}) — using cache")
+        return _filter_dates(cached, start, end)
+
+    if fresh.empty:
+        print(f"No new bars for {symbol} ({timeframe}); keeping cache")
+        return _filter_dates(cached, start, end)
+
+    combined = pd.concat([cached, fresh]).sort_index()
+    combined = combined[~combined.index.duplicated(keep="last")]
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _save_csv(combined, path)
+    print(f"Updated cache {len(combined)} bars [{prov.name}] -> {path}")
+    return _filter_dates(combined, start, end)
 
 
 def _resolve_provider(name: str):

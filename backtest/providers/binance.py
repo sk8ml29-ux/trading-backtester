@@ -1,13 +1,21 @@
-"""Binance public klines — years of intraday crypto, no API key required."""
+"""Binance public klines — years of intraday crypto, no API key required.
+
+``api.binance.com`` geo-blocks some cloud/VPS egress IPs with HTTP 451.
+The unrestricted market-data mirror ``data-api.binance.vision`` exposes the
+same ``/api/v3/klines`` contract and is tried first. Override the host list
+with env ``BINANCE_SPOT_API_BASE`` (single base URL, no trailing path).
+"""
 
 from __future__ import annotations
 
+import os
 import time
+import urllib.error
 from datetime import datetime, timezone
 
 import pandas as pd
 
-from backtest.http_client import fetch_json
+from backtest.http_client import HttpGeoBlocked, fetch_json
 from backtest.providers.base import DataProvider, ProviderInfo
 
 # Yahoo-style tickers used in universe -> Binance USDT pair
@@ -39,6 +47,52 @@ INTERVAL_MS: dict[str, int] = {
     "1d": 24 * 60 * 60_000,
 }
 
+# Vision first (works from geo-restricted egress); official API as fallback.
+_DEFAULT_SPOT_BASES: tuple[str, ...] = (
+    "https://data-api.binance.vision",
+    "https://api.binance.com",
+)
+
+
+def _spot_bases() -> list[str]:
+    env = os.environ.get("BINANCE_SPOT_API_BASE", "").strip()
+    if env:
+        return [env.rstrip("/")]
+    return list(_DEFAULT_SPOT_BASES)
+
+
+def _klines_url(base: str, pair: str, interval: str, start_ms: int) -> str:
+    return (
+        f"{base.rstrip('/')}/api/v3/klines?"
+        f"symbol={pair}&interval={interval}&limit=1000&startTime={start_ms}"
+    )
+
+
+def _fetch_klines_batch(bases: list[str], pair: str, interval: str, start_ms: int) -> tuple[list, str]:
+    """Try each base until one returns a batch. Returns (batch, working_base)."""
+    errors: list[str] = []
+    for base in bases:
+        url = _klines_url(base, pair, interval, start_ms)
+        try:
+            batch = fetch_json(url)
+        except HttpGeoBlocked as exc:
+            errors.append(f"{base}: {exc}")
+            continue
+        except urllib.error.HTTPError as exc:
+            errors.append(f"{base}: HTTP {exc.code}")
+            continue
+        except Exception as exc:  # noqa: BLE001 - try next mirror
+            errors.append(f"{base}: {type(exc).__name__}: {exc}")
+            continue
+        if batch is None:
+            errors.append(f"{base}: empty response")
+            continue
+        return batch, base
+    raise RuntimeError(
+        "Binance klines unreachable from all spot bases "
+        f"({', '.join(bases)}). Last errors: {'; '.join(errors)}"
+    )
+
 
 class BinanceProvider(DataProvider):
     name = "binance"
@@ -65,15 +119,22 @@ class BinanceProvider(DataProvider):
         step = INTERVAL_MS[interval]
         start_ms = _to_ms(start)
         end_ms = _to_ms(end) if end else int(datetime.now(tz=timezone.utc).timestamp() * 1000)
+        bases = _spot_bases()
 
         rows: list[list] = []
         cursor = start_ms
+        working_base: str | None = None
         while cursor < end_ms:
-            url = (
-                "https://api.binance.com/api/v3/klines?"
-                f"symbol={pair}&interval={interval}&limit=1000&startTime={cursor}"
-            )
-            batch = fetch_json(url)
+            try_bases = [working_base] if working_base else bases
+            # If the working host later fails, fall back to the full list.
+            try:
+                batch, working_base = _fetch_klines_batch(try_bases, pair, interval, cursor)
+            except RuntimeError:
+                if working_base and try_bases == [working_base]:
+                    working_base = None
+                    batch, working_base = _fetch_klines_batch(bases, pair, interval, cursor)
+                else:
+                    raise
             if not batch:
                 break
             rows.extend(batch)
