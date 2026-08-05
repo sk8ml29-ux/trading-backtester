@@ -1,0 +1,33 @@
+# PLACEHOLDER TEMPLATE -- not live-tested, URL is a stand-in.
+# (Filename ends in "_template" so load_feed_configs() skips it by default;
+#  rename it once you've filled in a real endpoint.)
+#
+# Use case: watch a specific auction-house/marketplace listing (eBay,
+# Catawiki, an art/watch/collectibles auction API, ...) and flag when the
+# current bid/price sits far enough below a reference value you set (e.g.
+# comparable recent sales, appraisal value, or a wholesale price).
+#
+# Most auction-house APIs require a free developer API key registered on
+# their site (a business decision -- see .cursorrules "Undantag" list) --
+# add `params: {api_key: "${AUCTION_API_KEY}"}`-style entries once you have
+# one; env-var substitution is not implemented yet, so bake the key in via
+# your own config generation step or extend config_loader.py to substitute
+# `${VAR}` from os.environ before this is used with a real paid API.
+name: example_auction_item
+market_type: marketplace
+poll_interval_s: 300
+confidence: 0.5
+action: execute_now
+endpoints:
+  - id: listing
+    url: "https://api.example-auction-house.invalid/v1/listings/123456"
+    value_path: "current_bid"
+    instrument_static: "example-listing-123456"
+rule:
+  kind: threshold
+  direction: below         # opportunity when current_bid < reference_value
+  reference_value: 5000.0  # set this to your own fair-value estimate for the item
+  min_edge_pct: 15.0        # only flag when at least 15% under your reference
+notes: >
+  Fill in `url`/`value_path` for your chosen auction API, set a defensible
+  `reference_value`, then remove "_template" from the filename.
