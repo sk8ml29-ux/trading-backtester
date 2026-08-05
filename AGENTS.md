@@ -15,6 +15,7 @@ Python trading backtester + paper-trading bot + read-only Flask dashboard. Pytho
 
 ### Non-obvious notes
 - **Market data cache** lives in `data/cache/` (gitignored). It is pre-populated in the VM snapshot and also shipped as `data_cache_10y.tar.gz`. If a symbol/timeframe has <300 cached bars, the loader re-downloads live from Yahoo/Binance/Dukascopy (network egress works in this environment). No API keys are required for the default flows; `POLYGON_API_KEY` (in `.env`) is optional and only upgrades stocks intraday data (falls back to Yahoo without it).
+- **Binance spot klines:** `api.binance.com` often returns HTTP 451 from this VM. `backtest/providers/binance.py` tries `data-api.binance.vision` first (override with `BINANCE_SPOT_API_BASE`). **Funding:** `fapi.binance.com` is also 451 here — `binance_funding.py` falls back to OKX public funding history.
 - `run_live.py` uses `--timeframe` (not `--entry-tf`). Running the paper bot with `--timeframe 1d` (entry == regime timeframe) hits a pre-existing `KeyError: 'ema_slow'`; use the default `30m` entry / `1d` regime documented flow instead.
 - There is **no formal lint config or pytest suite** (`scripts/test_*.py` are ad-hoc research scripts, not unit tests). Use `python -m compileall backtest strategies live dashboard config.py run_backtest.py run_live.py` as a quick syntax check.
 - Dependency versions float (`pandas>=2.0`, `numpy>=1.24`); the code runs on current pandas 3.x / numpy 2.x.

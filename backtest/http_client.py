@@ -4,12 +4,20 @@ import json
 import ssl
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
+
+
+class HttpGeoBlocked(RuntimeError):
+    """HTTP 451 — service unavailable from this egress IP (e.g. Binance eligibility)."""
+
+    def __init__(self, url: str, body: str = "") -> None:
+        self.url = url
+        self.body = body
+        super().__init__(f"HTTP 451 geo-blocked: {url}" + (f" ({body[:160]})" if body else ""))
 
 
 def _ssl_context() -> ssl.SSLContext:
@@ -37,4 +45,10 @@ def fetch_json(url: str, timeout: int = 45):
             raise RuntimeError(
                 "API rate-limited (HTTP 429). Wait ~15s and retry."
             ) from exc
+        if exc.code == 451:
+            try:
+                body = exc.read().decode("utf-8", errors="replace")
+            except Exception:
+                body = ""
+            raise HttpGeoBlocked(url, body) from exc
         raise
